@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E7F6FC">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="16dp">
+
+        <!-- Imagen del logo -->
+        <ImageView
+            android:id="@+id/contacto_logo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/logo"
+            android:contentDescription="Logo de AdoptaTuPet"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Texto con la descripción -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AdoptaTuPet.es es una plataforma de adopción de animales, cuyo fin es ayudar a las protectoras a dar visibilidad en internet a sus animales. Trabajamos por y para los animales sin hogar."
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="16dp"
+            android:lineSpacingExtra="4dp"
+            android:textAlignment="center"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeMaxTextSize="16sp"
+            android:autoSizeStepGranularity="1sp" />
+
+        <!-- Título -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lo que nos mueve"
+            android:textColor="#87DDFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:gravity="center" />
+
+        <!-- Tabla de contenido con 2 columnas y 4 filas -->
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="*"
+            android:padding="8dp">
+
+            <!-- Fila 1 -->
+            <TableRow android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Celda 1 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Adopción"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ED7F05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No compres, adopta. Ese es nuestro lema y nunca nos cansaremos de repetirlo. Miles de animales son abandonados cada año en España."
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:textAlignment="center"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp" />
+                </LinearLayout>
+
+                <!-- Celda 2 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Equipo"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ED7F05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AdoptaTuPet está formada por voluntarios de varias protectoras y conocemos de primera mano las necesidades de las asociaciones."
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:textAlignment="center"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp" />
+                </LinearLayout>
+            </TableRow>
+
+            <!-- Fila 2 -->
+            <TableRow android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Celda 1 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Amor"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ED7F05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nuestro amor por los animales es lo que mueve este proyecto. Queremos ayudar a los animales abandonados a encontrar una familia."
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:textAlignment="center"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp" />
+                </LinearLayout>
+
+                <!-- Celda 2 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Esterilización"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ED7F05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Una sola perra sin esterilizar y su descendencia pueden producir 67.000 cachorros en sólo seis años. Esterilizar salva vidas."
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:textAlignment="center"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp" />
+                </LinearLayout>
+            </TableRow>
+
+            <!-- Fila 3 -->
+            <TableRow android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Celda 1 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Familia"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ED7F05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nuestros animales son familia y como tal deben ser tratados. Debemos cuidarlos y acudir al veterinario periódicamente."
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:textAlignment="center"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp" />
+                </LinearLayout>
+
+                <!-- Celda 2 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Abuelitos"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="#ED7F05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sabemos que los cachorros son monísimos, pero hay muchos viejecitos esperando una oportunidad, recuerda que te lo agradecerán toda la vida."
+                        android:textColor="#000000"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginTop="8dp"
+                        android:textAlignment="center"
+                        android:autoSizeTextType="uniform"
+                        android:autoSizeMinTextSize="12sp"
+                        android:autoSizeMaxTextSize="14sp"
+                        android:autoSizeStepGranularity="1sp" />
+                </LinearLayout>
+            </TableRow>
+
+        </TableLayout>
+    </LinearLayout>
+</ScrollView>

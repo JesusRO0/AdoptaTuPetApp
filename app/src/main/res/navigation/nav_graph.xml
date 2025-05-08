@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.adoptatupet.fragments.HomeFragment"
+        android:label="Inicio"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_adopta"
+        android:name="com.example.adoptatupet.fragments.AdoptaFragment"
+        android:label="Adopta"
+        tools:layout="@layout/fragment_adopta" />
+
+    <fragment
+        android:id="@+id/nav_foro"
+        android:name="com.example.adoptatupet.fragments.ForoFragment"
+        android:label="Foro"
+        tools:layout="@layout/fragment_foro" />
+
+    <fragment
+        android:id="@+id/nav_contacto"
+        android:name="com.example.adoptatupet.fragments.ContactoFragment"
+        android:label="Contacto"
+        tools:layout="@layout/fragment_contacto" />
+</navigation>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">AdoptaTuPet</string>
+    <string name="inicio_bienvenido_a_adoptatupet">Inicio - Bienvenido a AdoptaTuPet</string>
+    <string name="adopta_aqu_est_n_los_animales_disponibles">Adopta - Aquí están los animales disponibles</string>
+    <string name="foro_comparte_tus_experiencias">Foro - Comparte tus experiencias</string>
+    <string name="contacto_informaci_n_de_adoptatupet">Contacto - Información de AdoptaTuPet</string>
+    <string name="inicio">Inicio</string>
+    <string name="adopta">Adopta</string>
+    <string name="foro">Foro</string>
+    <string name="contacto">Contacto</string>
+</resources>
