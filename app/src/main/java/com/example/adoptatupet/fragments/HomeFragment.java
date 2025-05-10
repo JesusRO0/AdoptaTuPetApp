@@ -5,16 +5,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-
 import com.example.adoptatupet.R;
 
 public class HomeFragment extends Fragment {
 
     public HomeFragment() {
-        // Requiere un constructor vacío
+        // Constructor vacío
     }
 
     @Override
@@ -23,26 +21,29 @@ public class HomeFragment extends Fragment {
         // Infla el layout para este fragmento
         View rootView = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Encuentra el botón VER PERROS usando su ID
-        Button verPerrosButton = rootView.findViewById(R.id.ver_perros_button); // Asegúrate de que este ID sea el correcto
+        Button conocenosButton = rootView.findViewById(R.id.conocenos_button);
 
-        // Agrega el OnClickListener para que navegue a AdoptaFragment
-        verPerrosButton.setOnClickListener(new View.OnClickListener() {
+        conocenosButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Crea una nueva instancia del fragmento AdoptaFragment
-                AdoptaFragment adoptaFragment = new AdoptaFragment();
-
-                // Obtén el FragmentTransaction y realiza el reemplazo
-                FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction(); // Usamos requireActivity()
-
-                // Reemplaza el fragmento actual con AdoptaFragment en el contenedor correcto
-                transaction.replace(R.id.nav_host_fragment, adoptaFragment); // Usamos nav_host_fragment aquí
-                transaction.addToBackStack(null); // Añadir la transacción al back stack para que se pueda volver
-                transaction.commit(); // Ejecuta la transacción
+                // Cambia manualmente el ítem seleccionado del BottomNavigationView
+                BottomNavigationView bottomNavigationView = requireActivity().findViewById(R.id.bottomNavigationView);
+                bottomNavigationView.setSelectedItemId(R.id.nav_contacto);
             }
         });
 
+
+        // Agrega el OnClickListener para que navegue a AdoptaFragment
+        Button verPerrosButton = rootView.findViewById(R.id.ver_perros_button);
+
+        verPerrosButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Cambia manualmente el item seleccionado del BottomNavigationView
+                BottomNavigationView bottomNavigationView = requireActivity().findViewById(R.id.bottomNavigationView);
+                bottomNavigationView.setSelectedItemId(R.id.nav_adopta);
+            }
+        });
         return rootView; // Devuelve la vista inflada
     }
 }

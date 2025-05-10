@@ -2,137 +2,87 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E7F6FC"
+    android:background="#E6F7FA"
     android:padding="16dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:paddingBottom="16dp">
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="vertical"
+android:gravity="center_horizontal">
 
-        <!-- Título principal -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bienvenidos a AdoptaTuPet.es"
-            android:textSize="26sp"
-            android:textColor="#87DDFF"
-            android:textStyle="bold"
-            android:layout_marginBottom="24dp"
-            android:fontFamily="sans-serif-medium"/>
+<!-- Imagen del gatito -->
+<ImageView
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:scaleType="centerCrop"
+    android:src="@drawable/gato_1" />
 
-        <!-- Subtítulo -->
-        <TextView
-            android:id="@+id/home_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="¡Adopta!"
-            android:textColor="#87DDFF"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"
-            android:fontFamily="sans-serif-condensed"/>
+<!-- Texto de bienvenida -->
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Únete a nuestra comunidad y forma parte del cambio. Ya sea adoptando, difundiendo o colaborando, cada ayuda cuenta."
+    android:textAlignment="center"
+    android:padding="12dp"
+    android:textSize="16sp"
+    android:textColor="#333" />
 
-        <!-- Imagen de un perro -->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:src="@drawable/perro_1"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="24dp"
-            android:layout_gravity="center" />
+<!-- Botón CONÓCENOS -->
+<Button
+    android:id="@+id/conocenos_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="CONÓCENOS"
+    android:backgroundTint="#FF9800"
+    android:textColor="#FFF"
+    android:layout_marginBottom="20dp" />
 
-        <!-- Descripción -->
-        <TextView
-            android:id="@+id/home_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Salva dos vidas, la del animal que adoptas y la del que ocupa su lugar en nuestro centro de adopción."
-            android:textColor="#000000"
-            android:textSize="18sp"
-            android:gravity="center"
-            android:lineSpacingExtra="6dp"
-            android:textAlignment="center"
-            android:layout_marginBottom="24dp"/>
+<!-- Título sección perros -->
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Adopta un perro"
+    android:textStyle="bold"
+    android:textSize="20sp"
+    android:textColor="#03A9F4"
+    android:layout_marginTop="20dp" />
 
-        <!-- Imagen de un gato -->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:src="@drawable/gato_1"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="24dp"
-            android:layout_gravity="center" />
+<!-- Imagen perros -->
+<ImageView
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:scaleType="centerCrop"
+    android:src="@drawable/perro_1" />
 
-        <!-- Texto adicional -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Únete a nuestra comunidad y forma parte del cambio. Ya sea adoptando, difundiendo o colaborando, cada ayuda cuenta."
-            android:textColor="#000000"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:lineSpacingExtra="4dp"
-            android:layout_marginBottom="32dp"/>
+<!-- Descripción -->
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Adopta un perro adulto o cachorro vacunado, desparasitado, con análisis de leishmaniosis, chip y esterilizado."
+    android:textAlignment="center"
+    android:padding="12dp"
+    android:textSize="16sp"
+    android:textColor="#333" />
 
-        <!-- Botón -->
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Conócenos"
-            android:backgroundTint="#ED7F05"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:layout_marginBottom="24dp"
-            android:layout_gravity="center"/>
+<!-- Botón VER PERROS -->
+<Button
+    android:id="@+id/ver_perros_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="VER PERROS"
+    android:backgroundTint="#FF9800"
+    android:textColor="#FFF"
+    android:layout_marginBottom="20dp" />
 
-        <!-- Nuevo Título de "Adopta un perro" -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Adopta un perro"
-            android:textSize="24sp"
-            android:textColor="#87DDFF"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"
-            android:fontFamily="sans-serif-medium"/>
-
-        <!-- Imagen del nuevo perro -->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:src="@drawable/perro_2"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="16dp"
-            android:layout_gravity="center" />
-
-        <!-- Descripción de adopción -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Al adoptar un perro adulto o un cachorro en AdoptaTuPet, te lo llevarás a casa vacunado, desparasitado, con análisis de leishmaniosis, con chip y esterilizado."
-            android:textColor="#000000"
-            android:textSize="16sp"
-            android:gravity="center"
-            android:lineSpacingExtra="4dp"
-            android:layout_marginBottom="24dp"/>
-
-        <!-- Botón para ver perros -->
-        <Button
-            android:id="@+id/ver_perros_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="VER PERROS"
-            android:backgroundTint="#ED7F05"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:layout_gravity="center"
-            android:layout_marginBottom="80dp" />
-
-    </LinearLayout>
-
-</ScrollView>
+<!-- 🔐 Botón nuevo: ENTRAR -->
+<Button
+    android:id="@+id/entrar_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="ENTRAR"
+    android:backgroundTint="#4CAF50"
+    android:textColor="#FFF"
+    android:layout_marginBottom="80dp" />
+</LinearLayout>
+    </ScrollView>
