@@ -7,29 +7,29 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!-- Contenido principal -->
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Toolbar con icono de menú (hamburguesa) -->
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <!-- AppBar con Toolbar -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/topAppBar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-            app:title="AdoptaTuPet" />
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+        </com.google.android.material.appbar.MaterialToolbar>
 
-        <!-- Contenedor principal donde se mostrarán los fragmentos -->
+        <!-- Contenedor de los fragments con margen top -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="?attr/actionBarSize"
-            app:defaultNavHost="true"
-            app:navGraph="@navigation/nav_graph" />
+            android:layout_marginTop="66dp"
+        app:defaultNavHost="true"
+        app:navGraph="@navigation/nav_graph" />
 
         <!-- Bottom Navigation -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -39,16 +39,16 @@
             android:layout_gravity="bottom"
             android:background="#3F51B5"
             app:menu="@menu/bottom_nav_menu" />
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <!-- Menú lateral (Navigation Drawer) -->
+    <!-- Menú lateral -->
     <com.google.android.material.navigation.NavigationView
-        android:id="@+id/navigation_view"
+        android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        app:menu="@menu/drawer_menu"
-        app:headerLayout="@layout/nav_header" />
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -74,15 +74,5 @@ android:gravity="center_horizontal">
     android:backgroundTint="#FF9800"
     android:textColor="#FFF"
     android:layout_marginBottom="20dp" />
-
-<!-- 🔐 Botón nuevo: ENTRAR -->
-<Button
-    android:id="@+id/entrar_button"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="ENTRAR"
-    android:backgroundTint="#4CAF50"
-    android:textColor="#FFF"
-    android:layout_marginBottom="80dp" />
 </LinearLayout>
     </ScrollView>
