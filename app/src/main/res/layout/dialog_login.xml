@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/loginLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp">
+
+    <!-- Campo para nombre (solo visible en registro) -->
+    <EditText
+        android:id="@+id/nameEditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nombre"
+        android:visibility="gone"
+        android:layout_marginBottom="12dp" />
 
     <EditText
         android:id="@+id/emailEditText"
@@ -20,4 +30,14 @@
         android:inputType="textPassword"
         android:layout_marginTop="12dp" />
 
+    <!-- Botón de alternar entre login y registro -->
+    <TextView
+        android:id="@+id/toggleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="¿No tienes cuenta? Regístrate"
+        android:textColor="#2196F3"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        android:padding="4dp" />
 </LinearLayout>

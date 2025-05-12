@@ -6,25 +6,25 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="com.example.adoptatupet.fragments.HomeFragment"
+        android:name="com.example.adoptatupet.views.fragments.HomeFragment"
         android:label="Inicio"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/nav_adopta"
-        android:name="com.example.adoptatupet.fragments.AdoptaFragment"
+        android:name="com.example.adoptatupet.views.fragments.AdoptaFragment"
         android:label="Adopta"
         tools:layout="@layout/fragment_adopta" />
 
     <fragment
         android:id="@+id/nav_foro"
-        android:name="com.example.adoptatupet.fragments.ForoFragment"
+        android:name="com.example.adoptatupet.views.fragments.ForoFragment"
         android:label="Foro"
         tools:layout="@layout/fragment_foro" />
 
     <fragment
         android:id="@+id/nav_contacto"
-        android:name="com.example.adoptatupet.fragments.ContactoFragment"
+        android:name="com.example.adoptatupet.views.fragments.ContactoFragment"
         android:label="Contacto"
         tools:layout="@layout/fragment_contacto" />
 </navigation>

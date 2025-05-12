@@ -1,4 +1,4 @@
-package com.example.adoptatupet.fragments;
+package com.example.adoptatupet.views.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
