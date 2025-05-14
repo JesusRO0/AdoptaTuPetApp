@@ -1,21 +1,30 @@
 package com.example.adoptatupet.models;
 
+import com.google.gson.annotations.Expose;
+
 public class Usuario {
+
+    private int idUsuario;
+
+    @Expose
     private String email;
+
+    @Expose
     private String usuario;
+
+    @Expose
     private String localidad;
+
+    @Expose
     private String contrasena;
 
-    // Constructor vacío necesario
-    public Usuario() {}
-
-    // Constructor para login
+    // Constructor para login (solo email y contraseña)
     public Usuario(String email, String contrasena) {
         this.email = email;
         this.contrasena = contrasena;
     }
 
-    // Constructor completo
+    // Constructor para registro (todos los campos menos id)
     public Usuario(String email, String usuario, String localidad, String contrasena) {
         this.email = email;
         this.usuario = usuario;
@@ -23,16 +32,22 @@ public class Usuario {
         this.contrasena = contrasena;
     }
 
-    // Getters y setters
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    // Getters
+    public String getEmail() {
+        return email;
+    }
 
-    public String getUsuario() { return usuario; }
-    public void setUsuario(String usuario) { this.usuario = usuario; }
+    public String getUsuario() {
+        return usuario;
+    }
 
-    public String getLocalidad() { return localidad; }
-    public void setLocalidad(String localidad) { this.localidad = localidad; }
+    public String getLocalidad() {
+        return localidad;
+    }
 
-    public String getContrasena() { return contrasena; }
-    public void setContrasena(String contrasena) { this.contrasena = contrasena; }
+    public String getContrasena() {
+        return contrasena;
+    }
+
+    // Setters si los necesitas
 }

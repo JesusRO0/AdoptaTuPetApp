@@ -9,11 +9,9 @@ import retrofit2.http.POST;
 
 public interface ApiService {
 
-    @Headers("Content-Type: application/json")
-    @POST("login.php")
-    Call<Mensaje> login(@Body Usuario usuario);
-
-    @Headers("Content-Type: application/json")
     @POST("register.php")
     Call<Mensaje> register(@Body Usuario usuario);
+
+    @POST("login.php")
+    Call<Mensaje> login(@Body Usuario usuario);
 }
