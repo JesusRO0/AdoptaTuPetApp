@@ -3,28 +3,26 @@
     android:layout_width="match_parent"
     android:layout_height="180dp"
     android:background="@color/purple_700"
-    android:gravity="bottom"
     android:orientation="vertical"
+    android:gravity="center"
     android:padding="16dp">
 
     <ImageView
-        android:id="@+id/nav_header_image"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="center_horizontal"
-        android:src="@drawable/ic_launcher_foreground"
-        android:contentDescription="@string/app_name"
-        android:background="@drawable/circle_background"
-        android:padding="8dp" />
+        android:id="@+id/nav_user_image"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/default_avatar"
+        android:scaleType="centerCrop"
+        android:layout_marginBottom="8dp"
+        android:padding="4dp" />
 
     <TextView
-        android:id="@+id/nav_header_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_gravity="center_horizontal"
+        android:id="@+id/nav_user_name"
         android:text="¡Bienvenido!"
         android:textColor="@android:color/white"
+        android:textStyle="bold"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </LinearLayout>

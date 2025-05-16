@@ -27,4 +27,12 @@
         android:name="com.example.adoptatupet.views.fragments.ContactoFragment"
         android:label="Contacto"
         tools:layout="@layout/fragment_contacto" />
+
+    <!-- ✅ NUEVO: Perfil -->
+    <fragment
+        android:id="@+id/perfilFragment"
+        android:name="com.example.adoptatupet.views.fragments.PerfilFragment"
+        android:label="Perfil"
+        tools:layout="@layout/fragment_perfil" />
+
 </navigation>

@@ -1,14 +1,15 @@
 package com.example.adoptatupet.views;
 
 import android.os.Bundle;
-import android.view.MenuItem;
+import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,8 @@ import androidx.fragment.app.Fragment;
 import com.example.adoptatupet.R;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.models.Usuario;
+import com.example.adoptatupet.network.ApiClient;
+import com.example.adoptatupet.network.ApiService;
 import com.example.adoptatupet.views.fragments.AdoptaFragment;
 import com.example.adoptatupet.views.fragments.ContactoFragment;
 import com.example.adoptatupet.views.fragments.ForoFragment;
@@ -30,14 +33,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import com.example.adoptatupet.network.ApiClient;
-import com.example.adoptatupet.network.ApiService;
-
 public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
     private Toolbar topAppBar;
+    private TextView navUserName;
+    private ImageView navUserImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,13 +59,30 @@ public class MainActivity extends AppCompatActivity {
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+        View headerView = navigationView.getHeaderView(0);
+        navUserName = headerView.findViewById(R.id.nav_user_name);
+        navUserImage = headerView.findViewById(R.id.nav_user_image);
+
         navigationView.setNavigationItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_login) {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_login) {
                 showLoginDialog();
+            } else if (id == R.id.nav_profile) {
+                Toast.makeText(this, "Funcionalidad perfil próximamente", Toast.LENGTH_SHORT).show();
+            } else if (id == R.id.nav_logout) {
+                navUserName.setText("¡Bienvenido!");
+                navUserImage.setImageResource(R.drawable.default_avatar);
+                Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
+
                 drawerLayout.closeDrawers();
-                return true;
+                navigationView.post(() -> actualizarOpcionesMenu(false));
+            } else if (id == R.id.nav_exit) {
+                finishAffinity();
             }
-            return false;
+
+            drawerLayout.closeDrawers();
+            return true;
         });
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
@@ -88,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             bottomNavigationView.setSelectedItemId(R.id.nav_home);
         }
+
+        actualizarOpcionesMenu(false);
     }
 
     private void loadFragment(Fragment fragment) {
@@ -124,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString().trim();
 
                 if (isLoginMode[0]) {
-                    // LOGIN
                     Usuario usuario = new Usuario(email, password);
 
                     apiService.login(usuario).enqueue(new Callback<Mensaje>() {
@@ -132,7 +152,14 @@ public class MainActivity extends AppCompatActivity {
                         public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                             if (response.isSuccessful() && response.body() != null) {
                                 if (response.body().isSuccess()) {
-                                    Toast.makeText(MainActivity.this, "Bienvenido " + response.body().getUsuario().getUsuario(), Toast.LENGTH_SHORT).show();
+                                    Usuario usuario = response.body().getUsuario();
+
+                                    navUserName.setText("¡Bienvenido " + usuario.getUsuario() + "!");
+                                    navUserImage.setImageResource(R.drawable.default_avatar);
+
+                                    actualizarOpcionesMenu(true);
+
+                                    Toast.makeText(MainActivity.this, "Bienvenido " + usuario.getUsuario(), Toast.LENGTH_SHORT).show();
                                     dialog.dismiss();
                                 } else {
                                     String mensaje = response.body().getMessage();
@@ -153,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
                     });
 
                 } else {
-                    // REGISTRO
                     String nombre = nameEditText.getText().toString().trim();
                     Usuario usuario = new Usuario(email, nombre, "Sin localidad", password);
 
@@ -201,5 +227,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dialog.show();
+    }
+
+    private void actualizarOpcionesMenu(boolean estaLogueado) {
+        Menu menu = navigationView.getMenu();
+
+        menu.findItem(R.id.nav_profile).setVisible(estaLogueado);
+        menu.findItem(R.id.nav_logout).setVisible(estaLogueado);
+        menu.findItem(R.id.nav_login).setVisible(!estaLogueado);
+
+        // 👇 Fuerza el redibujado del NavigationView
+        navigationView.invalidate();
     }
 }

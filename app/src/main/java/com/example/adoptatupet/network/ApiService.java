@@ -14,4 +14,7 @@ public interface ApiService {
 
     @POST("login.php")
     Call<Mensaje> login(@Body Usuario usuario);
+
+    @POST("update_usuario.php")
+    Call<Mensaje> updateUsuario(@Body Usuario usuario);
 }

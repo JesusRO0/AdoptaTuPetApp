@@ -25,11 +25,12 @@
         <!-- Contenedor de los fragments con margen top -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="66dp"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
 
         <!-- Bottom Navigation -->
         <com.google.android.material.bottomnavigation.BottomNavigationView

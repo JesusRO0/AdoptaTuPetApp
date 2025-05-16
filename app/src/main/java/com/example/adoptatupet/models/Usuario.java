@@ -18,13 +18,17 @@ public class Usuario {
     @Expose
     private String contrasena;
 
-    // Constructor para login (solo email y contraseña)
+    // 🔧 Constructor vacío necesario para Retrofit, Firebase o uso manual
+    public Usuario() {
+    }
+
+    // Constructor para login
     public Usuario(String email, String contrasena) {
         this.email = email;
         this.contrasena = contrasena;
     }
 
-    // Constructor para registro (todos los campos menos id)
+    // Constructor para registro
     public Usuario(String email, String usuario, String localidad, String contrasena) {
         this.email = email;
         this.usuario = usuario;
@@ -33,6 +37,10 @@ public class Usuario {
     }
 
     // Getters
+    public int getIdUsuario() {
+        return idUsuario;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -49,5 +57,24 @@ public class Usuario {
         return contrasena;
     }
 
-    // Setters si los necesitas
+    // ✅ Setters
+    public void setIdUsuario(int idUsuario) {
+        this.idUsuario = idUsuario;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setUsuario(String usuario) {
+        this.usuario = usuario;
+    }
+
+    public void setLocalidad(String localidad) {
+        this.localidad = localidad;
+    }
+
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
+    }
 }
