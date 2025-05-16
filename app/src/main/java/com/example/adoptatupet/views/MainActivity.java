@@ -73,12 +73,8 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_profile) {
                 loadFragment(new PerfilFragment());
             }else if (id == R.id.nav_logout) {
-                navUserName.setText("¡Bienvenido!");
-                navUserImage.setImageResource(R.drawable.default_avatar);
-                Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
-
-                drawerLayout.closeDrawers();
-                navigationView.post(() -> actualizarOpcionesMenu(false));
+                cerrarSesion();
+                return true;
             } else if (id == R.id.nav_exit) {
                 finishAffinity();
             }
@@ -257,4 +253,27 @@ public class MainActivity extends AppCompatActivity {
         navigationView.invalidate();
     }
 
+    private void cerrarSesion() {
+        navUserName.setText("¡Bienvenido!");
+        navUserImage.setImageResource(R.drawable.default_avatar);
+        actualizarOpcionesMenu(false);
+
+        // Limpia SharedPreferences (sesión)
+        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+        prefs.edit().clear().apply();
+
+        // Limpia el back stack para evitar volver al perfil
+        getSupportFragmentManager().popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        // Cambia a HomeFragment
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.nav_host_fragment, new HomeFragment())
+                .commit();
+
+        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
+
+        // Cierra el drawer
+        drawerLayout.closeDrawers();
+    }
 }
