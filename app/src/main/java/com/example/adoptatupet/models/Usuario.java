@@ -1,9 +1,11 @@
 package com.example.adoptatupet.models;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 public class Usuario {
 
+    @Expose
     private int idUsuario;
 
     @Expose
@@ -18,17 +20,19 @@ public class Usuario {
     @Expose
     private String contrasena;
 
-    // 🔧 Constructor vacío necesario para Retrofit, Firebase o uso manual
+    @Expose
+    @SerializedName("fotoPerfil")
+    private String fotoPerfil;
+
+    // Constructores
     public Usuario() {
     }
 
-    // Constructor para login
     public Usuario(String email, String contrasena) {
         this.email = email;
         this.contrasena = contrasena;
     }
 
-    // Constructor para registro
     public Usuario(String email, String usuario, String localidad, String contrasena) {
         this.email = email;
         this.usuario = usuario;
@@ -57,7 +61,11 @@ public class Usuario {
         return contrasena;
     }
 
-    // ✅ Setters
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    // Setters
     public void setIdUsuario(int idUsuario) {
         this.idUsuario = idUsuario;
     }
@@ -76,5 +84,9 @@ public class Usuario {
 
     public void setContrasena(String contrasena) {
         this.contrasena = contrasena;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 }

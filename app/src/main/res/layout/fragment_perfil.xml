@@ -9,6 +9,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal">
 
+        <!-- Foto perfil -->
         <ImageView
             android:id="@+id/imageViewPerfil"
             android:layout_width="120dp"
@@ -22,25 +23,138 @@
             android:id="@+id/btnCambiarFoto"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cambiar Foto" />
+            android:text="Cambiar Foto"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Nombre -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvNombre"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Nombre: "
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnEditarNombre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar" />
+        </LinearLayout>
 
         <EditText
             android:id="@+id/editTextNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre" />
+            android:visibility="gone"
+            android:hint="Nuevo nombre" />
+
+        <!-- Email -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Email: "
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnEditarEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/editTextEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:hint="Nuevo email"
+            android:inputType="textEmailAddress" />
+
+        <!-- Contraseña -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvPassword"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Contraseña: ********"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnEditarPassword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/editTextPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:hint="Nueva contraseña"
+            android:inputType="textPassword" />
+
+        <!-- Localidad -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvLocalidad"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Localidad: "
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnEditarLocalidad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar" />
+        </LinearLayout>
 
         <EditText
             android:id="@+id/editTextLocalidad"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Localidad" />
+            android:visibility="gone"
+            android:hint="Nueva localidad" />
 
+        <!-- Botón Guardar general -->
         <Button
             android:id="@+id/btnGuardarCambios"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Guardar Cambios"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="24dp"
+            android:visibility="gone" />
     </LinearLayout>
 </ScrollView>

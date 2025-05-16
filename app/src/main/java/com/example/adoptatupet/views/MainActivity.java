@@ -1,5 +1,6 @@
 package com.example.adoptatupet.views;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -146,6 +147,8 @@ public class MainActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString().trim();
 
                 if (isLoginMode[0]) {
+                    Log.d("LoginEmail", "Email enviado: " + email);  // Aquí el log correcto
+
                     Usuario usuario = new Usuario(email, password);
 
                     apiService.login(usuario).enqueue(new Callback<Mensaje>() {
@@ -154,6 +157,16 @@ public class MainActivity extends AppCompatActivity {
                             if (response.isSuccessful() && response.body() != null) {
                                 if (response.body().isSuccess()) {
                                     Usuario usuario = response.body().getUsuario();
+
+                                    SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = prefs.edit();
+                                    editor.putInt("idUsuario", usuario.getIdUsuario());
+                                    editor.putString("usuario", usuario.getUsuario());
+                                    editor.putString("localidad", usuario.getLocalidad());
+                                    editor.putString("fotoPerfil", usuario.getFotoPerfil());
+                                    editor.putString("email", usuario.getEmail());
+                                    editor.putString("contrasena", usuario.getContrasena());
+                                    editor.apply();
 
                                     navUserName.setText("¡Bienvenido " + usuario.getUsuario() + "!");
                                     navUserImage.setImageResource(R.drawable.default_avatar);
@@ -214,6 +227,9 @@ public class MainActivity extends AppCompatActivity {
             toggleTextView.setOnClickListener(v -> {
                 isLoginMode[0] = !isLoginMode[0];
                 if (isLoginMode[0]) {
+                    String email = emailEditText.getText().toString().trim();
+                    String password = passwordEditText.getText().toString().trim();
+                    Log.d("LoginEmail", "Email enviado: " + email);
                     nameEditText.setVisibility(View.GONE);
                     dialog.setTitle("Iniciar Sesión");
                     positiveButton.setText("Entrar");
@@ -240,4 +256,5 @@ public class MainActivity extends AppCompatActivity {
         // 👇 Fuerza el redibujado del NavigationView
         navigationView.invalidate();
     }
+
 }
