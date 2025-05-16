@@ -26,6 +26,7 @@ import com.example.adoptatupet.views.fragments.AdoptaFragment;
 import com.example.adoptatupet.views.fragments.ContactoFragment;
 import com.example.adoptatupet.views.fragments.ForoFragment;
 import com.example.adoptatupet.views.fragments.HomeFragment;
+import com.example.adoptatupet.views.fragments.PerfilFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 
@@ -69,8 +70,8 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_login) {
                 showLoginDialog();
             } else if (id == R.id.nav_profile) {
-                Toast.makeText(this, "Funcionalidad perfil próximamente", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_logout) {
+                loadFragment(new PerfilFragment());
+            }else if (id == R.id.nav_logout) {
                 navUserName.setText("¡Bienvenido!");
                 navUserImage.setImageResource(R.drawable.default_avatar);
                 Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
