@@ -29,6 +29,7 @@ import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
+import com.example.adoptatupet.views.MainActivity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -45,6 +46,7 @@ public class PerfilFragment extends Fragment {
     private Button btnGuardar, btnCambiarFoto;
     private Button btnEditarNombre, btnEditarEmail, btnEditarPassword, btnEditarLocalidad;
 
+    // Guarda la imagen actual codificada en Base64 para enviar al backend
     private String imagenBase64 = null;
 
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
@@ -53,6 +55,9 @@ public class PerfilFragment extends Fragment {
                     Uri selectedImage = result.getData().getData();
                     imageViewPerfil.setImageURI(selectedImage);
                     convertirImagenABase64(selectedImage);
+
+                    // Aquí llama a método para guardar cambios con la nueva foto
+                    guardarFotoDirecta();
                 }
             });
 
@@ -99,14 +104,12 @@ public class PerfilFragment extends Fragment {
 
     private void toggleEditCancel(TextView tv, EditText et, Button btn) {
         if (et.getVisibility() == View.GONE) {
-            // Mostrar edición
             tv.setVisibility(View.GONE);
             et.setVisibility(View.VISIBLE);
             et.setText(tv.getText().toString().replaceFirst("^[^:]+: ?", ""));
             btn.setText("Cancelar");
             btnGuardar.setVisibility(View.VISIBLE);
         } else {
-            // Cancelar edición
             et.setVisibility(View.GONE);
             tv.setVisibility(View.VISIBLE);
             btn.setText("Editar");
@@ -144,11 +147,14 @@ public class PerfilFragment extends Fragment {
                 byte[] decodedBytes = Base64.decode(base64Foto, Base64.DEFAULT);
                 Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
                 imageViewPerfil.setImageBitmap(decodedBitmap);
+                imagenBase64 = base64Foto;  // Importante: inicializar con la foto guardada
             } catch (Exception e) {
                 imageViewPerfil.setImageResource(R.drawable.default_avatar);
+                imagenBase64 = null;
             }
         } else {
             imageViewPerfil.setImageResource(R.drawable.default_avatar);
+            imagenBase64 = null;
         }
 
         editTextNombre.setVisibility(View.GONE);
@@ -157,7 +163,6 @@ public class PerfilFragment extends Fragment {
         editTextLocalidad.setVisibility(View.GONE);
         btnGuardar.setVisibility(View.GONE);
 
-        // Reset botones editar a "Editar"
         btnEditarNombre.setText("Editar");
         btnEditarEmail.setText("Editar");
         btnEditarPassword.setText("Editar");
@@ -205,7 +210,7 @@ public class PerfilFragment extends Fragment {
         usuario.setEmail(email);
         usuario.setContrasena(password);
         usuario.setLocalidad(localidad);
-        usuario.setFotoPerfil(imagenBase64 != null ? imagenBase64 : prefs.getString("fotoPerfil", null));
+        usuario.setFotoPerfil(imagenBase64); // Usar la imagen actualizada o la que venga
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
         apiService.updateUsuario(usuario).enqueue(new Callback<Mensaje>() {
@@ -217,9 +222,7 @@ public class PerfilFragment extends Fragment {
                     editor.putString("email", email);
                     editor.putString("contrasena", password);
                     editor.putString("localidad", localidad);
-                    if (imagenBase64 != null) {
-                        editor.putString("fotoPerfil", imagenBase64);
-                    }
+                    editor.putString("fotoPerfil", imagenBase64); // Actualizamos la foto guardada localmente
                     editor.apply();
 
                     Toast.makeText(getContext(), "Datos actualizados", Toast.LENGTH_SHORT).show();
@@ -255,4 +258,53 @@ public class PerfilFragment extends Fragment {
             }
         });
     }
+
+    private void guardarFotoDirecta() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
+        int idUsuario = prefs.getInt("idUsuario", -1);
+        if (idUsuario == -1) {
+            Toast.makeText(getContext(), "Error: sesión no válida", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Obtén los valores actuales guardados, para enviarlos junto a la foto
+        String nombre = prefs.getString("usuario", "");
+        String email = prefs.getString("email", "");
+        String password = prefs.getString("contrasena", "");
+        String localidad = prefs.getString("localidad", "");
+
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(idUsuario);
+        usuario.setUsuario(nombre);
+        usuario.setEmail(email);
+        usuario.setContrasena(password);
+        usuario.setLocalidad(localidad);
+        usuario.setFotoPerfil(imagenBase64); // La nueva imagen en base64
+
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        apiService.updateUsuario(usuario).enqueue(new Callback<Mensaje>() {
+            @Override
+            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("fotoPerfil", imagenBase64);
+                    editor.apply();
+
+                    Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).actualizarFotoDrawer(imagenBase64);
+                    }
+
+                } else {
+                    Toast.makeText(getContext(), "Error al actualizar la foto", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Mensaje> call, Throwable t) {
+                Toast.makeText(getContext(), "Fallo en servidor: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 }

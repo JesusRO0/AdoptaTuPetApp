@@ -1,6 +1,8 @@
 package com.example.adoptatupet.views;
 
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
                 showLoginDialog();
             } else if (id == R.id.nav_profile) {
                 loadFragment(new PerfilFragment());
-            }else if (id == R.id.nav_logout) {
+            } else if (id == R.id.nav_logout) {
                 cerrarSesion();
                 return true;
             } else if (id == R.id.nav_exit) {
@@ -106,8 +108,35 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.setSelectedItemId(R.id.nav_home);
         }
 
-        actualizarOpcionesMenu(false);
+        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+        boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
+
+        if (isLoggedIn) {
+            actualizarOpcionesMenu(true);
+            String usuario = prefs.getString("usuario", "Usuario");
+            navUserName.setText("¡Bienvenido " + usuario + "!");
+
+            // Cargar imagen base64 de SharedPreferences y mostrarla en el drawer
+            String base64Foto = prefs.getString("fotoPerfil", null);
+            if (base64Foto != null && !base64Foto.isEmpty()) {
+                try {
+                    byte[] decodedBytes = android.util.Base64.decode(base64Foto, android.util.Base64.DEFAULT);
+                    Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                    navUserImage.setImageBitmap(decodedBitmap);
+                } catch (Exception e) {
+                    navUserImage.setImageResource(R.drawable.default_avatar);
+                }
+            } else {
+                navUserImage.setImageResource(R.drawable.default_avatar);
+            }
+
+        } else {
+            actualizarOpcionesMenu(false);
+            navUserName.setText("¡Bienvenido!");
+            navUserImage.setImageResource(R.drawable.default_avatar);
+        }
     }
+
 
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
@@ -143,72 +172,60 @@ public class MainActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString().trim();
 
                 if (isLoginMode[0]) {
-                    Log.d("LoginEmail", "Email enviado: " + email);  // Aquí el log correcto
+                    Log.d("LoginEmail", "Email enviado: " + email);  // Log correcto
 
                     Usuario usuario = new Usuario(email, password);
 
                     apiService.login(usuario).enqueue(new Callback<Mensaje>() {
                         @Override
                         public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                            if (response.isSuccessful() && response.body() != null) {
-                                if (response.body().isSuccess()) {
-                                    Usuario usuario = response.body().getUsuario();
+                            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                Usuario usuario = response.body().getUsuario();
 
-                                    SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
-                                    SharedPreferences.Editor editor = prefs.edit();
-                                    editor.putInt("idUsuario", usuario.getIdUsuario());
-                                    editor.putString("usuario", usuario.getUsuario());
-                                    editor.putString("localidad", usuario.getLocalidad());
-                                    editor.putString("fotoPerfil", usuario.getFotoPerfil());
-                                    editor.putString("email", usuario.getEmail());
-                                    editor.putString("contrasena", usuario.getContrasena());
-                                    editor.apply();
+                                SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+                                SharedPreferences.Editor editor = prefs.edit();
+                                editor.putBoolean("isLoggedIn", true);
+                                editor.putInt("idUsuario", usuario.getIdUsuario());
+                                editor.putString("usuario", usuario.getUsuario());
+                                editor.putString("localidad", usuario.getLocalidad());
+                                editor.putString("fotoPerfil", usuario.getFotoPerfil()); // fotoBase64 del backend
+                                editor.putString("email", usuario.getEmail());
+                                editor.putString("contrasena", usuario.getContrasena());
+                                editor.apply();
 
-                                    navUserName.setText("¡Bienvenido " + usuario.getUsuario() + "!");
-                                    navUserImage.setImageResource(R.drawable.default_avatar);
+                                navUserName.setText("¡Bienvenido " + usuario.getUsuario() + "!");
+                                navUserImage.setImageResource(R.drawable.default_avatar);
 
-                                    actualizarOpcionesMenu(true);
+                                actualizarOpcionesMenu(true);
 
-                                    Toast.makeText(MainActivity.this, "Bienvenido " + usuario.getUsuario(), Toast.LENGTH_SHORT).show();
-                                    dialog.dismiss();
-                                } else {
-                                    String mensaje = response.body().getMessage();
-                                    if (mensaje == null || mensaje.trim().isEmpty()) {
-                                        mensaje = "Ocurrió un error desconocido.";
-                                    }
-                                    Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_SHORT).show();
-                                }
+                                Toast.makeText(MainActivity.this, "Bienvenido " + usuario.getUsuario(), Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
                             } else {
-                                Toast.makeText(MainActivity.this, "Respuesta inválida", Toast.LENGTH_SHORT).show();
+                                String mensaje = response.body() != null ? response.body().getMessage() : "Respuesta inválida";
+                                Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
                         public void onFailure(Call<Mensaje> call, Throwable t) {
-                            Toast.makeText(MainActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Fallo en servidor: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     });
 
                 } else {
+                    // Registro (sin cambios)
                     String nombre = nameEditText.getText().toString().trim();
                     Usuario usuario = new Usuario(email, nombre, "Sin localidad", password);
 
                     apiService.register(usuario).enqueue(new Callback<Mensaje>() {
                         @Override
                         public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                            if (response.isSuccessful() && response.body() != null) {
-                                if (response.body().isSuccess()) {
-                                    Toast.makeText(MainActivity.this, "Registro exitoso", Toast.LENGTH_SHORT).show();
-                                    dialog.dismiss();
-                                } else {
-                                    String mensaje = response.body().getMessage();
-                                    if (mensaje == null || mensaje.trim().isEmpty()) {
-                                        mensaje = "Ocurrió un error desconocido.";
-                                    }
-                                    Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_SHORT).show();
-                                }
+                            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                                Toast.makeText(MainActivity.this, "Registro exitoso", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
                             } else {
-                                Toast.makeText(MainActivity.this, "Respuesta inválida", Toast.LENGTH_SHORT).show();
+                                String mensaje = response.body() != null ? response.body().getMessage() : "Respuesta inválida";
+                                Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_SHORT).show();
                             }
                         }
 
@@ -223,9 +240,6 @@ public class MainActivity extends AppCompatActivity {
             toggleTextView.setOnClickListener(v -> {
                 isLoginMode[0] = !isLoginMode[0];
                 if (isLoginMode[0]) {
-                    String email = emailEditText.getText().toString().trim();
-                    String password = passwordEditText.getText().toString().trim();
-                    Log.d("LoginEmail", "Email enviado: " + email);
                     nameEditText.setVisibility(View.GONE);
                     dialog.setTitle("Iniciar Sesión");
                     positiveButton.setText("Entrar");
@@ -241,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
 
     private void actualizarOpcionesMenu(boolean estaLogueado) {
         Menu menu = navigationView.getMenu();
@@ -276,4 +291,18 @@ public class MainActivity extends AppCompatActivity {
         // Cierra el drawer
         drawerLayout.closeDrawers();
     }
+    public void actualizarFotoDrawer(String base64Foto) {
+        if (base64Foto != null && !base64Foto.isEmpty()) {
+            try {
+                byte[] decodedBytes = android.util.Base64.decode(base64Foto, android.util.Base64.DEFAULT);
+                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                navUserImage.setImageBitmap(decodedBitmap);
+            } catch (Exception e) {
+                navUserImage.setImageResource(R.drawable.default_avatar);
+            }
+        } else {
+            navUserImage.setImageResource(R.drawable.default_avatar);
+        }
+    }
+
 }
