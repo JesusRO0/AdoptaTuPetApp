@@ -224,5 +224,15 @@
             android:textAllCaps="false"
             android:fontFamily="sans-serif-medium"
             android:elevation="4dp" />
+        <Button
+            android:id="@+id/btnAñadirAnimal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AÑADIR ANIMAL"
+            android:visibility="gone"
+            android:backgroundTint="?attr/colorSecondary"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="24dp"
+            android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 </ScrollView>

@@ -108,35 +108,9 @@ public class MainActivity extends AppCompatActivity {
             bottomNavigationView.setSelectedItemId(R.id.nav_home);
         }
 
-        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
-        boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
-
-        if (isLoggedIn) {
-            actualizarOpcionesMenu(true);
-            String usuario = prefs.getString("usuario", "Usuario");
-            navUserName.setText("¡Bienvenido " + usuario + "!");
-
-            // Cargar imagen base64 de SharedPreferences y mostrarla en el drawer
-            String base64Foto = prefs.getString("fotoPerfil", null);
-            if (base64Foto != null && !base64Foto.isEmpty()) {
-                try {
-                    byte[] decodedBytes = android.util.Base64.decode(base64Foto, android.util.Base64.DEFAULT);
-                    Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                    navUserImage.setImageBitmap(decodedBitmap);
-                } catch (Exception e) {
-                    navUserImage.setImageResource(R.drawable.default_avatar);
-                }
-            } else {
-                navUserImage.setImageResource(R.drawable.default_avatar);
-            }
-
-        } else {
-            actualizarOpcionesMenu(false);
-            navUserName.setText("¡Bienvenido!");
-            navUserImage.setImageResource(R.drawable.default_avatar);
-        }
+        // Al iniciar la app, carga usuario y actualiza UI (nombre + foto)
+        cargarUsuarioYActualizarUI();
     }
-
 
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction()
@@ -172,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
                 String password = passwordEditText.getText().toString().trim();
 
                 if (isLoginMode[0]) {
-                    Log.d("LoginEmail", "Email enviado: " + email);  // Log correcto
+                    // Modo LOGIN
+                    Log.d("LoginEmail", "Email enviado: " + email);
 
                     Usuario usuario = new Usuario(email, password);
 
@@ -182,21 +157,51 @@ public class MainActivity extends AppCompatActivity {
                             if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                                 Usuario usuario = response.body().getUsuario();
 
+                                String fotoPerfilRaw = usuario.getFotoPerfil();
+                                if (fotoPerfilRaw != null) {
+                                    Log.d("DEBUG_LOGIN_FULL", "FotoPerfil completa (primeros 500 chars): " + fotoPerfilRaw.substring(0, Math.min(500, fotoPerfilRaw.length())));
+                                } else {
+                                    Log.d("DEBUG_LOGIN_FULL", "FotoPerfil es null");
+                                }
+
+                                // Limpieza y formateo de la foto de perfil base64
+                                String fotoPerfil = usuario.getFotoPerfil();
+                                if (fotoPerfil != null) {
+                                    if (fotoPerfil.contains(",")) {
+                                        fotoPerfil = fotoPerfil.substring(fotoPerfil.indexOf(",") + 1);
+                                    }
+                                    fotoPerfil = fotoPerfil.replaceAll("\\s+", "");
+                                    Log.d("FotoPerfilClean", "Longitud fotoPerfil limpia: " + fotoPerfil.length());
+                                }
+
+                                // Guardar datos en SharedPreferences
                                 SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
                                 SharedPreferences.Editor editor = prefs.edit();
                                 editor.putBoolean("isLoggedIn", true);
                                 editor.putInt("idUsuario", usuario.getIdUsuario());
                                 editor.putString("usuario", usuario.getUsuario());
                                 editor.putString("localidad", usuario.getLocalidad());
-                                editor.putString("fotoPerfil", usuario.getFotoPerfil()); // fotoBase64 del backend
+                                editor.putString("fotoPerfil", fotoPerfil); // Guardar la foto limpia
                                 editor.putString("email", usuario.getEmail());
                                 editor.putString("contrasena", usuario.getContrasena());
                                 editor.apply();
+                                Log.d("DEBUG_LOGIN", "FotoPerfil guardada en SharedPreferences");
 
+                                // Actualizar UI del drawer
                                 navUserName.setText("¡Bienvenido " + usuario.getUsuario() + "!");
-                                navUserImage.setImageResource(R.drawable.default_avatar);
-
+                                actualizarFotoDrawer(fotoPerfil);
                                 actualizarOpcionesMenu(true);
+
+                                // Actualizar perfil si está visible
+                                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+                                if (currentFragment instanceof PerfilFragment) {
+                                    ((PerfilFragment) currentFragment).actualizarImagenPerfilDesdePrefs();
+                                }
+
+                                // Dentro de onResponse, tras limpiar fotoPerfil:
+                                Log.d("DEBUG_LOGIN", "FotoPerfil recibida (limpia), longitud: " + (fotoPerfil != null ? fotoPerfil.length() : "null"));
+                                Log.d("DEBUG_LOGIN", "FotoPerfil primeros 30 chars: " + (fotoPerfil != null && fotoPerfil.length() > 30 ? fotoPerfil.substring(0,30) : fotoPerfil));
+
 
                                 Toast.makeText(MainActivity.this, "Bienvenido " + usuario.getUsuario(), Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
@@ -213,8 +218,12 @@ public class MainActivity extends AppCompatActivity {
                     });
 
                 } else {
-                    // Registro (sin cambios)
+                    // Modo REGISTRO
                     String nombre = nameEditText.getText().toString().trim();
+                    if (nombre.isEmpty()) {
+                        Toast.makeText(MainActivity.this, "Por favor ingresa un nombre", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     Usuario usuario = new Usuario(email, nombre, "Sin localidad", password);
 
                     apiService.register(usuario).enqueue(new Callback<Mensaje>() {
@@ -264,45 +273,110 @@ public class MainActivity extends AppCompatActivity {
         menu.findItem(R.id.nav_logout).setVisible(estaLogueado);
         menu.findItem(R.id.nav_login).setVisible(!estaLogueado);
 
-        // 👇 Fuerza el redibujado del NavigationView
         navigationView.invalidate();
     }
 
     private void cerrarSesion() {
-        navUserName.setText("¡Bienvenido!");
-        navUserImage.setImageResource(R.drawable.default_avatar);
-        actualizarOpcionesMenu(false);
-
-        // Limpia SharedPreferences (sesión)
         SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
         prefs.edit().clear().apply();
 
-        // Limpia el back stack para evitar volver al perfil
-        getSupportFragmentManager().popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        Menu menu = navigationView.getMenu();
+        menu.clear();
+        navigationView.inflateMenu(R.menu.drawer_menu);
 
-        // Cambia a HomeFragment
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.nav_host_fragment, new HomeFragment())
-                .commit();
+        actualizarOpcionesMenu(false);
+
+        navUserName.setText("¡Bienvenido!");
+        navUserImage.setImageResource(R.drawable.default_avatar);
+
+        getSupportFragmentManager().popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        loadFragment(new HomeFragment());
 
         Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
 
-        // Cierra el drawer
         drawerLayout.closeDrawers();
     }
+
     public void actualizarFotoDrawer(String base64Foto) {
-        if (base64Foto != null && !base64Foto.isEmpty()) {
-            try {
-                byte[] decodedBytes = android.util.Base64.decode(base64Foto, android.util.Base64.DEFAULT);
-                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                navUserImage.setImageBitmap(decodedBitmap);
-            } catch (Exception e) {
-                navUserImage.setImageResource(R.drawable.default_avatar);
+        View headerView = navigationView.getHeaderView(0);
+        ImageView navUserImage = headerView.findViewById(R.id.nav_user_image);
+
+        Log.d("DEBUG_DRAWER", "actualizarFotoDrawer llamada");
+        Log.d("DEBUG_DRAWER", "Base64 recibido (longitud): " +
+                (base64Foto != null ? base64Foto.length() : "null"));
+
+        if (base64Foto == null || base64Foto.trim().isEmpty()) {
+            navUserImage.setImageResource(R.drawable.default_avatar);
+            Log.d("DEBUG_DRAWER", "Cadena vacía o null, pongo avatar por defecto.");
+            return;
+        }
+
+        // 1) Limpieza: solo si realmente trae un prefijo data:, y
+        //    eliminamos posibles saltos de línea o espacios.
+        if (base64Foto.contains("base64,")) {
+            base64Foto = base64Foto.substring(base64Foto.indexOf("base64,") + 7);
+        }
+        base64Foto = base64Foto.replaceAll("\\s+", "");
+
+        // 2) Decodificar con NO_WRAP (mantiene la cadena intacta)
+        byte[] decodedBytes;
+        try {
+            decodedBytes = android.util.Base64.decode(base64Foto, android.util.Base64.NO_WRAP);
+        } catch (IllegalArgumentException e) {
+            Log.e("DEBUG_DRAWER", "Error al decodificar Base64", e);
+            navUserImage.setImageResource(R.drawable.default_avatar);
+            return;
+        }
+
+        Log.d("DEBUG_DRAWER", "Bytes decodificados: " + decodedBytes.length);
+
+        // 3) Imprimimos los primeros 4 bytes en hexadecimal para comprobar el 'magic number'
+        if (decodedBytes.length >= 4) {
+            StringBuilder magic = new StringBuilder();
+            for (int i = 0; i < 4; i++) {
+                magic.append(String.format("%02X ", decodedBytes[i]));
             }
+            Log.d("DEBUG_DRAWER", "Magic bytes: " + magic.toString().trim());
+            // PNG debería empezar: 89 50 4E 47
+            // JPEG debería empezar: FF D8 FF E0 (o similar)
         } else {
+            Log.e("DEBUG_DRAWER", "decodedBytes demasiado corto para ser imagen válida");
+        }
+
+        // 4) Intentamos convertir a Bitmap
+        Bitmap bmp = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        if (bmp == null) {
+            Log.e("DEBUG_DRAWER", "BitmapFactory.decodeByteArray devolvió null");
+            navUserImage.setImageResource(R.drawable.default_avatar);
+        } else {
+            navUserImage.setImageBitmap(bmp);
+            Log.d("DEBUG_DRAWER", "Bitmap cargado y aplicado correctamente.");
+        }
+    }
+
+
+    private void cargarUsuarioYActualizarUI() {
+        SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
+        boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
+        actualizarOpcionesMenu(isLoggedIn);
+
+        if (isLoggedIn) {
+            String usuario = prefs.getString("usuario", "Usuario");
+            String fotoPerfil = prefs.getString("fotoPerfil", null);
+
+            navUserName.setText("¡Bienvenido " + usuario + "!");
+
+            actualizarFotoDrawer(fotoPerfil);
+
+        } else {
+            navUserName.setText("¡Bienvenido!");
             navUserImage.setImageResource(R.drawable.default_avatar);
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        cargarUsuarioYActualizarUI();
+    }
 }

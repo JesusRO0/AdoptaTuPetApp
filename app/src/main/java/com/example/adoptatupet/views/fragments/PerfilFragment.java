@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +46,7 @@ public class PerfilFragment extends Fragment {
     private EditText editTextNombre, editTextEmail, editTextPassword, editTextLocalidad;
     private Button btnGuardar, btnCambiarFoto;
     private Button btnEditarNombre, btnEditarEmail, btnEditarPassword, btnEditarLocalidad;
+    private Button btnAñadirAnimal; // Nuevo botón para admin
 
     // Guarda la imagen actual codificada en Base64 para enviar al backend
     private String imagenBase64 = null;
@@ -56,7 +58,7 @@ public class PerfilFragment extends Fragment {
                     imageViewPerfil.setImageURI(selectedImage);
                     convertirImagenABase64(selectedImage);
 
-                    // Aquí llama a método para guardar cambios con la nueva foto
+                    // Guarda la foto automáticamente
                     guardarFotoDirecta();
                 }
             });
@@ -88,6 +90,8 @@ public class PerfilFragment extends Fragment {
         btnEditarPassword = view.findViewById(R.id.btnEditarPassword);
         btnEditarLocalidad = view.findViewById(R.id.btnEditarLocalidad);
 
+        btnAñadirAnimal = view.findViewById(R.id.btnAñadirAnimal); // Inicializa el botón nuevo
+
         cargarDatosUsuario();
 
         btnCambiarFoto.setOnClickListener(v -> seleccionarImagen());
@@ -99,8 +103,27 @@ public class PerfilFragment extends Fragment {
 
         btnGuardar.setOnClickListener(v -> guardarCambios());
 
+        // Mostrar botón Añadir Animal solo si el usuario es admin
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
+        String email = prefs.getString("email", "");
+        if ("admin@gmail.com".equalsIgnoreCase(email)) {
+            btnAñadirAnimal.setVisibility(View.VISIBLE);
+        } else {
+            btnAñadirAnimal.setVisibility(View.GONE);
+        }
+
+        btnAñadirAnimal.setOnClickListener(v -> {
+            // Navegar a AddAnimalFragment
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.nav_host_fragment, new AddAnimalFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         return view;
     }
+
+    // --- El resto de métodos que ya tienes (toggleEditCancel, cargarDatosUsuario, seleccionarImagen, convertirImagenABase64, guardarCambios, guardarFotoDirecta) ---
 
     private void toggleEditCancel(TextView tv, EditText et, Button btn) {
         if (et.getVisibility() == View.GONE) {
@@ -123,7 +146,7 @@ public class PerfilFragment extends Fragment {
         }
     }
 
-    private void cargarDatosUsuario() {
+    public  void cargarDatosUsuario() {
         SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
 
         String nombre = prefs.getString("usuario", "");
@@ -222,9 +245,13 @@ public class PerfilFragment extends Fragment {
                     editor.putString("email", email);
                     editor.putString("contrasena", password);
                     editor.putString("localidad", localidad);
-                    editor.putString("fotoPerfil", imagenBase64); // Actualizamos la foto guardada localmente
+                    String imagenBase64Limpia = imagenBase64.replaceAll("\\s+", "");
+                    editor.putString("fotoPerfil", imagenBase64Limpia);
                     editor.apply();
 
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).actualizarFotoDrawer(imagenBase64Limpia);
+                    }
                     Toast.makeText(getContext(), "Datos actualizados", Toast.LENGTH_SHORT).show();
 
                     // Ocultar inputs y mostrar TextViews actualizados
@@ -267,7 +294,6 @@ public class PerfilFragment extends Fragment {
             return;
         }
 
-        // Obtén los valores actuales guardados, para enviarlos junto a la foto
         String nombre = prefs.getString("usuario", "");
         String email = prefs.getString("email", "");
         String password = prefs.getString("contrasena", "");
@@ -279,7 +305,7 @@ public class PerfilFragment extends Fragment {
         usuario.setEmail(email);
         usuario.setContrasena(password);
         usuario.setLocalidad(localidad);
-        usuario.setFotoPerfil(imagenBase64); // La nueva imagen en base64
+        usuario.setFotoPerfil(imagenBase64);
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
         apiService.updateUsuario(usuario).enqueue(new Callback<Mensaje>() {
@@ -291,10 +317,11 @@ public class PerfilFragment extends Fragment {
                     editor.apply();
 
                     Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
+
+                    // Aquí llamamos a actualizar la foto en el drawer con la variable correcta
                     if (getActivity() instanceof MainActivity) {
                         ((MainActivity) getActivity()).actualizarFotoDrawer(imagenBase64);
                     }
-
                 } else {
                     Toast.makeText(getContext(), "Error al actualizar la foto", Toast.LENGTH_SHORT).show();
                 }
@@ -306,5 +333,20 @@ public class PerfilFragment extends Fragment {
             }
         });
     }
-
+    public void actualizarImagenPerfilDesdePrefs() {
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
+        String base64Foto = prefs.getString("fotoPerfil", null);
+        if (base64Foto != null && !base64Foto.isEmpty()) {
+            base64Foto = base64Foto.replaceAll("\\s+", "");
+            try {
+                byte[] decodedBytes = Base64.decode(base64Foto, Base64.DEFAULT);
+                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                imageViewPerfil.setImageBitmap(decodedBitmap);
+            } catch (Exception e) {
+                imageViewPerfil.setImageResource(R.drawable.default_avatar);
+            }
+        } else {
+            imageViewPerfil.setImageResource(R.drawable.default_avatar);
+        }
+    }
 }
