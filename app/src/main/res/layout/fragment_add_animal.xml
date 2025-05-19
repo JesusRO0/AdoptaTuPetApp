@@ -1,6 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:fillViewport="true"
+    android:background="@color/white">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="80dp">
+
+        <!-- Botón para volver al perfil -->
+        <Button
+            android:id="@+id/btnVolver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="← Volver"
+            android:textAllCaps="false"
+            android:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Nombre -->
+        <EditText
+            android:id="@+id/editTextAnimalNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nombre" />
+
+        <!-- Especie -->
+        <EditText
+            android:id="@+id/editTextEspecie"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Especie" />
+
+        <!-- Raza -->
+        <EditText
+            android:id="@+id/editTextRaza"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Raza" />
+
+        <!-- Edad -->
+        <EditText
+            android:id="@+id/editTextEdad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Edad" />
+
+        <!-- Localidad -->
+        <EditText
+            android:id="@+id/editTextLocalidadAnimal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Localidad" />
+
+        <!-- Sexo -->
+        <EditText
+            android:id="@+id/editTextSexo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Sexo" />
+
+        <!-- Tamaño -->
+        <EditText
+            android:id="@+id/editTextTamano"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Tamaño" />
+
+        <!-- Descripción -->
+        <EditText
+            android:id="@+id/editTextDescripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Descripción"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
+
+        <!-- Imagen -->
+        <ImageView
+            android:id="@+id/imageViewAnimal"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/default_avatar"
+            android:scaleType="centerCrop"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"/>
+
+        <Button
+            android:id="@+id/btnSeleccionarImagenAnimal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Seleccionar Imagen"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"/>
+
+        <!-- Botón de enviar -->
+        <Button
+            android:id="@+id/btnEnviarAnimal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Añadir Animal"
+            android:backgroundTint="?attr/colorSecondary"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="24dp"/>
+    </LinearLayout>
+</ScrollView>

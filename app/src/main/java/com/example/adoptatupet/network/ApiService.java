@@ -1,5 +1,6 @@
 package com.example.adoptatupet.network;
 
+import com.example.adoptatupet.models.Animal;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.models.Mensaje;
 import retrofit2.Call;
@@ -16,4 +17,7 @@ public interface ApiService {
 
     @POST("update_usuario.php")
     Call<Mensaje> updateUsuario(@Body Usuario usuario);
+
+    @POST("add_animal.php")
+    Call<Mensaje> addAnimal(@Body Animal animal);
 }

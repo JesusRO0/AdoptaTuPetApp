@@ -44,10 +44,6 @@ public class AdoptaFragment extends Fragment {
     }
 
     private void loadAnimals() {
-        // Aquí puedes cargar los animales desde una base de datos, API, etc.
-        animalList.add(new Animal("Perro 1", "Descripción 1", R.drawable.perro_1));
-        animalList.add(new Animal("Gato 2", "Descripción 2", R.drawable.gato_1));
-        // Añadir más animales según sea necesario
 
         adapter.notifyDataSetChanged();
     }
