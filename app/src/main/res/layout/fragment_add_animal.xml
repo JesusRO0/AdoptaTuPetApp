@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollAddAnimal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
@@ -7,12 +8,13 @@
     android:background="@color/white">
 
     <LinearLayout
+        android:id="@+id/llAddAnimal"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="80dp">
 
-        <!-- Botón para volver al perfil -->
+        <!-- ← Volver -->
         <Button
             android:id="@+id/btnVolver"
             android:layout_width="wrap_content"
@@ -31,46 +33,139 @@
             android:hint="Nombre" />
 
         <!-- Especie -->
-        <EditText
-            android:id="@+id/editTextEspecie"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Especie:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+        <RadioGroup
+            android:id="@+id/rgEspecie"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Especie" />
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbPerro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Perro"/>
+            <RadioButton
+                android:id="@+id/rbGato"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gato"
+                android:layout_marginStart="24dp"/>
+        </RadioGroup>
 
         <!-- Raza -->
         <EditText
             android:id="@+id/editTextRaza"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Raza" />
+            android:hint="Raza"
+            android:layout_marginTop="12dp"/>
 
         <!-- Edad -->
-        <EditText
-            android:id="@+id/editTextEdad"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edad:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+        <RadioGroup
+            android:id="@+id/rgEdad"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Edad" />
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbCachorro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cachorro"/>
+            <RadioButton
+                android:id="@+id/rbJoven"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Joven"
+                android:layout_marginStart="24dp"/>
+            <RadioButton
+                android:id="@+id/rbAdulto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Adulto"
+                android:layout_marginStart="24dp"/>
+        </RadioGroup>
 
         <!-- Localidad -->
-        <EditText
-            android:id="@+id/editTextLocalidadAnimal"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Localidad:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerLocalidadAnimal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Localidad" />
+            android:layout_marginTop="4dp"
+            android:entries="@array/spain_localities"/>
 
         <!-- Sexo -->
-        <EditText
-            android:id="@+id/editTextSexo"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sexo:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+        <RadioGroup
+            android:id="@+id/rgSexo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Sexo" />
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbMacho"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Macho"/>
+            <RadioButton
+                android:id="@+id/rbHembra"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hembra"
+                android:layout_marginStart="24dp"/>
+        </RadioGroup>
 
         <!-- Tamaño -->
-        <EditText
-            android:id="@+id/editTextTamano"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tamaño:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+        <RadioGroup
+            android:id="@+id/rgTamano"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Tamaño" />
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/rbPequeno"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pequeño"/>
+            <RadioButton
+                android:id="@+id/rbMediano"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mediano"
+                android:layout_marginStart="24dp"/>
+            <RadioButton
+                android:id="@+id/rbGrande"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grande"
+                android:layout_marginStart="24dp"/>
+        </RadioGroup>
 
         <!-- Descripción -->
         <EditText
@@ -79,7 +174,8 @@
             android:layout_height="wrap_content"
             android:hint="Descripción"
             android:inputType="textMultiLine"
-            android:minLines="3" />
+            android:minLines="3"
+            android:layout_marginTop="12dp"/>
 
         <!-- Imagen -->
         <ImageView
@@ -99,7 +195,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="8dp"/>
 
-        <!-- Botón de enviar -->
+        <!-- Enviar -->
         <Button
             android:id="@+id/btnEnviarAnimal"
             android:layout_width="match_parent"
@@ -108,5 +204,6 @@
             android:backgroundTint="?attr/colorSecondary"
             android:textColor="@android:color/white"
             android:layout_marginTop="24dp"/>
+
     </LinearLayout>
 </ScrollView>
