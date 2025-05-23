@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,13 +28,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.adoptatupet.R;
+import com.example.adoptatupet.controllers.AnimalController;
 import com.example.adoptatupet.models.Animal;
 import com.example.adoptatupet.models.Mensaje;
-import com.example.adoptatupet.network.ApiClient;
-import com.example.adoptatupet.network.ApiService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -41,89 +44,137 @@ import retrofit2.Response;
 
 /**
  * Fragment para añadir un nuevo animal.
- * Incluye selección de especie, edad, sexo y tamaño con RadioGroups,
- * validación de campos y envío al servidor.
+ * - Especie: Perro / Gato (RadioGroup)
+ * - Raza: Spinner dinámico según especie
+ * - Edad: Cachorro / Joven / Adulto (RadioGroup)
+ * - Localidad: Spinner con placeholder y lista de España
+ * - Sexo: Macho / Hembra (RadioGroup)
+ * - Tamaño: Pequeño / Mediano / Grande (RadioGroup)
+ * - Descripción: EditText
+ * - Imagen: galería -> Base64
+ * - Validación de todos los campos y envío al servidor
  */
 public class AddAnimalFragment extends Fragment {
 
-    private EditText etNombre, etRaza, etLocalidad, etDescripcion;
-    private RadioGroup rgEspecie, rgEdad, rgSexo, rgTamanoGroup;
-    private Spinner spinnerLocalidad;
+    private Spinner     spinnerLocalidad, spinnerRaza;
+    private RadioGroup  rgEspecie, rgEdad, rgSexo, rgTamano;
     private RadioButton rbPerro, rbGato, rbCachorro, rbJoven, rbAdulto, rbMacho, rbHembra, rbPequeno, rbMediano, rbGrande;
-    private ImageView ivFoto;
-    private Button btnSeleccionarImagenAnimal, btnEnviarAnimal, btnVolver;
-    private String imagenBase64 = null;
+    private EditText    etDescripcion;
+    private ImageView   ivFoto;
+    private Button      btnSeleccionarImagen, btnEnviarAnimal, btnVolver;
+    private String      imagenBase64 = null;
 
     // Lanzador para seleccionar imagen de la galería
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
-            registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == requireActivity().RESULT_OK
-                                && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            ivFoto.setImageURI(uri);
-                            convertirImagenABase64(uri);
-                        }
-                    }
-            );
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == requireActivity().RESULT_OK && result.getData() != null) {
+                    Uri uri = result.getData().getData();
+                    ivFoto.setImageURI(uri);
+                    convertirImagenABase64(uri);
+                }
+            });
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // 1) Inflar layout
         View view = inflater.inflate(R.layout.fragment_add_animal, container, false);
 
-        // 2) Inicializar vistas y variables
-        etNombre = view.findViewById(R.id.editTextAnimalNombre);
-        rgEspecie = view.findViewById(R.id.rgEspecie);
-        rbPerro = view.findViewById(R.id.rbPerro);
-        rbGato  = view.findViewById(R.id.rbGato);
+        // 1) Referencias a vistas
+        spinnerLocalidad      = view.findViewById(R.id.spinnerLocalidadAnimal);
+        spinnerRaza           = view.findViewById(R.id.spinnerRaza);
 
-        etRaza = view.findViewById(R.id.editTextRaza);
+        rgEspecie             = view.findViewById(R.id.rgEspecie);
+        rbPerro               = view.findViewById(R.id.rbPerro);
+        rbGato                = view.findViewById(R.id.rbGato);
 
-        rgEdad = view.findViewById(R.id.rgEdad);
-        rbCachorro = view.findViewById(R.id.rbCachorro);
-        rbJoven    = view.findViewById(R.id.rbJoven);
-        rbAdulto   = view.findViewById(R.id.rbAdulto);
+        rgEdad                = view.findViewById(R.id.rgEdad);
+        rbCachorro            = view.findViewById(R.id.rbCachorro);
+        rbJoven               = view.findViewById(R.id.rbJoven);
+        rbAdulto              = view.findViewById(R.id.rbAdulto);
 
-        // 1) Referencias a vistas...
-        spinnerLocalidad = view.findViewById(R.id.spinnerLocalidadAnimal);
+        rgSexo                = view.findViewById(R.id.rgSexo);
+        rbMacho               = view.findViewById(R.id.rbMacho);
+        rbHembra              = view.findViewById(R.id.rbHembra);
 
-        // 2) Configuramos el adapter
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+        rgTamano              = view.findViewById(R.id.rgTamano);
+        rbPequeno             = view.findViewById(R.id.rbPequeno);
+        rbMediano             = view.findViewById(R.id.rbMediano);
+        rbGrande              = view.findViewById(R.id.rbGrande);
+
+        etDescripcion         = view.findViewById(R.id.editTextDescripcion);
+        ivFoto                = view.findViewById(R.id.imageViewAnimal);
+
+        btnSeleccionarImagen  = view.findViewById(R.id.btnSeleccionarImagenAnimal);
+        btnEnviarAnimal       = view.findViewById(R.id.btnEnviarAnimal);
+        btnVolver             = view.findViewById(R.id.btnVolver);
+
+        // 2) Spinner Localidad con placeholder
+        String[] baseLocs = getResources().getStringArray(R.array.spain_localities);
+        List<String> locList = new ArrayList<>();
+        locList.add("Selecciona localidad");
+        locList.addAll(Arrays.asList(baseLocs));
+        ArrayAdapter<String> locAdapter = new ArrayAdapter<String>(
                 requireContext(),
-                R.array.spain_localities,
-                android.R.layout.simple_spinner_item
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerLocalidad.setAdapter(adapter);
+                android.R.layout.simple_spinner_item,
+                locList
+        ) {
+            @Override public boolean isEnabled(int position) {
+                return position != 0;
+            }
+            @Override public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                View v = super.getDropDownView(position, convertView, parent);
+                TextView tv = (TextView)v;
+                tv.setTextColor(position == 0 ? 0xFF888888 : 0xFF000000);
+                return v;
+            }
+        };
+        locAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerLocalidad.setAdapter(locAdapter);
+        spinnerLocalidad.setSelection(0);
 
-        rgSexo = view.findViewById(R.id.rgSexo);
-        rbMacho  = view.findViewById(R.id.rbMacho);
-        rbHembra = view.findViewById(R.id.rbHembra);
+        // 3) Spinner Raza dinámico según especie
+        spinnerRaza.setAdapter(new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                new String[]{"Selecciona especie primero"}
+        ));
 
-        rgTamanoGroup = view.findViewById(R.id.rgTamano);
-        rbPequeno = view.findViewById(R.id.rbPequeno);
-        rbMediano = view.findViewById(R.id.rbMediano);
-        rbGrande  = view.findViewById(R.id.rbGrande);
+        rgEspecie.setOnCheckedChangeListener((group, checkedId) -> {
+            String[] base = (checkedId == R.id.rbPerro)
+                    ? getResources().getStringArray(R.array.dog_breeds)
+                    : getResources().getStringArray(R.array.cat_breeds);
 
-        etDescripcion = view.findViewById(R.id.editTextDescripcion);
+            List<String> razaList = new ArrayList<>();
+            razaList.add("Selecciona raza");
+            razaList.addAll(Arrays.asList(base));
 
-        ivFoto = view.findViewById(R.id.imageViewAnimal);
-        btnSeleccionarImagenAnimal = view.findViewById(R.id.btnSeleccionarImagenAnimal);
-        btnEnviarAnimal = view.findViewById(R.id.btnEnviarAnimal);
-        btnVolver      = view.findViewById(R.id.btnVolver);
+            ArrayAdapter<String> razaAdapter = new ArrayAdapter<String>(
+                    requireContext(),
+                    android.R.layout.simple_spinner_item,
+                    razaList
+            ) {
+                @Override public boolean isEnabled(int position) {
+                    return position != 0;
+                }
+                @Override public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View v = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView)v;
+                    tv.setTextColor(position == 0 ? 0xFF888888 : 0xFF000000);
+                    return v;
+                }
+            };
+            razaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerRaza.setAdapter(razaAdapter);
+            spinnerRaza.setSelection(0);
+        });
 
-        // 3) Configurar listeners
-        btnSeleccionarImagenAnimal.setOnClickListener(v ->
+        // 4) Listeners de botones
+        btnSeleccionarImagen.setOnClickListener(v ->
                 imagePickerLauncher.launch(
                         new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 )
         );
-
         btnEnviarAnimal.setOnClickListener(v -> validarYEnviar());
         btnVolver.setOnClickListener(v ->
                 requireActivity().getSupportFragmentManager().popBackStack()
@@ -132,9 +183,7 @@ public class AddAnimalFragment extends Fragment {
         return view;
     }
 
-    /**
-     * Convierte la URI seleccionada a Base64 (sin saltos de línea).
-     */
+    /** Convierte URI a Base64 (sin saltos de línea) */
     private void convertirImagenABase64(Uri uri) {
         try {
             Bitmap bmp = MediaStore.Images.Media.getBitmap(
@@ -151,33 +200,22 @@ public class AddAnimalFragment extends Fragment {
         }
     }
 
-    /**
-     * Valida todos los campos y envía el objeto Animal al servidor.
-     */
+    /** Valida todos los campos y envía el objeto Animal al servidor */
     private void validarYEnviar() {
-        // Nombre
-        String nombre = etNombre.getText().toString().trim();
-        if (TextUtils.isEmpty(nombre)) {
-            etNombre.setError("Requerido");
-            etNombre.requestFocus();
-            return;
-        }
-
         // Especie
         int selEsp = rgEspecie.getCheckedRadioButtonId();
         if (selEsp == -1) {
             Toast.makeText(getContext(), "Selecciona la especie", Toast.LENGTH_SHORT).show();
             return;
         }
-        String especie = selEsp == R.id.rbPerro ? "Perro" : "Gato";
+        String especie = (selEsp == R.id.rbPerro) ? "Perro" : "Gato";
 
         // Raza
-        String raza = etRaza.getText().toString().trim();
-        if (TextUtils.isEmpty(raza)) {
-            etRaza.setError("Requerido");
-            etRaza.requestFocus();
+        if (spinnerRaza.getSelectedItemPosition() == 0) {
+            Toast.makeText(getContext(), "Selecciona la raza", Toast.LENGTH_SHORT).show();
             return;
         }
+        String raza = spinnerRaza.getSelectedItem().toString();
 
         // Edad
         int selEdad = rgEdad.getCheckedRadioButtonId();
@@ -190,11 +228,11 @@ public class AddAnimalFragment extends Fragment {
                 : "Adulto";
 
         // Localidad
-        String localidad = spinnerLocalidad.getSelectedItem().toString();
-        if (TextUtils.isEmpty(localidad)) {
-            Toast.makeText(getContext(),"Selecciona la localidad",Toast.LENGTH_SHORT).show();
+        if (spinnerLocalidad.getSelectedItemPosition() == 0) {
+            Toast.makeText(getContext(), "Selecciona la localidad", Toast.LENGTH_SHORT).show();
             return;
         }
+        String localidad = spinnerLocalidad.getSelectedItem().toString();
 
         // Sexo
         int selSexo = rgSexo.getCheckedRadioButtonId();
@@ -202,10 +240,10 @@ public class AddAnimalFragment extends Fragment {
             Toast.makeText(getContext(), "Selecciona el sexo", Toast.LENGTH_SHORT).show();
             return;
         }
-        String sexo = selSexo == R.id.rbMacho ? "Macho" : "Hembra";
+        String sexo = (selSexo == R.id.rbMacho) ? "Macho" : "Hembra";
 
         // Tamaño
-        int selTam = rgTamanoGroup.getCheckedRadioButtonId();
+        int selTam = rgTamano.getCheckedRadioButtonId();
         if (selTam == -1) {
             Toast.makeText(getContext(), "Selecciona el tamaño", Toast.LENGTH_SHORT).show();
             return;
@@ -237,9 +275,9 @@ public class AddAnimalFragment extends Fragment {
             return;
         }
 
-        // Construir Animal
+        // Construir Animal (usamos raza también como nombre)
         Animal animal = new Animal(
-                nombre,
+                raza,
                 especie,
                 raza,
                 edad,
@@ -251,26 +289,19 @@ public class AddAnimalFragment extends Fragment {
                 idUsuario
         );
 
-        // Enviar al servidor
-        ApiService api = ApiClient.getClient().create(ApiService.class);
-        api.addAnimal(animal).enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(),
-                            "Animal añadido con éxito", Toast.LENGTH_SHORT).show();
-                    requireActivity().getSupportFragmentManager().popBackStack();
-                } else {
-                    Toast.makeText(getContext(),
-                            "Error al añadir animal", Toast.LENGTH_SHORT).show();
-                }
-            }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
-                Toast.makeText(getContext(),
-                        "Fallo en servidor: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Enviar al servidor con AnimalController
+        AnimalController.getInstance(requireContext())
+                .addAnimal(animal, new AnimalController.AnimalCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(getContext(),
+                                "Animal añadido con éxito", Toast.LENGTH_SHORT).show();
+                        requireActivity().getSupportFragmentManager().popBackStack();
+                    }
+                    @Override
+                    public void onError(String message) {
+                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

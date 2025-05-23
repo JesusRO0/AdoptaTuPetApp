@@ -1,16 +1,29 @@
 package com.example.adoptatupet.models;
 
+import com.google.gson.annotations.Expose;
+
 public class Animal {
+    @Expose
     private int idAnimal;       // Se ignora al crear (AUTO_INCREMENT)
+    @Expose
     private String nombre;
+    @Expose
     private String especie;
+    @Expose
     private String raza;
+    @Expose
     private String edad;
+    @Expose
     private String localidad;
+    @Expose
     private String sexo;
+    @Expose
     private String tamano;
+    @Expose
     private String descripcion;
+    @Expose
     private String imagen;      // Base64
+    @Expose
     private int idUsuario;      // FK con usuario logueado
 
     public Animal() {}

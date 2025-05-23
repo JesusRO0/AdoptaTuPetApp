@@ -58,12 +58,18 @@
         </RadioGroup>
 
         <!-- Raza -->
-        <EditText
-            android:id="@+id/editTextRaza"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Raza:"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerRaza"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Raza"
-            android:layout_marginTop="12dp"/>
+            android:layout_marginTop="4dp"/>
 
         <!-- Edad -->
         <TextView

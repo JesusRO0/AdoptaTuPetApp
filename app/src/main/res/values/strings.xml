@@ -27,6 +27,8 @@
         <item>Burgos</item>
         <item>Cáceres</item>
         <item>Cádiz</item>
+        <item>Ceuta</item>
+        <item>Melilla</item>
         <item>Cantabria</item>
         <item>Castellón</item>
         <item>Ciudad Real</item>
@@ -66,4 +68,33 @@
         <item>Zamora</item>
         <item>Zaragoza</item>
     </string-array>
+        <!-- Razas de perro -->
+        <string-array name="dog_breeds">
+            <item>Labrador Retriever</item>
+            <item>Pastor Alemán</item>
+            <item>Golden Retriever</item>
+            <item>Bulldog Francés</item>
+            <item>Beagle</item>
+            <item>Poodle</item>
+            <item>Rottweiler</item>
+            <item>Yorkshire Terrier</item>
+            <item>Boxer</item>
+            <item>Dachshund</item>
+            <item>Chihuahua</item>
+            <item>Otros</item>
+        </string-array>
+        <!-- Razas de gato -->
+        <string-array name="cat_breeds">
+            <item>Siames</item>
+            <item>Maine Coon</item>
+            <item>Persa</item>
+            <item>Bengala</item>
+            <item>Sphynx</item>
+            <item>Ragdoll</item>
+            <item>Abisinio</item>
+            <item>Exótico</item>
+            <item>British Shorthair</item>
+            <item>Noruego</item>
+            <item>Otros</item>
+        </string-array>
 </resources>
