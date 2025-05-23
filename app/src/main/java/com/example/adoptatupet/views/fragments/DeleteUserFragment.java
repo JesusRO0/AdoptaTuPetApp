@@ -17,10 +17,14 @@ import com.example.adoptatupet.R;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,13 +32,13 @@ import retrofit2.Response;
 public class DeleteUserFragment extends Fragment {
 
     private EditText etEmailEliminar;
-    private Button btnEliminarUsuario, btnVolverEliminar;
+    private Button   btnEliminarUsuario, btnVolverEliminar;
+    private final Gson gson = new Gson();
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                             @Nullable ViewGroup   container,
+                             @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_delete_user, container, false);
 
         etEmailEliminar    = view.findViewById(R.id.etEmailEliminar);
@@ -61,27 +65,49 @@ public class DeleteUserFragment extends Fragment {
     private void eliminarUsuario(String email) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
 
-        // Preparamos el Map con el campo "email"
         Map<String,String> body = Collections.singletonMap("email", email);
-
         api.deleteUserEmail(body).enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
-                if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
-                    Toast.makeText(getContext(),
-                            "Usuario eliminado", Toast.LENGTH_SHORT).show();
-                    requireActivity().getSupportFragmentManager().popBackStack();
+            @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                // Si el body viene en 200 OK o en error HTTP, lo intentamos parsear
+                if (resp.isSuccessful() && resp.body() != null) {
+                    // 200 OK con JSON
+                    mostrarMensaje(resp.body());
                 } else {
-                    String msg = (resp.body()!=null ? resp.body().getMessage() : "Error al eliminar");
-                    Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                    // Error HTTP: obtenemos el errorBody y parseamos
+                    ResponseBody err = resp.errorBody();
+                    if (err != null) {
+                        try {
+                            String json = err.string();
+                            Mensaje m = gson.fromJson(json, Mensaje.class);
+                            mostrarMensaje(m);
+                        } catch (IOException | JsonSyntaxException e) {
+                            Toast.makeText(getContext(),
+                                    "Error al procesar la respuesta",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getContext(),
+                                "Error inesperado",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
+            @Override public void onFailure(Call<Mensaje> call, Throwable t) {
                 Toast.makeText(getContext(),
-                        "Fallo en servidor: "+t.getMessage(),
+                        "Fallo en servidor: " + t.getMessage(),
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void mostrarMensaje(Mensaje m) {
+        // Mostrar siempre el mensaje
+        Toast.makeText(getContext(),
+                m.getMessage(),
+                Toast.LENGTH_SHORT).show();
+        // Si ha sido éxito, volvemos atrás
+        if (m.isSuccess()) {
+            requireActivity().getSupportFragmentManager().popBackStack();
+        }
     }
 }

@@ -340,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Carga el usuario desde prefs y actualiza el drawer (nombre + foto).
      */
-    private void cargarUsuarioYActualizarUI() {
+    public void cargarUsuarioYActualizarUI() {
         Usuario u = usuarioController.loadFromPrefs();
         if (u != null) {
             navUserName.setText("¡Bienvenido " + u.getUsuario() + "!");

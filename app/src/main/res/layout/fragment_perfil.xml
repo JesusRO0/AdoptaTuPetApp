@@ -224,6 +224,20 @@
             android:textAllCaps="false"
             android:fontFamily="sans-serif-medium"
             android:elevation="4dp" />
+
+        <!-- Botón para borrar cuenta -->
+        <Button
+            android:id="@+id/btnBorrarCuenta"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="BORRAR CUENTA"
+            android:textAllCaps="false"
+            android:backgroundTint="#D32F2F"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:elevation="2dp" />
+
         <!-- Botón para añadir un animal -->
         <Button
             android:id="@+id/btnAñadirAnimal"
@@ -237,6 +251,7 @@
             android:textAllCaps="true"
             android:fontFamily="sans-serif-medium"
             android:elevation="4dp" />
+
         <!-- Botón para eliminar usuarios -->
         <Button
             android:id="@+id/btnEliminarUsuario"

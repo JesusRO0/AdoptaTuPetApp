@@ -22,6 +22,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.adoptatupet.R;
@@ -29,10 +30,10 @@ import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
-import com.example.adoptatupet.views.MainActivity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collections;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -40,29 +41,25 @@ import retrofit2.Response;
 
 /**
  * PerfilFragment: muestra y permite editar los datos del usuario.
- * Si el email guardado es admin@gmail.com, muestra un botón "AÑADIR ANIMAL"
- * que navega a AddAnimalFragment.
  */
 public class PerfilFragment extends Fragment {
 
-    // -- Vistas del layout --
     private ImageView imageViewPerfil;
     private TextView  tvNombre, tvEmail, tvPassword, tvLocalidad;
     private EditText  editTextNombre, editTextEmail, editTextPassword, editTextLocalidad;
     private Button    btnGuardar, btnCambiarFoto;
     private Button    btnEditarNombre, btnEditarEmail, btnEditarPassword, btnEditarLocalidad;
-    private Button    btnAñadirAnimal, btnEliminarUsuario;
+    private Button    btnAñadirAnimal, btnEliminarUsuario, btnBorrarCuenta;
 
-    // Cadena Base64 de la imagen actual
     private String imagenBase64 = null;
 
-    // Lanzador para seleccionar una foto de la galería
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if (result.getResultCode() == requireActivity().RESULT_OK &&
                                 result.getData() != null) {
+
                             Uri uri = result.getData().getData();
                             imageViewPerfil.setImageURI(uri);
                             convertirImagenABase64(uri);
@@ -75,10 +72,9 @@ public class PerfilFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup   container,
                              @Nullable Bundle      savedInstanceState) {
-        // 1) Inflar el XML
         View view = inflater.inflate(R.layout.fragment_perfil, container, false);
 
-        // 2) Referencias a las vistas
+        // Referencias
         imageViewPerfil    = view.findViewById(R.id.imageViewPerfil);
         tvNombre           = view.findViewById(R.id.tvNombre);
         tvEmail            = view.findViewById(R.id.tvEmail);
@@ -96,63 +92,65 @@ public class PerfilFragment extends Fragment {
         btnEditarLocalidad = view.findViewById(R.id.btnEditarLocalidad);
         btnAñadirAnimal    = view.findViewById(R.id.btnAñadirAnimal);
         btnEliminarUsuario = view.findViewById(R.id.btnEliminarUsuario);
+        btnBorrarCuenta    = view.findViewById(R.id.btnBorrarCuenta);
 
-        // 3) Cargar datos del usuario (SharedPreferences) y actualizar UI
+        // Carga inicial
         cargarDatosUsuario();
 
-        // 4) Listeners de edición
+        // Listeners para editar
         btnCambiarFoto.setOnClickListener(v -> seleccionarImagen());
-        btnEditarNombre.   setOnClickListener(v -> toggleEditCancel(tvNombre,    editTextNombre,    btnEditarNombre));
-        btnEditarEmail.    setOnClickListener(v -> toggleEditCancel(tvEmail,     editTextEmail,     btnEditarEmail));
-        btnEditarPassword. setOnClickListener(v -> toggleEditCancel(tvPassword,  editTextPassword,  btnEditarPassword));
+        btnEditarNombre.setOnClickListener(v -> toggleEditCancel(tvNombre, editTextNombre, btnEditarNombre));
+        btnEditarEmail.setOnClickListener(v -> toggleEditCancel(tvEmail, editTextEmail, btnEditarEmail));
+        btnEditarPassword.setOnClickListener(v -> toggleEditCancel(tvPassword, editTextPassword, btnEditarPassword));
         btnEditarLocalidad.setOnClickListener(v -> toggleEditCancel(tvLocalidad, editTextLocalidad, btnEditarLocalidad));
-        btnGuardar.        setOnClickListener(v -> guardarCambios());
+        btnGuardar.setOnClickListener(v -> guardarCambios());
 
-        // 5) Mostrar “AÑADIR ANIMAL” si es admin
-        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
-        String email = prefs.getString("email", "");
+        // Botones admin vs usuario normal
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        String email = prefs.getString("email","");
         if ("admin@gmail.com".equalsIgnoreCase(email)) {
             btnAñadirAnimal.setVisibility(View.VISIBLE);
             btnEliminarUsuario.setVisibility(View.VISIBLE);
-
-            btnAñadirAnimal.setOnClickListener(v -> {
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.nav_host_fragment, new AddAnimalFragment())
-                        .addToBackStack(null)
-                        .commit();
-            });
-            btnEliminarUsuario.setOnClickListener(v -> {
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.nav_host_fragment, new DeleteUserFragment())
-                        .addToBackStack(null)
-                        .commit();
-            });
+            btnAñadirAnimal.setOnClickListener(v ->
+                    requireActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.nav_host_fragment, new AddAnimalFragment())
+                            .addToBackStack(null).commit()
+            );
+            btnEliminarUsuario.setOnClickListener(v ->
+                    requireActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.nav_host_fragment, new DeleteUserFragment())
+                            .addToBackStack(null).commit()
+            );
         } else {
             btnAñadirAnimal.setVisibility(View.GONE);
             btnEliminarUsuario.setVisibility(View.GONE);
         }
 
+        // Borrar cuenta global
+        btnBorrarCuenta.setOnClickListener(v ->
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Eliminar cuenta")
+                        .setMessage("¿Estás seguro? Acción irreversible.")
+                        .setPositiveButton("Aceptar",(d,w)-> borrarCuenta())
+                        .setNegativeButton("Cancelar",null)
+                        .show()
+        );
 
         return view;
     }
 
-    /** Alterna entre ver y editar un campo concreto. */
     private void toggleEditCancel(TextView tv, EditText et, Button btn) {
         if (et.getVisibility() == View.GONE) {
-            // Pasar a edición
             tv.setVisibility(View.GONE);
             et.setVisibility(View.VISIBLE);
             et.setText(tv.getText().toString().replaceFirst("^[^:]+: ?", ""));
             btn.setText("Cancelar");
             btnGuardar.setVisibility(View.VISIBLE);
         } else {
-            // Cancelar edición
             et.setVisibility(View.GONE);
             tv.setVisibility(View.VISIBLE);
             btn.setText("Editar");
-            // Ocultar Guardar si no hay campos en edición
             if (editTextNombre.getVisibility()==View.GONE &&
                     editTextEmail.getVisibility()==View.GONE &&
                     editTextPassword.getVisibility()==View.GONE &&
@@ -162,39 +160,41 @@ public class PerfilFragment extends Fragment {
         }
     }
 
-    /** Carga todos los datos del usuario (incluida la foto) desde SharedPreferences. */
     public void cargarDatosUsuario() {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
 
-        // Nombre
-        String nombre = prefs.getString("usuario", "");
+        // Hacer siempre visibles los TextView
+        tvNombre.setVisibility(View.VISIBLE);
+        tvEmail.setVisibility(View.VISIBLE);
+        tvPassword.setVisibility(View.VISIBLE);
+        tvLocalidad.setVisibility(View.VISIBLE);
+
+        // Cargar valores
+        String nombre = prefs.getString("usuario","");
         tvNombre.setText("Nombre: " + nombre);
         editTextNombre.setText(nombre);
 
-        // Email
-        String mail = prefs.getString("email", "");
+        String mail = prefs.getString("email","");
         tvEmail.setText("Email: " + mail);
         editTextEmail.setText(mail);
 
-        // Contraseña (oculta)
         tvPassword.setText("Contraseña: ********");
-        editTextPassword.setText(prefs.getString("contrasena", ""));
+        editTextPassword.setText(prefs.getString("contrasena",""));
 
-        // Localidad
-        String loc = prefs.getString("localidad", "");
+        String loc = prefs.getString("localidad","");
         tvLocalidad.setText("Localidad: " + loc);
         editTextLocalidad.setText(loc);
 
-        // Foto (Base64)
-        String b64 = prefs.getString("fotoPerfil", null);
-        if (b64 != null && !b64.isEmpty()) {
+        // Foto
+        String b64 = prefs.getString("fotoPerfil",null);
+        if (b64!=null && !b64.isEmpty()) {
             try {
-                byte[] data = Base64.decode(b64, Base64.DEFAULT);
-                Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                byte[] data = Base64.decode(b64,Base64.DEFAULT);
+                Bitmap bmp = BitmapFactory.decodeByteArray(data,0,data.length);
                 imageViewPerfil.setImageBitmap(bmp);
                 imagenBase64 = b64;
-            } catch (Exception e) {
+            } catch(Exception e) {
                 imageViewPerfil.setImageResource(R.drawable.default_avatar);
                 imagenBase64 = null;
             }
@@ -203,71 +203,68 @@ public class PerfilFragment extends Fragment {
             imagenBase64 = null;
         }
 
-        // Restablecer vistas de edición
+        // Ocultar todos los EditText y el botón Guardar
         editTextNombre.setVisibility(View.GONE);
         editTextEmail.setVisibility(View.GONE);
         editTextPassword.setVisibility(View.GONE);
         editTextLocalidad.setVisibility(View.GONE);
         btnGuardar.setVisibility(View.GONE);
+
+        // Reset texto de botones
         btnEditarNombre.setText("Editar");
         btnEditarEmail.setText("Editar");
         btnEditarPassword.setText("Editar");
         btnEditarLocalidad.setText("Editar");
     }
 
-    /** Abre la galería para seleccionar imagen. */
     private void seleccionarImagen() {
-        Intent i = new Intent(Intent.ACTION_PICK,
+        Intent intent = new Intent(Intent.ACTION_PICK,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        imagePickerLauncher.launch(i);
+        imagePickerLauncher.launch(intent);
     }
 
-    /** Convierte una URI de imagen a Base64. */
     private void convertirImagenABase64(Uri uri) {
         try {
             Bitmap bmp = MediaStore.Images.Media.getBitmap(
-                    requireActivity().getContentResolver(), uri);
+                    requireActivity().getContentResolver(), uri
+            );
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-            imagenBase64 = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
-        } catch (IOException e) {
-            Toast.makeText(getContext(),
-                    "Error al cargar la imagen", Toast.LENGTH_SHORT).show();
+            imagenBase64 = Base64.encodeToString(
+                    baos.toByteArray(), Base64.NO_WRAP
+            );
+        } catch(IOException e) {
+            Toast.makeText(getContext(),"Error al cargar imagen",Toast.LENGTH_SHORT).show();
         }
     }
 
-    /** Envía al servidor todos los cambios y actualiza SharedPreferences + drawer. */
     private void guardarCambios() {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
-        int idUsuario = prefs.getInt("idUsuario", -1);
-        if (idUsuario == -1) {
-            Toast.makeText(getContext(),
-                    "Error: sesión no válida", Toast.LENGTH_SHORT).show();
+        int idUsuario = prefs.getInt("idUsuario",-1);
+        if (idUsuario==-1) {
+            Toast.makeText(getContext(),"Sesión no válida",Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Recoger valores editados o de prefs
-        String nombre =  editTextNombre.getVisibility()==View.VISIBLE
+        String nombre = editTextNombre.getVisibility()==View.VISIBLE
                 ? editTextNombre.getText().toString().trim()
-                : prefs.getString("usuario", "");
-        String mail =     editTextEmail.getVisibility()==View.VISIBLE
+                : prefs.getString("usuario","");
+        String mail   = editTextEmail.getVisibility()==View.VISIBLE
                 ? editTextEmail.getText().toString().trim()
-                : prefs.getString("email", "");
-        String pass =     editTextPassword.getVisibility()==View.VISIBLE
+                : prefs.getString("email","");
+        String pass   = editTextPassword.getVisibility()==View.VISIBLE
                 ? editTextPassword.getText().toString().trim()
-                : prefs.getString("contrasena", "");
-        String loc  =     editTextLocalidad.getVisibility()==View.VISIBLE
+                : prefs.getString("contrasena","");
+        String loc    = editTextLocalidad.getVisibility()==View.VISIBLE
                 ? editTextLocalidad.getText().toString().trim()
-                : prefs.getString("localidad", "");
+                : prefs.getString("localidad","");
 
-        if (nombre.isEmpty()||mail.isEmpty()||pass.isEmpty()||loc.isEmpty()) {
-            Toast.makeText(getContext(),
-                    "Completa todos los campos", Toast.LENGTH_SHORT).show();
+        if (nombre.isEmpty()|| mail.isEmpty()|| pass.isEmpty()|| loc.isEmpty()) {
+            Toast.makeText(getContext(),"Completa todos los campos",Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Construir objeto Usuario
         Usuario u = new Usuario();
         u.setIdUsuario(idUsuario);
         u.setUsuario(nombre);
@@ -276,42 +273,65 @@ public class PerfilFragment extends Fragment {
         u.setLocalidad(loc);
         u.setFotoPerfil(imagenBase64);
 
-        // Llamada al API
         ApiService api = ApiClient.getClient().create(ApiService.class);
         api.updateUsuario(u).enqueue(new Callback<Mensaje>() {
             @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
                 if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
-                    // Guardar foto limpia en prefs
+                    // Guardar todo en prefs
                     prefs.edit()
+                            .putString("usuario",    nombre)
+                            .putString("email",      mail)
+                            .putString("contrasena", pass)
+                            .putString("localidad",  loc)
                             .putString("fotoPerfil", imagenBase64.replaceAll("\\s+",""))
                             .apply();
-                    // Actualizar drawer
-                    ((MainActivity)getActivity())
-                            .actualizarFotoDrawer(imagenBase64);
-                    Toast.makeText(getContext(),
-                            "Datos actualizados", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(),"Datos actualizados",Toast.LENGTH_SHORT).show();
                     cargarDatosUsuario();
                 } else {
-                    Toast.makeText(getContext(),
-                            "Error al actualizar", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(),"Error al actualizar",Toast.LENGTH_SHORT).show();
                 }
             }
             @Override public void onFailure(Call<Mensaje> c, Throwable t) {
-                Toast.makeText(getContext(),
-                        "Fallo en servidor: "+t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(),"Fallo en servidor: "+t.getMessage(),Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    /** Envía inmediatamente la nueva foto al servidor tras seleccionarla. */
+    private void borrarCuenta() {
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        String email = prefs.getString("email","");
+
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        api.deleteUserEmail(Collections.singletonMap("email",email))
+                .enqueue(new Callback<Mensaje>() {
+                    @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
+                        if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
+                            prefs.edit().clear().apply();
+                            Toast.makeText(getContext(),"Cuenta eliminada",Toast.LENGTH_SHORT).show();
+                            requireActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.nav_host_fragment, new HomeFragment())
+                                    .commit();
+                        } else {
+                            String msg = r.body()!=null
+                                    ? r.body().getMessage()
+                                    : "Error al borrar cuenta";
+                            Toast.makeText(getContext(),msg,Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    @Override public void onFailure(Call<Mensaje> c, Throwable t) {
+                        Toast.makeText(getContext(),"Error de red: "+t.getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
     private void guardarFotoDirecta() {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
-        int idUsuario = prefs.getInt("idUsuario", -1);
-        if (idUsuario == -1) {
-            Toast.makeText(getContext(),
-                    "Error: sesión no válida", Toast.LENGTH_SHORT).show();
+        int idUsuario = prefs.getInt("idUsuario",-1);
+        if (idUsuario==-1) {
+            Toast.makeText(getContext(),"Sesión no válida",Toast.LENGTH_SHORT).show();
             return;
         }
         Usuario u = new Usuario();
@@ -326,40 +346,15 @@ public class PerfilFragment extends Fragment {
         api.updateUsuario(u).enqueue(new Callback<Mensaje>() {
             @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
                 if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
-                    prefs.edit().putString("fotoPerfil", imagenBase64).apply();
-                    Toast.makeText(getContext(),
-                            "Foto actualizada", Toast.LENGTH_SHORT).show();
-                    ((MainActivity)getActivity())
-                            .actualizarFotoDrawer(imagenBase64);
+                    prefs.edit().putString("fotoPerfil",imagenBase64).apply();
+                    Toast.makeText(getContext(),"Foto actualizada",Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(),
-                            "Error al actualizar foto", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(),"Error al actualizar foto",Toast.LENGTH_SHORT).show();
                 }
             }
             @Override public void onFailure(Call<Mensaje> c, Throwable t) {
-                Toast.makeText(getContext(),
-                        "Fallo en servidor: "+t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(),"Fallo en servidor: "+t.getMessage(),Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    /** Si este fragmento está activo tras login, actualiza sólo la imagen. */
-    public void actualizarImagenPerfilDesdePrefs() {
-        SharedPreferences prefs = requireActivity()
-                .getSharedPreferences("user", Context.MODE_PRIVATE);
-        String b64 = prefs.getString("fotoPerfil", null);
-        if (b64 != null && !b64.isEmpty()) {
-            b64 = b64.replaceAll("\\s+","");
-            try {
-                byte[] data = Base64.decode(b64, Base64.DEFAULT);
-                Bitmap bmp = BitmapFactory.decodeByteArray(data,0,data.length);
-                imageViewPerfil.setImageBitmap(bmp);
-            } catch (Exception e) {
-                imageViewPerfil.setImageResource(R.drawable.default_avatar);
-            }
-        } else {
-            imageViewPerfil.setImageResource(R.drawable.default_avatar);
-        }
     }
 }
