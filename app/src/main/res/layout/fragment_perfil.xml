@@ -224,7 +224,7 @@
             android:textAllCaps="false"
             android:fontFamily="sans-serif-medium"
             android:elevation="4dp" />
-        <!-- NUEVO: Botón que sólo verá el admin -->
+        <!-- Botón para añadir un animal -->
         <Button
             android:id="@+id/btnAñadirAnimal"
             android:layout_width="match_parent"
@@ -237,6 +237,18 @@
             android:textAllCaps="true"
             android:fontFamily="sans-serif-medium"
             android:elevation="4dp" />
-
+        <!-- Botón para eliminar usuarios -->
+        <Button
+            android:id="@+id/btnEliminarUsuario"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="ELIMINAR USUARIO"
+            android:layout_marginTop="16dp"
+            android:textAllCaps="false"
+            android:backgroundTint="?attr/colorSecondary"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:fontFamily="sans-serif-medium"
+            android:elevation="4dp" />
     </LinearLayout>
 </ScrollView>

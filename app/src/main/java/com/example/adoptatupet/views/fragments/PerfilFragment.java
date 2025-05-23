@@ -30,7 +30,6 @@ import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
 import com.example.adoptatupet.views.MainActivity;
-import com.example.adoptatupet.views.fragments.AddAnimalFragment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,7 +51,7 @@ public class PerfilFragment extends Fragment {
     private EditText  editTextNombre, editTextEmail, editTextPassword, editTextLocalidad;
     private Button    btnGuardar, btnCambiarFoto;
     private Button    btnEditarNombre, btnEditarEmail, btnEditarPassword, btnEditarLocalidad;
-    private Button    btnAñadirAnimal;
+    private Button    btnAñadirAnimal, btnEliminarUsuario;
 
     // Cadena Base64 de la imagen actual
     private String imagenBase64 = null;
@@ -96,6 +95,7 @@ public class PerfilFragment extends Fragment {
         btnEditarPassword  = view.findViewById(R.id.btnEditarPassword);
         btnEditarLocalidad = view.findViewById(R.id.btnEditarLocalidad);
         btnAñadirAnimal    = view.findViewById(R.id.btnAñadirAnimal);
+        btnEliminarUsuario = view.findViewById(R.id.btnEliminarUsuario);
 
         // 3) Cargar datos del usuario (SharedPreferences) y actualizar UI
         cargarDatosUsuario();
@@ -109,23 +109,31 @@ public class PerfilFragment extends Fragment {
         btnGuardar.        setOnClickListener(v -> guardarCambios());
 
         // 5) Mostrar “AÑADIR ANIMAL” si es admin
-        SharedPreferences prefs = requireActivity()
-                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE);
         String email = prefs.getString("email", "");
         if ("admin@gmail.com".equalsIgnoreCase(email)) {
             btnAñadirAnimal.setVisibility(View.VISIBLE);
-            btnAñadirAnimal.setText("AÑADIR ANIMAL");
+            btnEliminarUsuario.setVisibility(View.VISIBLE);
+
             btnAñadirAnimal.setOnClickListener(v -> {
-                // Navegar al formulario de administración
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.nav_host_fragment, new AddAnimalFragment())
                         .addToBackStack(null)
                         .commit();
             });
+            btnEliminarUsuario.setOnClickListener(v -> {
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.nav_host_fragment, new DeleteUserFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
         } else {
             btnAñadirAnimal.setVisibility(View.GONE);
+            btnEliminarUsuario.setVisibility(View.GONE);
         }
+
 
         return view;
     }

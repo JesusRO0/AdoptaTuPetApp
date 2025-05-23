@@ -4,6 +4,8 @@ import com.example.adoptatupet.models.Animal;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.models.Mensaje;
 
+import java.util.Map;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
@@ -41,4 +43,7 @@ public interface ApiService {
      */
     @POST("add_animal.php")
     Call<Mensaje> addAnimal(@Body Animal animal);
+
+    @POST("delete_user.php")
+    Call<Mensaje> deleteUserEmail(@Body Map<String,String> body);
 }
