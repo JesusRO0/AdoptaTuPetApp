@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,8 +44,9 @@ import retrofit2.Response;
 
 /**
  * PerfilFragment: muestra y permite editar los datos del usuario.
- * - Localidad nunca desaparece: muestra "Sin localidad" si está vacía.
- * - Tras guardar, todos los botones "Editar" siguen visibles.
+ * - Si no hay localidad, muestra "Sin localidad".
+ * - Asegura que tras guardar siempre se vea el TextView correspondiente.
+ * - Añade ProgressDialog al guardar cambios y al cambiar foto.
  */
 public class PerfilFragment extends Fragment {
 
@@ -55,18 +57,21 @@ public class PerfilFragment extends Fragment {
     private Button    btnEditarNombre, btnEditarEmail, btnEditarPassword, btnEditarLocalidad;
     private Button    btnAñadirAnimal, btnEliminarUsuario, btnBorrarCuenta;
 
+    // Cadena Base64 de la imagen actual
     private String imagenBase64 = null;
 
+    // Lanzador para seleccionar foto de galería
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if (result.getResultCode() == requireActivity().RESULT_OK &&
                                 result.getData() != null) {
-
                             Uri uri = result.getData().getData();
                             imageViewPerfil.setImageURI(uri);
                             convertirImagenABase64(uri);
+                            // mostramos la rueda mientras subimos la nueva foto
+                            ((MainActivity) requireActivity()).showLoading();
                             guardarFotoDirecta();
                         }
                     }
@@ -74,8 +79,8 @@ public class PerfilFragment extends Fragment {
 
     @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                             @Nullable ViewGroup   container,
+                             @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_perfil, container, false);
 
         // Referencias a vistas
@@ -101,30 +106,31 @@ public class PerfilFragment extends Fragment {
         // Carga inicial de datos
         cargarDatosUsuario();
 
-        // Listeners de edición
+        // Listeners para editar y guardar
         btnCambiarFoto.setOnClickListener(v -> seleccionarImagen());
-        btnEditarNombre   .setOnClickListener(v -> toggleEditCancel(tvNombre,    editTextNombre,    btnEditarNombre));
-        btnEditarEmail    .setOnClickListener(v -> toggleEditCancel(tvEmail,     editTextEmail,     btnEditarEmail));
-        btnEditarPassword .setOnClickListener(v -> toggleEditCancel(tvPassword,  editTextPassword,  btnEditarPassword));
+        btnEditarNombre.setOnClickListener(v -> toggleEditCancel(tvNombre, editTextNombre, btnEditarNombre));
+        btnEditarEmail.setOnClickListener(v -> toggleEditCancel(tvEmail, editTextEmail, btnEditarEmail));
+        btnEditarPassword.setOnClickListener(v -> toggleEditCancel(tvPassword, editTextPassword, btnEditarPassword));
         btnEditarLocalidad.setOnClickListener(v -> toggleEditCancel(tvLocalidad, editTextLocalidad, btnEditarLocalidad));
-        btnGuardar        .setOnClickListener(v -> guardarCambios());
+        btnGuardar.setOnClickListener(v -> guardarCambios());
 
-        // Botones admin vs usuario normal
+        // Botones de admin vs usuario normal
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
-        String email = prefs.getString("email","");
-
+        String email = prefs.getString("email", "");
         if ("admin@gmail.com".equalsIgnoreCase(email)) {
             btnAñadirAnimal.setVisibility(View.VISIBLE);
             btnEliminarUsuario.setVisibility(View.VISIBLE);
             btnAñadirAnimal.setOnClickListener(v ->
-                    requireActivity().getSupportFragmentManager().beginTransaction()
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
                             .replace(R.id.nav_host_fragment, new AddAnimalFragment())
                             .addToBackStack(null)
                             .commit()
             );
             btnEliminarUsuario.setOnClickListener(v ->
-                    requireActivity().getSupportFragmentManager().beginTransaction()
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
                             .replace(R.id.nav_host_fragment, new DeleteUserFragment())
                             .addToBackStack(null)
                             .commit()
@@ -134,12 +140,16 @@ public class PerfilFragment extends Fragment {
             btnEliminarUsuario.setVisibility(View.GONE);
         }
 
-        // Borrar cuenta (todos los usuarios)
+        // Borrar cuenta
         btnBorrarCuenta.setOnClickListener(v ->
                 new AlertDialog.Builder(requireContext())
                         .setTitle("Eliminar cuenta")
                         .setMessage("¿Estás seguro? Acción irreversible.")
-                        .setPositiveButton("Aceptar", (d,w) -> borrarCuenta())
+                        .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+                            @Override public void onClick(DialogInterface dialog, int which) {
+                                borrarCuenta();
+                            }
+                        })
                         .setNegativeButton("Cancelar", null)
                         .show()
         );
@@ -147,10 +157,10 @@ public class PerfilFragment extends Fragment {
         return view;
     }
 
-    /** Alterna entre modo ver (TextView) y editar (EditText). */
+    /** Alterna entre ver y editar un campo concreto. */
     private void toggleEditCancel(TextView tv, EditText et, Button btn) {
         if (et.getVisibility() == View.GONE) {
-            // Entrar en edición
+            // Entrar a edición
             tv.setVisibility(View.GONE);
             et.setVisibility(View.VISIBLE);
             et.setText(tv.getText().toString().replaceFirst("^[^:]+: ?", ""));
@@ -161,7 +171,7 @@ public class PerfilFragment extends Fragment {
             et.setVisibility(View.GONE);
             tv.setVisibility(View.VISIBLE);
             btn.setText("Editar");
-            // Si ningún campo está en edición, ocultar Guardar
+            // Si ningún campo queda en edición, ocultar Guardar
             if (editTextNombre.getVisibility()==View.GONE &&
                     editTextEmail.getVisibility()==View.GONE &&
                     editTextPassword.getVisibility()==View.GONE &&
@@ -172,42 +182,39 @@ public class PerfilFragment extends Fragment {
     }
 
     /**
-     * Carga datos desde SharedPreferences y actualiza la UI:
-     * - Nombre, Email, Contraseña, Localidad (o "Sin localidad")
-     * - Foto de perfil
-     * - Oculta todos los EditText y el botón Guardar
+     * Carga datos de SharedPreferences y actualiza la UI:
+     * - Siempre muestra los TextView
+     * - Si no hay localidad, pone "Sin localidad"
      */
     public void cargarDatosUsuario() {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
 
+        // Aseguramos que todos los TextView estén visibles
+        tvNombre.setVisibility(View.VISIBLE);
+        tvEmail.setVisibility(View.VISIBLE);
+        tvPassword.setVisibility(View.VISIBLE);
+        tvLocalidad.setVisibility(View.VISIBLE);
+
         // Nombre
-        String nombre = prefs.getString("usuario","");
+        String nombre = prefs.getString("usuario", "");
         tvNombre.setText("Nombre: " + nombre);
         editTextNombre.setText(nombre);
-        tvNombre.setVisibility(View.VISIBLE);
-        btnEditarNombre.setVisibility(View.VISIBLE);
 
         // Email
-        String mail = prefs.getString("email","");
+        String mail = prefs.getString("email", "");
         tvEmail.setText("Email: " + mail);
         editTextEmail.setText(mail);
-        tvEmail.setVisibility(View.VISIBLE);
-        btnEditarEmail.setVisibility(View.VISIBLE);
 
-        // Contraseña (siempre oculta)
+        // Contraseña (oculta)
         tvPassword.setText("Contraseña: ********");
-        editTextPassword.setText(prefs.getString("contrasena",""));
-        tvPassword.setVisibility(View.VISIBLE);
-        btnEditarPassword.setVisibility(View.VISIBLE);
+        editTextPassword.setText(prefs.getString("contrasena", ""));
 
-        // Localidad (si está vacía, mostramos "Sin localidad")
-        String loc = prefs.getString("localidad","");
-        if (loc.isEmpty()) loc = "Sin localidad";  // ** siempre hay texto
+        // Localidad
+        String loc = prefs.getString("localidad", "");
+        if (TextUtils.isEmpty(loc)) loc = "Sin localidad";
         tvLocalidad.setText("Localidad: " + loc);
-        editTextLocalidad.setText(loc);
-        tvLocalidad.setVisibility(View.VISIBLE);
-        btnEditarLocalidad.setVisibility(View.VISIBLE);
+        editTextLocalidad.setText(prefs.getString("localidad", ""));
 
         // Foto de perfil
         String b64 = prefs.getString("fotoPerfil", null);
@@ -226,76 +233,74 @@ public class PerfilFragment extends Fragment {
             imagenBase64 = null;
         }
 
-        // Ocultar todos los EditText y botón Guardar
+        // Ocultar campos de edición y botón Guardar
         editTextNombre.setVisibility(View.GONE);
         editTextEmail.setVisibility(View.GONE);
         editTextPassword.setVisibility(View.GONE);
         editTextLocalidad.setVisibility(View.GONE);
         btnGuardar.setVisibility(View.GONE);
 
-        // Reset textos de botones
+        // Reset texto de botones "Editar"
         btnEditarNombre.setText("Editar");
         btnEditarEmail.setText("Editar");
         btnEditarPassword.setText("Editar");
         btnEditarLocalidad.setText("Editar");
     }
 
-    /** Abre la galería para seleccionar una nueva foto. */
+    /** Abre la galería para escoger imagen. */
     private void seleccionarImagen() {
         Intent intent = new Intent(Intent.ACTION_PICK,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         imagePickerLauncher.launch(intent);
     }
 
-    /** Convierte URI de imagen a Base64 (NO_WRAP). */
+    /** Convierte URI a Base64 (sin saltos) y guarda en imagenBase64. */
     private void convertirImagenABase64(Uri uri) {
         try {
             Bitmap bmp = MediaStore.Images.Media.getBitmap(
-                    requireActivity().getContentResolver(), uri);
+                    requireActivity().getContentResolver(), uri
+            );
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos);
             imagenBase64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
         } catch (IOException e) {
-            Toast.makeText(getContext(),
-                    "Error al cargar imagen", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Error al cargar imagen", Toast.LENGTH_SHORT).show();
         }
     }
 
-    /**
-     * Envía al servidor los cambios de perfil y, si tienen éxito,
-     * los guarda en prefs y recarga la UI (de nuevo incluyendo localidad).
-     */
+    /** Envía los cambios al servidor mostrando la ProgressDialog de MainActivity. */
     private void guardarCambios() {
+        // Muestra la rueda
+        ((MainActivity) requireActivity()).showLoading();
+
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
         int idUsuario = prefs.getInt("idUsuario", -1);
         if (idUsuario == -1) {
-            Toast.makeText(getContext(),
-                    "Sesión no válida", Toast.LENGTH_SHORT).show();
+            ((MainActivity) requireActivity()).hideLoading();
+            Toast.makeText(getContext(), "Sesión no válida", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Recoger valores editados o los guardados en prefs
         String nombre = editTextNombre.getVisibility()==View.VISIBLE
                 ? editTextNombre.getText().toString().trim()
-                : prefs.getString("usuario","");
+                : prefs.getString("usuario", "");
         String mail = editTextEmail.getVisibility()==View.VISIBLE
                 ? editTextEmail.getText().toString().trim()
-                : prefs.getString("email","");
+                : prefs.getString("email", "");
         String pass = editTextPassword.getVisibility()==View.VISIBLE
                 ? editTextPassword.getText().toString().trim()
-                : prefs.getString("contrasena","");
+                : prefs.getString("contrasena", "");
         String loc  = editTextLocalidad.getVisibility()==View.VISIBLE
                 ? editTextLocalidad.getText().toString().trim()
-                : prefs.getString("localidad","");
+                : prefs.getString("localidad", "");
 
-        if (nombre.isEmpty()|| mail.isEmpty()|| pass.isEmpty()|| loc.isEmpty()) {
-            Toast.makeText(getContext(),
-                    "Completa todos los campos", Toast.LENGTH_SHORT).show();
+        if (nombre.isEmpty() || mail.isEmpty() || pass.isEmpty() || loc.isEmpty()) {
+            ((MainActivity) requireActivity()).hideLoading();
+            Toast.makeText(getContext(), "Completa todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Construir objeto Usuario
         Usuario u = new Usuario();
         u.setIdUsuario(idUsuario);
         u.setUsuario(nombre);
@@ -304,12 +309,13 @@ public class PerfilFragment extends Fragment {
         u.setLocalidad(loc);
         u.setFotoPerfil(imagenBase64);
 
-        // Llamada al API
         ApiService api = ApiClient.getClient().create(ApiService.class);
         api.updateUsuario(u).enqueue(new Callback<Mensaje>() {
-            @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> r) {
+            @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
+                // Oculta la rueda
+                ((MainActivity) requireActivity()).hideLoading();
                 if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
-                    // Guardar TODO en prefs
+                    // Actualiza prefs con valores nuevos
                     prefs.edit()
                             .putString("usuario",   nombre)
                             .putString("email",     mail)
@@ -317,65 +323,30 @@ public class PerfilFragment extends Fragment {
                             .putString("localidad", loc)
                             .putString("fotoPerfil",imagenBase64.replaceAll("\\s+",""))
                             .apply();
-
-                    Toast.makeText(getContext(),
-                            "Datos actualizados", Toast.LENGTH_SHORT).show();
-
-                    // Recargar la UI (localidad siempre visible)
+                    Toast.makeText(getContext(), "Datos actualizados", Toast.LENGTH_SHORT).show();
+                    // Recarga UI mostrando siempre los TextView
                     cargarDatosUsuario();
                 } else {
-                    Toast.makeText(getContext(),
-                            "Error al actualizar", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error al actualizar", Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override public void onFailure(Call<Mensaje> call, Throwable t) {
-                Toast.makeText(getContext(),
-                        "Fallo en servidor: "+t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+            @Override public void onFailure(Call<Mensaje> c, Throwable t) {
+                ((MainActivity) requireActivity()).hideLoading();
+                Toast.makeText(getContext(), "Fallo en servidor: "+t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    /** Borra la cuenta y lleva al HomeFragment. */
-    private void borrarCuenta() {
-        SharedPreferences prefs = requireActivity()
-                .getSharedPreferences("user", Context.MODE_PRIVATE);
-        String email = prefs.getString("email","");
-
-        ApiService api = ApiClient.getClient().create(ApiService.class);
-        api.deleteUserEmail(Collections.singletonMap("email",email))
-                .enqueue(new Callback<Mensaje>() {
-                    @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> r) {
-                        if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
-                            prefs.edit().clear().apply();
-                            Toast.makeText(getContext(),
-                                    "Cuenta eliminada", Toast.LENGTH_SHORT).show();
-                            requireActivity().getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .replace(R.id.nav_host_fragment, new HomeFragment())
-                                    .commit();
-                        } else {
-                            String msg = r.body()!=null
-                                    ? r.body().getMessage()
-                                    : "Error al borrar cuenta";
-                            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    @Override public void onFailure(Call<Mensaje> call, Throwable t) {
-                        Toast.makeText(getContext(),
-                                "Error de red: "+t.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-    /** Envía inmediatamente la nueva foto al servidor y actualiza el drawer. */
+    /** Envía nueva foto al servidor y actualiza el drawer. */
     private void guardarFotoDirecta() {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
-        int idUsuario = prefs.getInt("idUsuario", -1);
-        if (idUsuario == -1) return;
-
+        int idUsuario = prefs.getInt("idUsuario",-1);
+        if (idUsuario==-1) {
+            ((MainActivity) requireActivity()).hideLoading();
+            Toast.makeText(getContext(),"Sesión no válida",Toast.LENGTH_SHORT).show();
+            return;
+        }
         Usuario u = new Usuario();
         u.setIdUsuario(idUsuario);
         u.setUsuario(prefs.getString("usuario",""));
@@ -387,16 +358,50 @@ public class PerfilFragment extends Fragment {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         api.updateUsuario(u).enqueue(new Callback<Mensaje>() {
             @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> r) {
+                ((MainActivity) requireActivity()).hideLoading();
                 if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
-                    prefs.edit().putString("fotoPerfil", imagenBase64).apply();
-                    // Actualizar imagen en el drawer inmediatamente:
-                    ((MainActivity) requireActivity())
-                            .actualizarFotoDrawer(imagenBase64);
-                    Toast.makeText(getContext(),
-                            "Foto actualizada", Toast.LENGTH_SHORT).show();
+                    // Guardamos la foto en prefs y actualizamos drawer
+                    prefs.edit().putString("fotoPerfil",imagenBase64).apply();
+                    ((MainActivity) requireActivity()).actualizarFotoDrawer(imagenBase64);
+                    Toast.makeText(getContext(),"Foto actualizada",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(),"Error al actualizar foto",Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override public void onFailure(Call<Mensaje> call, Throwable t) { }
+            @Override public void onFailure(Call<Mensaje> call, Throwable t) {
+                ((MainActivity) requireActivity()).hideLoading();
+                Toast.makeText(getContext(),"Fallo en servidor: "+t.getMessage(),Toast.LENGTH_SHORT).show();
+            }
         });
+    }
+
+    /** Llama a delete_user.php y vuelve a HomeFragment. */
+    private void borrarCuenta() {
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        String email = prefs.getString("email","");
+
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        api.deleteUserEmail(Collections.singletonMap("email",email))
+                .enqueue(new Callback<Mensaje>() {
+                    @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
+                        if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
+                            prefs.edit().clear().apply();
+                            Toast.makeText(getContext(),"Cuenta eliminada",Toast.LENGTH_SHORT).show();
+                            requireActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.nav_host_fragment, new HomeFragment())
+                                    .commit();
+                        } else {
+                            String msg = r.body()!=null
+                                    ? r.body().getMessage()
+                                    : "Error al borrar cuenta";
+                            Toast.makeText(getContext(),msg,Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    @Override public void onFailure(Call<Mensaje> c, Throwable t) {
+                        Toast.makeText(getContext(),"Error de red: "+t.getMessage(),Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

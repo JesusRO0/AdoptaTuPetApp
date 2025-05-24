@@ -1,8 +1,6 @@
 package com.example.adoptatupet.views;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -25,7 +23,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.adoptatupet.R;
-import com.example.adoptatupet.controllers.UsuarioController;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.views.fragments.AdoptaFragment;
@@ -46,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar           topAppBar;
     private TextView          navUserName;
     private ImageView         navUserImage;
-    private UsuarioController usuarioController;
+    private com.example.adoptatupet.controllers.usuarioController usuarioController;
 
     // ProgressDialog para mostrar rueda de carga
     private ProgressDialog loadingDialog;
@@ -57,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Instancia singleton del controller de usuario
-        usuarioController = UsuarioController.getInstance(this);
+        usuarioController = com.example.adoptatupet.controllers.usuarioController.getInstance(this);
 
         // Configura la barra superior y el drawer
         topAppBar     = findViewById(R.id.topAppBar);
@@ -248,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Muestra la rueda de carga. */
-    private void showLoading() {
+    public void showLoading() {
         if (loadingDialog == null) {
             loadingDialog = new ProgressDialog(this);
             loadingDialog.setMessage("Cargando...");
@@ -258,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Oculta la rueda de carga. */
-    private void hideLoading() {
+    public void hideLoading() {
         if (loadingDialog != null && loadingDialog.isShowing()) {
             loadingDialog.dismiss();
         }

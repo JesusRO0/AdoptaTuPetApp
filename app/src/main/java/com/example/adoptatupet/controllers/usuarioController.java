@@ -16,13 +16,13 @@ import retrofit2.Response;
  * Controller que centraliza toda la lógica de usuario:
  * login, register, updateProfile, carga/guardado en prefs y logout.
  */
-public class UsuarioController {
+public class usuarioController {
     private static final String PREFS_NAME = "user";
-    private static UsuarioController instance;
+    private static usuarioController instance;
     private final SharedPreferences prefs;
     private final ApiService api;
 
-    private UsuarioController(Context ctx) {
+    private usuarioController(Context ctx) {
         prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         api   = ApiClient.getClient().create(ApiService.class);
     }
@@ -30,9 +30,9 @@ public class UsuarioController {
     /**
      * Devuelve la instancia singleton del controller.
      */
-    public static UsuarioController getInstance(Context ctx) {
+    public static usuarioController getInstance(Context ctx) {
         if (instance == null) {
-            instance = new UsuarioController(ctx.getApplicationContext());
+            instance = new usuarioController(ctx.getApplicationContext());
         }
         return instance;
     }

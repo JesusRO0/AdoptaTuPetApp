@@ -1,7 +1,7 @@
 package com.example.adoptatupet.controllers;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+
 import com.example.adoptatupet.models.Animal;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
@@ -10,19 +10,19 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AnimalController {
-    private static AnimalController instance;
+public class animalController {
+    private static animalController instance;
     private final ApiService api;
     private final Context ctx;
 
-    private AnimalController(Context ctx) {
+    private animalController(Context ctx) {
         this.ctx = ctx.getApplicationContext();
         this.api = ApiClient.getClient().create(ApiService.class);
     }
 
-    public static AnimalController getInstance(Context ctx) {
+    public static animalController getInstance(Context ctx) {
         if (instance == null) {
-            instance = new AnimalController(ctx);
+            instance = new animalController(ctx);
         }
         return instance;
     }

@@ -28,19 +28,14 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.adoptatupet.R;
-import com.example.adoptatupet.controllers.AnimalController;
+import com.example.adoptatupet.controllers.animalController;
 import com.example.adoptatupet.models.Animal;
-import com.example.adoptatupet.models.Mensaje;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Fragment para añadir un nuevo animal.
@@ -289,9 +284,9 @@ public class AddAnimalFragment extends Fragment {
                 idUsuario
         );
 
-        // Enviar al servidor con AnimalController
-        AnimalController.getInstance(requireContext())
-                .addAnimal(animal, new AnimalController.AnimalCallback() {
+        // Enviar al servidor con animalController
+        animalController.getInstance(requireContext())
+                .addAnimal(animal, new animalController.AnimalCallback() {
                     @Override
                     public void onSuccess() {
                         Toast.makeText(getContext(),

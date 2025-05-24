@@ -17,11 +17,11 @@ import java.util.List;
 /**
  * Adapter para mostrar una lista de animales en un RecyclerView.
  */
-public class AnimalAdapter extends RecyclerView.Adapter<AnimalAdapter.ViewHolder> {
+public class animalAdapter extends RecyclerView.Adapter<animalAdapter.ViewHolder> {
 
     private final List<Animal> animals;
 
-    public AnimalAdapter(List<Animal> animals) {
+    public animalAdapter(List<Animal> animals) {
         this.animals = animals;
     }
 
