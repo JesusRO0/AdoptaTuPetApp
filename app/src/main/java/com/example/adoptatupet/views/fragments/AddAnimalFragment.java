@@ -43,22 +43,26 @@ import java.util.List;
  */
 public class AddAnimalFragment extends Fragment {
 
+    private EditText    etNombre, etDescripcion;
     private Spinner     spinnerLocalidad, spinnerRaza;
     private RadioGroup  rgEspecie, rgEdad, rgSexo, rgTamano;
     private RadioButton rbPerro, rbGato, rbCachorro, rbJoven, rbAdulto, rbMacho, rbHembra, rbPequeno, rbMediano, rbGrande;
-    private EditText    etDescripcion;
     private ImageView   ivFoto;
     private Button      btnSeleccionarImagen, btnEnviarAnimal, btnVolver;
     private String      imagenBase64 = null;
 
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode()==requireActivity().RESULT_OK && result.getData()!=null) {
-                    Uri uri = result.getData().getData();
-                    ivFoto.setImageURI(uri);
-                    convertirImagenABase64(uri);
-                }
-            });
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode()==requireActivity().RESULT_OK
+                                && result.getData()!=null) {
+                            Uri uri = result.getData().getData();
+                            ivFoto.setImageURI(uri);
+                            convertirImagenABase64(uri);
+                        }
+                    }
+            );
 
     @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -67,27 +71,28 @@ public class AddAnimalFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_add_animal, container, false);
 
         // 1) Referencias
-        spinnerLocalidad      = view.findViewById(R.id.spinnerLocalidadAnimal);
-        spinnerRaza           = view.findViewById(R.id.spinnerRaza);
-        rgEspecie             = view.findViewById(R.id.rgEspecie);
-        rbPerro               = view.findViewById(R.id.rbPerro);
-        rbGato                = view.findViewById(R.id.rbGato);
-        rgEdad                = view.findViewById(R.id.rgEdad);
-        rbCachorro            = view.findViewById(R.id.rbCachorro);
-        rbJoven               = view.findViewById(R.id.rbJoven);
-        rbAdulto              = view.findViewById(R.id.rbAdulto);
-        rgSexo                = view.findViewById(R.id.rgSexo);
-        rbMacho               = view.findViewById(R.id.rbMacho);
-        rbHembra              = view.findViewById(R.id.rbHembra);
-        rgTamano              = view.findViewById(R.id.rgTamano);
-        rbPequeno             = view.findViewById(R.id.rbPequeno);
-        rbMediano             = view.findViewById(R.id.rbMediano);
-        rbGrande              = view.findViewById(R.id.rbGrande);
-        etDescripcion         = view.findViewById(R.id.editTextDescripcion);
-        ivFoto                = view.findViewById(R.id.imageViewAnimal);
-        btnSeleccionarImagen  = view.findViewById(R.id.btnSeleccionarImagenAnimal);
-        btnEnviarAnimal       = view.findViewById(R.id.btnEnviarAnimal);
-        btnVolver             = view.findViewById(R.id.btnVolver);
+        etNombre             = view.findViewById(R.id.editTextAnimalNombre);
+        spinnerLocalidad     = view.findViewById(R.id.spinnerLocalidadAnimal);
+        spinnerRaza          = view.findViewById(R.id.spinnerRaza);
+        rgEspecie            = view.findViewById(R.id.rgEspecie);
+        rbPerro              = view.findViewById(R.id.rbPerro);
+        rbGato               = view.findViewById(R.id.rbGato);
+        rgEdad               = view.findViewById(R.id.rgEdad);
+        rbCachorro           = view.findViewById(R.id.rbCachorro);
+        rbJoven              = view.findViewById(R.id.rbJoven);
+        rbAdulto             = view.findViewById(R.id.rbAdulto);
+        rgSexo               = view.findViewById(R.id.rgSexo);
+        rbMacho              = view.findViewById(R.id.rbMacho);
+        rbHembra             = view.findViewById(R.id.rbHembra);
+        rgTamano             = view.findViewById(R.id.rgTamano);
+        rbPequeno            = view.findViewById(R.id.rbPequeno);
+        rbMediano            = view.findViewById(R.id.rbMediano);
+        rbGrande             = view.findViewById(R.id.rbGrande);
+        etDescripcion        = view.findViewById(R.id.editTextDescripcion);
+        ivFoto               = view.findViewById(R.id.imageViewAnimal);
+        btnSeleccionarImagen = view.findViewById(R.id.btnSeleccionarImagenAnimal);
+        btnEnviarAnimal      = view.findViewById(R.id.btnEnviarAnimal);
+        btnVolver            = view.findViewById(R.id.btnVolver);
 
         // 2) Spinner Localidad
         String[] baseLocs = getResources().getStringArray(R.array.spain_localities);
@@ -116,8 +121,7 @@ public class AddAnimalFragment extends Fragment {
                 android.R.layout.simple_spinner_item,
                 new String[]{"Selecciona especie primero"}
         ));
-
-        rgEspecie.setOnCheckedChangeListener((g, id) -> {
+        rgEspecie.setOnCheckedChangeListener((g,id) -> {
             String[] base = id==R.id.rbPerro
                     ? getResources().getStringArray(R.array.dog_breeds)
                     : getResources().getStringArray(R.array.cat_breeds);
@@ -129,8 +133,8 @@ public class AddAnimalFragment extends Fragment {
                     android.R.layout.simple_spinner_item,
                     l
             ) {
-                @Override public boolean isEnabled(int pos) { return pos!=0; }
-                @Override public View getDropDownView(int pos, View cv, ViewGroup p) {
+                @Override public boolean isEnabled(int pos){return pos!=0;}
+                @Override public View getDropDownView(int pos, View cv, ViewGroup p){
                     View v = super.getDropDownView(pos,cv,p);
                     ((TextView)v).setTextColor(pos==0?0xFF888888:0xFF000000);
                     return v;
@@ -171,43 +175,65 @@ public class AddAnimalFragment extends Fragment {
         }
     }
 
-    /** Valida y envía al servidor mostrando la rueda. */
+    /** Valida y envía al servidor mostrando la rueda de carga. */
     private void validarYEnviar(){
-        // ——— Validaciones… ———
+        // — Nombre —
+        String nombre = etNombre.getText().toString().trim();
+        if (TextUtils.isEmpty(nombre)) {
+            etNombre.setError("Requerido");
+            etNombre.requestFocus();
+            return;
+        }
+        // — Especie —
         if (rgEspecie.getCheckedRadioButtonId()==-1) {
             Toast.makeText(getContext(),"Selecciona especie",Toast.LENGTH_SHORT).show();
             return;
         }
+        boolean esPerro = rgEspecie.getCheckedRadioButtonId()==R.id.rbPerro;
+        String especie = esPerro?"Perro":"Gato";
+        // — Raza —
         if (spinnerRaza.getSelectedItemPosition()==0) {
             Toast.makeText(getContext(),"Selecciona raza",Toast.LENGTH_SHORT).show();
             return;
         }
+        String raza = spinnerRaza.getSelectedItem().toString();
+        // — Edad —
         if (rgEdad.getCheckedRadioButtonId()==-1) {
             Toast.makeText(getContext(),"Selecciona edad",Toast.LENGTH_SHORT).show();
             return;
         }
+        String edad = rbCachorro.isChecked()?"Cachorro":rbJoven.isChecked()?"Joven":"Adulto";
+        // — Localidad —
         if (spinnerLocalidad.getSelectedItemPosition()==0) {
             Toast.makeText(getContext(),"Selecciona localidad",Toast.LENGTH_SHORT).show();
             return;
         }
+        String loc = spinnerLocalidad.getSelectedItem().toString();
+        // — Sexo —
         if (rgSexo.getCheckedRadioButtonId()==-1) {
             Toast.makeText(getContext(),"Selecciona sexo",Toast.LENGTH_SHORT).show();
             return;
         }
+        String sexo = rbMacho.isChecked()?"Macho":"Hembra";
+        // — Tamaño —
         if (rgTamano.getCheckedRadioButtonId()==-1) {
             Toast.makeText(getContext(),"Selecciona tamaño",Toast.LENGTH_SHORT).show();
             return;
         }
+        String tam = rbPequeno.isChecked()?"Pequeño":rbMediano.isChecked()?"Mediano":"Grande";
+        // — Descripción —
         String desc = etDescripcion.getText().toString().trim();
         if (TextUtils.isEmpty(desc)) {
             etDescripcion.setError("Requerido");
             etDescripcion.requestFocus();
             return;
         }
+        // — Imagen —
         if (imagenBase64==null) {
             Toast.makeText(getContext(),"Selecciona imagen",Toast.LENGTH_SHORT).show();
             return;
         }
+        // — ID Usuario —
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
         int idU = prefs.getInt("idUsuario",-1);
@@ -216,28 +242,23 @@ public class AddAnimalFragment extends Fragment {
             return;
         }
 
-        // Construcción del Animal
-        String especie = rbPerro.isChecked()?"Perro":"Gato";
-        String raza = spinnerRaza.getSelectedItem().toString();
-        String edad = rbCachorro.isChecked()?"Cachorro":rbJoven.isChecked()?"Joven":"Adulto";
-        String loc  = spinnerLocalidad.getSelectedItem().toString();
-        String sexo = rbMacho.isChecked()?"Macho":"Hembra";
-        String tam  = rbPequeno.isChecked()?"Pequeño":rbMediano.isChecked()?"Mediano":"Grande";
-
+        // Construir Animal con **nombre** correcto
         Animal a = new Animal(
-                raza, especie, raza, edad, loc, sexo, tam, desc, imagenBase64, idU
+                nombre, especie, raza, edad,
+                loc, sexo, tam, desc,
+                imagenBase64, idU
         );
 
-        // ——— Aquí: mostramos rueda ———
+        // Mostrar rueda
         ((MainActivity) requireActivity()).showLoading();
 
+        // Enviar
         animalController.getInstance(requireContext())
                 .addAnimal(a, new animalController.AnimalCallback(){
                     @Override public void onSuccess(){
-                        // ocultar rueda
                         ((MainActivity) requireActivity()).hideLoading();
                         Toast.makeText(getContext(),
-                                "Animal añadido con éxito",Toast.LENGTH_SHORT).show();
+                                "Animal añadido con éxito", Toast.LENGTH_SHORT).show();
                         requireActivity().getSupportFragmentManager().popBackStack();
                     }
                     @Override public void onError(String msg){
