@@ -377,31 +377,35 @@ public class PerfilFragment extends Fragment {
 
     /** Llama a delete_user.php y vuelve a HomeFragment. */
     private void borrarCuenta() {
+        // mostramos rueda
+        ((MainActivity) requireActivity()).showLoading();
+
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
-        String email = prefs.getString("email","");
+        String email = prefs.getString("email", "");
 
         ApiService api = ApiClient.getClient().create(ApiService.class);
-        api.deleteUserEmail(Collections.singletonMap("email",email))
+        api.deleteUserEmail(Collections.singletonMap("email", email))
                 .enqueue(new Callback<Mensaje>() {
                     @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
+                        // ocultar rueda
+                        ((MainActivity) requireActivity()).hideLoading();
+
                         if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
-                            prefs.edit().clear().apply();
-                            Toast.makeText(getContext(),"Cuenta eliminada",Toast.LENGTH_SHORT).show();
-                            requireActivity().getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .replace(R.id.nav_host_fragment, new HomeFragment())
-                                    .commit();
+                            // en lugar de limpiar y navegar manualmente, llamamos cerrarSesion()
+                            ((MainActivity) requireActivity()).cerrarSesion();
                         } else {
                             String msg = r.body()!=null
                                     ? r.body().getMessage()
                                     : "Error al borrar cuenta";
-                            Toast.makeText(getContext(),msg,Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
                         }
                     }
                     @Override public void onFailure(Call<Mensaje> c, Throwable t) {
+                        ((MainActivity) requireActivity()).hideLoading();
                         Toast.makeText(getContext(),"Error de red: "+t.getMessage(),Toast.LENGTH_SHORT).show();
                     }
                 });
     }
+
 }

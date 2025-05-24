@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Cierra sesión y vuelve a HomeFragment. */
-    private void cerrarSesion() {
+    public void cerrarSesion() {
         usuarioController.logout();
         navigationView.getMenu().clear();
         navigationView.inflateMenu(R.menu.drawer_menu);
