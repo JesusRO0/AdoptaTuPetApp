@@ -1,10 +1,12 @@
 package com.example.adoptatupet.views;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,10 +39,6 @@ import com.google.android.material.navigation.NavigationView;
 import retrofit2.Call;
 import retrofit2.Response;
 
-/**
- * MainActivity: gestiona el menú lateral, el login/logout y la navegación inferior.
- * Toda la lógica de usuario se delega a UsuarioController.
- */
 public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout      drawerLayout;
@@ -49,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView          navUserName;
     private ImageView         navUserImage;
     private UsuarioController usuarioController;
+
+    // ProgressDialog para mostrar rueda de carga
+    private ProgressDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,71 +73,60 @@ public class MainActivity extends AppCompatActivity {
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        // Obtiene referencias al header (avatar y nombre)
+        // Header del drawer
         View headerView = navigationView.getHeaderView(0);
         navUserName  = headerView.findViewById(R.id.nav_user_name);
         navUserImage = headerView.findViewById(R.id.nav_user_image);
 
-        // Listener para clicks en el menú lateral
+        // Listener menú lateral usando if en lugar de switch
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
+            drawerLayout.closeDrawers();
 
             if (id == R.id.nav_login) {
-                showLoginDialog();
+                showLoginDialog(); return true;
             }
-            else if (id == R.id.nav_profile) {
-                loadFragment(new PerfilFragment());
+            if (id == R.id.nav_profile) {
+                loadFragment(new PerfilFragment()); return true;
             }
-            else if (id == R.id.nav_logout) {
-                cerrarSesion();
-                return true;  // ya cerramos el drawer dentro de cerrarSesion()
+            if (id == R.id.nav_logout) {
+                cerrarSesion(); return true;
             }
-            else if (id == R.id.nav_exit) {
-                finishAffinity();
+            if (id == R.id.nav_exit) {
+                finishAffinity(); return true;
             }
-
-            drawerLayout.closeDrawers();
-            return true;
+            return false;
         });
 
-
-        // Configura la navegación inferior
+        // Navegación inferior
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
         bottomNav.setOnNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
             Fragment destino;
-            if (id == R.id.nav_home) {
+            if (item.getItemId() == R.id.nav_home) {
                 destino = new HomeFragment();
-            }
-            else if (id == R.id.nav_adopta) {
+            } else if (item.getItemId() == R.id.nav_adopta) {
                 destino = new AdoptaFragment();
-            }
-            else if (id == R.id.nav_foro) {
+            } else if (item.getItemId() == R.id.nav_foro) {
                 destino = new ForoFragment();
-            }
-            else if (id == R.id.nav_contacto) {
+            } else if (item.getItemId() == R.id.nav_contacto) {
                 destino = new ContactoFragment();
-            }
-            else {
+            } else {
                 return false;
             }
             loadFragment(destino);
             return true;
         });
 
-
-        // Selecciona Home por defecto
+        // Selección inicial
         if (savedInstanceState == null) {
             bottomNav.setSelectedItemId(R.id.nav_home);
         }
 
-        // Al iniciar, carga usuario y actualiza UI del drawer
+        // Carga usuario en header
         cargarUsuarioYActualizarUI();
     }
 
-    /**
-     * Reemplaza el contenedor de fragmentos con el fragmento dado.
-     */
+    /** Reemplaza el frame con el fragmento dado. */
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
@@ -145,27 +135,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Muestra un diálogo para login o registro.
-     * Usa UsuarioController para la lógica de red y prefs.
+     * Muestra un diálogo de login/registro con rueda de carga.
      */
     private void showLoginDialog() {
-        // 1) Inflamos el layout personalizado
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_login, null);
         EditText nameET  = dialogView.findViewById(R.id.nameEditText);
         EditText emailET = dialogView.findViewById(R.id.emailEditText);
         EditText passET  = dialogView.findViewById(R.id.passwordEditText);
         TextView toggle  = dialogView.findViewById(R.id.toggleTextView);
 
-        // 2) Construimos el AlertDialog añadiendo ya el botón POSITIVO ("Entrar")
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
-                .setPositiveButton("Entrar", null)              // ← aquí creamos el botón
+                .setPositiveButton("Entrar", null)
                 .setNegativeButton("Cancelar", (d, w) -> d.dismiss())
                 .create();
-
         dialog.setTitle("Iniciar Sesión");
 
-        // 3) Al mostrarse, sobreescribimos el listener del botón Entrar
         dialog.setOnShowListener(dlg -> {
             Button btnOK = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
             btnOK.setOnClickListener(v -> {
@@ -173,13 +158,14 @@ public class MainActivity extends AppCompatActivity {
                 String pass  = passET.getText().toString().trim();
 
                 if (nameET.getVisibility() == View.GONE) {
-                    // ——— MODO LOGIN ———
+                    // —— LOGIN ——
+                    showLoading();
                     usuarioController.login(email, pass, new retrofit2.Callback<Mensaje>() {
                         @Override
-                        public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                                Usuario u = response.body().getUsuario();
-                                // Actualiza el header
+                        public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                            hideLoading();
+                            if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
+                                Usuario u = resp.body().getUsuario();
                                 navUserName.setText("¡Bienvenido " + u.getUsuario() + "!");
                                 actualizarFotoDrawer(u.getFotoPerfil());
                                 actualizarOpcionesMenu(true);
@@ -195,13 +181,14 @@ public class MainActivity extends AppCompatActivity {
                         }
                         @Override
                         public void onFailure(Call<Mensaje> call, Throwable t) {
+                            hideLoading();
                             Toast.makeText(MainActivity.this,
                                     "Error en servidor",
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
                 } else {
-                    // ——— MODO REGISTRO ———
+                    // —— REGISTRO ——
                     String nombre = nameET.getText().toString().trim();
                     if (nombre.isEmpty() || email.isEmpty() || pass.isEmpty()) {
                         Toast.makeText(MainActivity.this,
@@ -209,44 +196,39 @@ public class MainActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    // Llamada al register del controller
+                    showLoading();
                     usuarioController.register(
-                            email,
-                            nombre,
-                            "Sin localidad",  // o pide un campo adicional si lo deseas
-                            pass,
+                            email, nombre, "Sin localidad", pass,
                             new retrofit2.Callback<Mensaje>() {
                                 @Override
                                 public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
-                                    if (resp.isSuccessful() && resp.body() != null && resp.body().isSuccess()) {
+                                    hideLoading();
+                                    if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
                                         Toast.makeText(MainActivity.this,
-                                                "Registro exitoso, ya puedes iniciar sesión",
+                                                "Registro exitoso, inicie sesión",
                                                 Toast.LENGTH_SHORT).show();
-                                        // Volver a modo login automáticamente
                                         nameET.setVisibility(View.GONE);
                                         btnOK.setText("Entrar");
                                         dialog.setTitle("Iniciar Sesión");
                                         toggle.setText("¿No tienes cuenta? Regístrate");
                                     } else {
                                         Toast.makeText(MainActivity.this,
-                                                resp.body() != null
-                                                        ? resp.body().getMessage()
-                                                        : "Error en registro",
+                                                resp.body()!=null?resp.body().getMessage():"Error en registro",
                                                 Toast.LENGTH_SHORT).show();
                                     }
                                 }
                                 @Override
                                 public void onFailure(Call<Mensaje> call, Throwable t) {
+                                    hideLoading();
                                     Toast.makeText(MainActivity.this,
                                             "Error en servidor durante registro",
                                             Toast.LENGTH_SHORT).show();
                                 }
-                            }
-                    );
+                            });
                 }
             });
 
-            // 4) Toggle entre Login y Registro
+            // Alternar Login / Registro
             toggle.setOnClickListener(v -> {
                 if (nameET.getVisibility() == View.GONE) {
                     nameET.setVisibility(View.VISIBLE);
@@ -262,64 +244,53 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        // 5) ¡Por fin, lo mostramos!
         dialog.show();
     }
 
+    /** Muestra la rueda de carga. */
+    private void showLoading() {
+        if (loadingDialog == null) {
+            loadingDialog = new ProgressDialog(this);
+            loadingDialog.setMessage("Cargando...");
+            loadingDialog.setCancelable(false);
+        }
+        loadingDialog.show();
+    }
 
-    /**
-     * Actualiza visibilidad de items de menú según si está logueado.
-     */
+    /** Oculta la rueda de carga. */
+    private void hideLoading() {
+        if (loadingDialog != null && loadingDialog.isShowing()) {
+            loadingDialog.dismiss();
+        }
+    }
+
+    /** Actualiza visibilidad de opciones del drawer. */
     private void actualizarOpcionesMenu(boolean loggedIn) {
         Menu menu = navigationView.getMenu();
         menu.findItem(R.id.nav_profile).setVisible(loggedIn);
         menu.findItem(R.id.nav_logout).setVisible(loggedIn);
         menu.findItem(R.id.nav_login).setVisible(!loggedIn);
         navigationView.invalidate();
-
-        // DEBUG — imprime el estado de cada ítem
         for (int i = 0; i < menu.size(); i++) {
             MenuItem mi = menu.getItem(i);
             Log.d("DEBUG_MENU", "Item " + mi.getTitle() + " visible=" + mi.isVisible());
         }
     }
 
-    /**
-     * Cierra la sesión del usuario:
-     * 1) Borra prefs
-     * 2) Reinflar el menú (vuelve a cargar drawer_menu.xml)
-     * 3) Oculta/mostrar items según estado
-     * 4) Resetea header
-     * 5) Vuelve al HomeFragment
-     */
+    /** Cierra sesión y vuelve a HomeFragment. */
     private void cerrarSesion() {
-        // 1) Borra todos los datos de sesión
         usuarioController.logout();
-
-        // 2) Reinflar el menú para forzar que 'Entrar' vuelva a añadirse
         navigationView.getMenu().clear();
         navigationView.inflateMenu(R.menu.drawer_menu);
-
-        // 3) Actualiza visibilidad de items (solo nav_login y nav_exit visible)
         actualizarOpcionesMenu(false);
-
-        // 4) Restablece el header a estado "sin sesión"
         navUserName.setText("¡Bienvenido!");
         navUserImage.setImageResource(R.drawable.default_avatar);
-
-        // 5) Navega al HomeFragment
         loadFragment(new HomeFragment());
-
-        // Mensaje al usuario
         Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
-
-        // Cierra el drawer
         drawerLayout.closeDrawers();
     }
 
-    /**
-     * Decodifica una cadena Base64 (sin prefijos) y la muestra en el avatar del drawer.
-     */
+    /** Actualiza avatar en el drawer a partir de Base64. */
     public void actualizarFotoDrawer(String base64Foto) {
         View header = navigationView.getHeaderView(0);
         ImageView avatar = header.findViewById(R.id.nav_user_image);
@@ -328,18 +299,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         if (base64Foto.contains(",")) {
-            base64Foto = base64Foto.substring(base64Foto.indexOf(",") + 1);
+            base64Foto = base64Foto.substring(base64Foto.indexOf(",")+1);
         }
-        base64Foto = base64Foto.replaceAll("\\s+", "");
-        byte[] bytes = android.util.Base64.decode(base64Foto, android.util.Base64.NO_WRAP);
-        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        if (bmp != null) avatar.setImageBitmap(bmp);
-        else           avatar.setImageResource(R.drawable.default_avatar);
+        base64Foto = base64Foto.replaceAll("\\s+","");
+        byte[] bytes = Base64.decode(base64Foto, Base64.NO_WRAP);
+        Bitmap bmp = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+        avatar.setImageBitmap(bmp!=null?bmp:BitmapFactory.decodeResource(getResources(), R.drawable.default_avatar));
     }
 
-    /**
-     * Carga el usuario desde prefs y actualiza el drawer (nombre + foto).
-     */
+    /** Carga usuario de prefs y actualiza header y menú. */
     public void cargarUsuarioYActualizarUI() {
         Usuario u = usuarioController.loadFromPrefs();
         if (u != null) {
@@ -356,7 +324,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresca cada vez que vuelve a primer plano
         cargarUsuarioYActualizarUI();
     }
 }
