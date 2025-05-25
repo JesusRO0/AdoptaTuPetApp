@@ -1,73 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    card_view:cardCornerRadius="8dp"
-    card_view:cardElevation="4dp">
+    android:layout_margin="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="6dp">
 
-    <LinearLayout
+    <!-- Usamos FrameLayout como contenedor clickable con ripple -->
+    <FrameLayout
+        android:id="@+id/cardAnimalContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <!-- Imagen del animal -->
-        <ImageView
-            android:id="@+id/ivAnimalFoto"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/default_avatar" />
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:padding="16dp">
 
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingStart="8dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-            <!-- Nombre -->
-            <TextView
-                android:id="@+id/tvAnimalNombre"
-                android:layout_width="wrap_content"
+            <!-- Texto -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Nombre del animal"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <!-- Especie -->
-            <TextView
-                android:id="@+id/tvAnimalEspecie"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Especie"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                <TextView
+                    android:id="@+id/tvAnimalNombre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Misifú"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#222" />
 
-            <!-- Raza -->
-            <TextView
-                android:id="@+id/tvAnimalRaza"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Raza"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                <!-- Especie -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Especie:"
+                        android:textStyle="bold"
+                        android:textColor="#555"
+                        android:layout_marginEnd="4dp"/>
+                    <TextView
+                        android:id="@+id/tvAnimalEspecie"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gato"
+                        android:textColor="#333"/>
+                </LinearLayout>
 
-            <!-- Edad -->
-            <TextView
-                android:id="@+id/tvAnimalEdad"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Edad"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                <!-- Raza -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Raza:"
+                        android:textStyle="bold"
+                        android:textColor="#555"
+                        android:layout_marginEnd="4dp"/>
+                    <TextView
+                        android:id="@+id/tvAnimalRaza"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Exótico"
+                        android:textColor="#333"/>
+                </LinearLayout>
 
-            <!-- Localidad -->
-            <TextView
-                android:id="@+id/tvAnimalLocalidad"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Localidad"
-                android:textAppearance="?android:attr/textAppearanceSmall" />
+                <!-- Edad -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edad:"
+                        android:textStyle="bold"
+                        android:textColor="#555"
+                        android:layout_marginEnd="4dp"/>
+                    <TextView
+                        android:id="@+id/tvAnimalEdad"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Adulto"
+                        android:textColor="#333"/>
+                </LinearLayout>
+
+                <!-- Localidad -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Localidad:"
+                        android:textStyle="bold"
+                        android:textColor="#555"
+                        android:layout_marginEnd="4dp"/>
+                    <TextView
+                        android:id="@+id/tvAnimalLocalidad"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Huelva"
+                        android:textColor="#333"/>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Foto circular -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/ivAnimalFoto"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/default_avatar"
+                app:civ_border_width="2dp"
+                app:civ_border_color="#87DDFF"
+                android:scaleType="centerCrop"/>
         </LinearLayout>
-    </LinearLayout>
+    </FrameLayout>
 </androidx.cardview.widget.CardView>

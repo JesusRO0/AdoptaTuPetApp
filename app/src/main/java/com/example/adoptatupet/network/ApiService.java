@@ -4,10 +4,12 @@ import com.example.adoptatupet.models.Animal;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.models.Mensaje;
 
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 /**
@@ -44,6 +46,17 @@ public interface ApiService {
     @POST("add_animal.php")
     Call<Mensaje> addAnimal(@Body Animal animal);
 
+    /**
+     * Borra un usuario dado su email.
+     * POST https://…/api/delete_user.php
+     */
     @POST("delete_user.php")
-    Call<Mensaje> deleteUserEmail(@Body Map<String,String> body);
+    Call<Mensaje> deleteUserEmail(@Body Map<String, String> body);
+
+    /**
+     * Obtiene todos los animales.
+     * GET https://…/api/get_animals.php
+     */
+    @GET("get_animals.php")
+    Call<List<Animal>> getAllAnimals();
 }

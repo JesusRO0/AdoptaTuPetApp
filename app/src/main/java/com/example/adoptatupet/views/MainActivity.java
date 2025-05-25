@@ -23,6 +23,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 
 import com.example.adoptatupet.R;
+import com.example.adoptatupet.controllers.animalController;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.views.fragments.AdoptaFragment;
@@ -121,6 +122,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Carga usuario en header
         cargarUsuarioYActualizarUI();
+
+        // ** Precarga de animales **
+        animalController.getInstance(this)
+                .fetchAllAnimals(null);  // null porque no necesitamos callback en este punto
     }
 
     /** Reemplaza el frame con el fragmento dado. */
