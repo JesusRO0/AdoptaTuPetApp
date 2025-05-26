@@ -62,6 +62,9 @@ dependencies {
     implementation ("com.google.android.material:material:1.9.0")
     implementation ("com.github.bumptech.glide:glide:4.14.2")
     implementation ("de.hdodenhof:circleimageview:3.1.0")
+    implementation ("androidx.core:core-ktx:1.7.0")
+    implementation ("androidx.core:core:1.7.0")
+    implementation(libs.cronet.embedded)
     annotationProcessor ("com.github.bumptech.glide:compiler:4.14.2")
 
     testImplementation(libs.junit)

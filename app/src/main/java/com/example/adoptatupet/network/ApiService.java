@@ -59,4 +59,16 @@ public interface ApiService {
      */
     @GET("get_animals.php")
     Call<List<Animal>> getAllAnimals();
+
+    /**
+     * Borra un animal dado su id.
+     * POST https://…/api/delete_animal.php
+     */
+    @POST("delete_animal.php")
+    Call<Mensaje> deleteAnimal(@Body Map<String, String> body);
+
+
+    /** Actualiza un animal existente */
+    @POST("update_animal.php")
+    Call<Mensaje> updateAnimal(@Body Animal animal);
 }

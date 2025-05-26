@@ -12,7 +12,9 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,7 +44,7 @@ public class animalController {
      * Constructor privado. Inicializa API, SharedPreferences y Gson,
      * y carga la caché previa (si existe).
      */
-    private animalController(Context ctx) {
+    public animalController(Context ctx) {
         this.api   = ApiClient.getClient().create(ApiService.class);
         this.prefs = ctx.getApplicationContext()
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -161,5 +163,59 @@ public class animalController {
                 cachedAnimals.clear();
             }
         }
+    }
+
+    /**
+     * Borra un animal del servidor.
+     * @param idAnimal El ID del animal a eliminar.
+     * @param cb       Callback para notificar éxito o error.
+     */
+    public void deleteAnimal(int idAnimal, AnimalCallback cb) {
+        // Preparamos el body con el id del animal
+        Map<String,String> body = new HashMap<>();
+        body.put("idAnimal", String.valueOf(idAnimal));
+
+        // Llamada al endpoint delete_animal.php
+        api.deleteAnimal(body).enqueue(new Callback<Mensaje>() {
+            @Override
+            public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                if (resp.isSuccessful() && resp.body() != null && resp.body().isSuccess()) {
+                    cb.onSuccess();
+                } else {
+                    // Mensaje desde el servidor o genérico
+                    String msg = (resp.body() != null)
+                            ? resp.body().getMessage()
+                            : "Error al borrar animal";
+                    cb.onError(msg);
+                }
+            }
+            @Override
+            public void onFailure(Call<Mensaje> call, Throwable t) {
+                cb.onError("Fallo en servidor: " + t.getMessage());
+            }
+        });
+    }
+    /**
+     * Actualiza un animal existente en el servidor.
+     * @param animal Objeto Animal que incluye su id (getId()) y los nuevos datos.
+     * @param cb     Callback para notificar éxito o error.
+     */
+    public void updateAnimal(Animal animal, AnimalCallback cb) {
+        api.updateAnimal(animal).enqueue(new Callback<Mensaje>() {
+            @Override
+            public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                if (resp.isSuccessful() && resp.body() != null && resp.body().isSuccess()) {
+                    cb.onSuccess();
+                } else {
+                    cb.onError(resp.body() != null
+                            ? resp.body().getMessage()
+                            : "Error desconocido al actualizar animal");
+                }
+            }
+            @Override
+            public void onFailure(Call<Mensaje> call, Throwable t) {
+                cb.onError("Fallo en servidor: " + t.getMessage());
+            }
+        });
     }
 }

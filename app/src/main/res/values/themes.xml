@@ -4,6 +4,14 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
         <item name="colorSecondary">@color/colorSecondary</item>
-        <!-- Puedes añadir otros atributos aquí -->
+    </style>
+
+    <!-- Si todavía quieres un TextAppearance específico para etiquetas: -->
+    <style name="TextAppearance.MaterialComponents.LabelLarge" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:fontFamily">@font/fredoka_regular</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 </resources>
