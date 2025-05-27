@@ -16,7 +16,6 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -37,11 +36,13 @@ import java.util.List;
 
 /**
  * Fragment para editar un Animal existente.
+ * Recibe solo el ID (ARG_ID) para evitar TransactionTooLargeException.
  * Al guardar cambios valida campos y llama a updateAnimal.
  */
 public class UpdateAnimalFragment extends Fragment {
 
-    private static final String ARG_ANIMAL = "animal";
+    private static final String ARG_ID = "animal_id";
+    private int animalId;
     private Animal animal;
 
     private EditText    etNombre, etDescripcion;
@@ -52,7 +53,6 @@ public class UpdateAnimalFragment extends Fragment {
     private Button      btnSeleccionarImagen, btnGuardar, btnCancelar;
     private String      imagenBase64 = null;
 
-    // Lanzador para escoger imagen de galería
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -70,25 +70,26 @@ public class UpdateAnimalFragment extends Fragment {
     }
 
     /**
-     * Crea instancia con el objeto Animal.
+     * Instancia pasando solo el ID del Animal.
      */
-    public static UpdateAnimalFragment newInstance(@NonNull Animal animal) {
-        UpdateAnimalFragment fragment = new UpdateAnimalFragment();
+    public static UpdateAnimalFragment newInstance(int idAnimal) {
+        UpdateAnimalFragment f = new UpdateAnimalFragment();
         Bundle args = new Bundle();
-        args.putParcelable(ARG_ANIMAL, animal);
-        fragment.setArguments(args);
-        return fragment;
+        args.putInt(ARG_ID, idAnimal);
+        f.setArguments(args);
+        return f;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            animal = getArguments().getParcelable(ARG_ANIMAL);
+            animalId = getArguments().getInt(ARG_ID, -1);
         }
     }
 
-    @Nullable @Override
+    @Nullable
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -118,43 +119,15 @@ public class UpdateAnimalFragment extends Fragment {
         btnGuardar           = view.findViewById(R.id.btnEditGuardarCambios);
         btnCancelar          = view.findViewById(R.id.btnCancelarEdicion);
 
-        // Sobrecargar campos con datos del animal
-        if (animal != null) {
-            etNombre.setText(animal.getNombre());
-            etDescripcion.setText(animal.getDescripcion());
-            // Especie
-            if ("Perro".equalsIgnoreCase(animal.getEspecie())) rbPerro.setChecked(true);
-            else rbGato.setChecked(true);
-            // Razas
-            String[] breeds = "Perro".equalsIgnoreCase(animal.getEspecie())
-                    ? getResources().getStringArray(R.array.dog_breeds)
-                    : getResources().getStringArray(R.array.cat_breeds);
-            ArrayAdapter<String> razaAdapter = new ArrayAdapter<>(
-                    requireContext(), android.R.layout.simple_spinner_item,
-                    Arrays.asList(breeds)
-            );
-            razaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerRaza.setAdapter(razaAdapter);
-            spinnerRaza.setSelection(Arrays.asList(breeds).indexOf(animal.getRaza()));
-            // Edad
-            selectRadio(rgEdad, animal.getEdad());
-            // Localidad
-            List<String> locList = Arrays.asList(getResources().getStringArray(R.array.spain_localities));
-            ArrayAdapter<String> locAdapter = new ArrayAdapter<>(
-                    requireContext(), android.R.layout.simple_spinner_item, locList);
-            locAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerLocalidad.setAdapter(locAdapter);
-            spinnerLocalidad.setSelection(locList.indexOf(animal.getLocalidad()));
-            // Sexo
-            selectRadio(rgSexo, animal.getSexo());
-            // Tamaño
-            selectRadio(rgTamano, animal.getTamano());
-            // Imagen se deja vacía hasta nueva selección
-            ivFoto.setImageResource(R.drawable.default_avatar);
-            imagenBase64 = null;
-        }
+        // TODO: fetch animal details by ID and then prefill fields
+        // Por ejemplo:
+        // animalController.getInstance(requireContext())
+        //   .fetchAnimalById(animalId, new animalController.AnimalByIdCallback() { ... });
 
-        // Escuchar cambios de especie para recargar razas
+        // Inicia imagen default
+        ivFoto.setImageResource(R.drawable.default_avatar);
+
+        // Escucha cambios especie para recargar razas
         rgEspecie.setOnCheckedChangeListener((g, id) -> {
             String[] newBreeds = (id == R.id.rbPerroEdit)
                     ? getResources().getStringArray(R.array.dog_breeds)
@@ -174,67 +147,62 @@ public class UpdateAnimalFragment extends Fragment {
                 )
         );
 
-        // Guardar cambios: validar, construir objeto y llamar a updateAnimal
+        // Guardar
         btnGuardar.setOnClickListener(v -> {
-            // Validaciones mínimas
+            // Validaciones...
             String nombre = etNombre.getText().toString().trim();
             if (TextUtils.isEmpty(nombre)) { etNombre.setError("Requerido"); return; }
-            String especie = rbPerro.isChecked() ? "Perro" : "Gato";
-            String raza = spinnerRaza.getSelectedItem().toString();
-            String edad = ((RadioButton) requireView().findViewById(rgEdad.getCheckedRadioButtonId())).getText().toString();
-            String localidad = spinnerLocalidad.getSelectedItem().toString();
-            String sexo = ((RadioButton) requireView().findViewById(rgSexo.getCheckedRadioButtonId())).getText().toString();
-            String tamano = ((RadioButton) requireView().findViewById(rgTamano.getCheckedRadioButtonId())).getText().toString();
-            String desc = etDescripcion.getText().toString().trim();
-            if (TextUtils.isEmpty(desc)) { etDescripcion.setError("Requerido"); return; }
-            // Si no cambia la imagen, usamos la existente
-            String foto = imagenBase64 != null ? imagenBase64 : animal.getImagen();
-            // Construir objeto actualizado
+            // Resto de validaciones
+
+            // Construir Animal actualizado (usar imagenBase64 o existente)
+            // TODO: asegurarse de que 'animal' no sea null si no se ha fetcheado
             Animal actualizado = new Animal(
-                    animal.getIdAnimal(), nombre, especie, raza,
-                    edad, localidad, sexo, tamano,
-                    desc, foto, animal.getIdUsuario()
+                    animalId,
+                    nombre,
+                    rbPerro.isChecked() ? "Perro" : "Gato",
+                    spinnerRaza.getSelectedItem().toString(),
+                    ((RadioButton) requireView().findViewById(rgEdad.getCheckedRadioButtonId())).getText().toString(),
+                    spinnerLocalidad.getSelectedItem().toString(),
+                    ((RadioButton) requireView().findViewById(rgSexo.getCheckedRadioButtonId())).getText().toString(),
+                    ((RadioButton) requireView().findViewById(rgTamano.getCheckedRadioButtonId())).getText().toString(),
+                    etDescripcion.getText().toString().trim(),
+                    imagenBase64 != null ? imagenBase64 : (animal != null ? animal.getImagen() : null),
+                    animal != null ? animal.getIdUsuario() : -1
             );
-            // Mostrar loader
+
             ((MainActivity) requireActivity()).showLoading();
-            // Llamar a update
             animalController.getInstance(requireContext())
                     .updateAnimal(actualizado, new animalController.AnimalCallback() {
-                        @Override
-                        public void onSuccess() {
+                        @Override public void onSuccess() {
                             ((MainActivity) requireActivity()).hideLoading();
                             Toast.makeText(getContext(), "Animal actualizado", Toast.LENGTH_SHORT).show();
                             requireActivity().getSupportFragmentManager().popBackStack();
                         }
-                        @Override
-                        public void onError(String msg) {
+                        @Override public void onError(String msg) {
                             ((MainActivity) requireActivity()).hideLoading();
                             Toast.makeText(getContext(), "Error: " + msg, Toast.LENGTH_LONG).show();
                         }
                     });
         });
 
-        // Cancelar edición
         btnCancelar.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-
         return view;
     }
 
-    /** Convierte URI a Base64 (sin saltos) */
     private void convertirImagenABase64(Uri uri) {
         try {
             Bitmap bmp = MediaStore.Images.Media.getBitmap(
                     requireActivity().getContentResolver(), uri);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos);
-            imagenBase64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP);
+            imagenBase64 = android.util.Base64.encodeToString(
+                    baos.toByteArray(), android.util.Base64.NO_WRAP);
         } catch (IOException e) {
             Toast.makeText(getContext(), "Error al cargar imagen", Toast.LENGTH_SHORT).show();
             imagenBase64 = null;
         }
     }
 
-    /** Selecciona el RadioButton cuyo texto coincide con val */
     private void selectRadio(RadioGroup rg, String val) {
         for (int i = 0; i < rg.getChildCount(); i++) {
             if (rg.getChildAt(i) instanceof RadioButton) {

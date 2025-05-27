@@ -24,11 +24,13 @@ import com.google.android.material.button.MaterialButton;
 
 /**
  * Fragment que muestra el detalle completo de un Animal.
- * Incluye botones de BORRAR y EDITAR, visibles solo para admin.
+ * Ahora recibe solo el ID para evitar TransactionTooLargeException.
+ * Incluye botones BORRAR y EDITAR solo para admin.
  */
 public class AnimalDetailFragment extends Fragment {
 
-    private static final String ARG_ANIMAL = "animal";
+    private static final String ARG_ID = "animal_id";
+    private int animalId;
     private Animal animal;
 
     public AnimalDetailFragment() {
@@ -36,12 +38,12 @@ public class AnimalDetailFragment extends Fragment {
     }
 
     /**
-     * Crea instancia con el objeto Animal.
+     * Instancia pasando solo el ID del Animal.
      */
-    public static AnimalDetailFragment newInstance(@NonNull Animal animal) {
+    public static AnimalDetailFragment newInstance(int idAnimal) {
         AnimalDetailFragment fragment = new AnimalDetailFragment();
         Bundle args = new Bundle();
-        args.putParcelable(ARG_ANIMAL, animal);
+        args.putInt(ARG_ID, idAnimal);
         fragment.setArguments(args);
         return fragment;
     }
@@ -49,9 +51,9 @@ public class AnimalDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Recuperar el Animal desde los argumentos
+        // Recuperar solo el ID desde los argumentos
         if (getArguments() != null) {
-            animal = getArguments().getParcelable(ARG_ANIMAL);
+            animalId = getArguments().getInt(ARG_ID, -1);
         }
     }
 
@@ -60,7 +62,6 @@ public class AnimalDetailFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // Inflar layout
         View view = inflater.inflate(R.layout.fragment_animal_detail, container, false);
 
         // Bind de vistas
@@ -74,28 +75,39 @@ public class AnimalDetailFragment extends Fragment {
         TextView  tvTamano      = view.findViewById(R.id.tvDetailTamano);
         TextView  tvDescripcion = view.findViewById(R.id.tvDetailDescripcion);
 
-        // Mostrar datos del animal
-        if (animal != null) {
-            tvNombre.setText(animal.getNombre());
-            tvEspecie.setText(animal.getEspecie());
-            tvRaza.setText(animal.getRaza());
-            tvEdad.setText(animal.getEdad());
-            tvLocalidad.setText(animal.getLocalidad());
-            tvSexo.setText(animal.getSexo());
-            tvTamano.setText(animal.getTamano());
-            tvDescripcion.setText(animal.getDescripcion());
-
-            // Cargar imagen en Base64
-            String b64 = animal.getImagen();
-            if (b64 != null && !b64.isEmpty()) {
-                byte[] data = Base64.decode(b64, Base64.DEFAULT);
-                ivFoto.setImageBitmap(
-                        android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length)
-                );
-            } else {
-                ivFoto.setImageResource(R.drawable.default_avatar);
-            }
-        }
+        // 1) Recuperar el animal por ID
+        animalController.getInstance(requireContext())
+                .fetchAnimalById(animalId, new animalController.AnimalByIdCallback() {
+                    @Override
+                    public void onSuccess(Animal a) {
+                        animal = a;
+                        // 2) Mostrar datos
+                        tvNombre.setText(a.getNombre());
+                        tvEspecie.setText(a.getEspecie());
+                        tvRaza.setText(a.getRaza());
+                        tvEdad.setText(a.getEdad());
+                        tvLocalidad.setText(a.getLocalidad());
+                        tvSexo.setText(a.getSexo());
+                        tvTamano.setText(a.getTamano());
+                        tvDescripcion.setText(a.getDescripcion());
+                        String b64 = a.getImagen();
+                        if (b64 != null && !b64.isEmpty()) {
+                            byte[] data = Base64.decode(b64, Base64.DEFAULT);
+                            ivFoto.setImageBitmap(
+                                    android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length)
+                            );
+                        } else {
+                            ivFoto.setImageResource(R.drawable.default_avatar);
+                        }
+                    }
+                    @Override
+                    public void onError(String msg) {
+                        Toast.makeText(requireContext(),
+                                        "Error cargando animal: " + msg,
+                                        Toast.LENGTH_LONG)
+                                .show();
+                    }
+                });
 
         return view;
     }
@@ -104,17 +116,17 @@ public class AnimalDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // 1) Desactivar overscroll en scroll y root
+        // Desactivar overscroll
         NestedScrollView scroll = view.findViewById(R.id.scrollAnimalDetail);
         scroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
         CoordinatorLayout root = view.findViewById(R.id.detail_root);
         root.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
-        // 2) Configurar flecha de atrás en la toolbar
+        // Toolbar atrás
         Toolbar toolbar = view.findViewById(R.id.toolbar_detail);
         toolbar.setNavigationOnClickListener(v -> requireActivity().onBackPressed());
 
-        // 3) Botones (solo admin)
+        // Botones admin
         MaterialButton btnBorrar = view.findViewById(R.id.btnBorrarAnimal);
         MaterialButton btnEditar = view.findViewById(R.id.btnEditarAnimal);
         String email = usuarioController
@@ -123,34 +135,41 @@ public class AnimalDetailFragment extends Fragment {
                 .getEmail();
 
         if ("admin@gmail.com".equalsIgnoreCase(email)) {
-            // Mostrar Borrar
             btnBorrar.setVisibility(View.VISIBLE);
-            btnBorrar.setOnClickListener(v -> {
-                animalController.getInstance(requireContext())
-                        .deleteAnimal(animal.getIdAnimal(), new animalController.AnimalCallback() {
-                            @Override
-                            public void onSuccess() {
-                                Toast.makeText(getContext(), "Animal borrado", Toast.LENGTH_SHORT).show();
-                                requireActivity().onBackPressed();
-                            }
-                            @Override
-                            public void onError(String message) {
-                                Toast.makeText(getContext(), "Error: " + message, Toast.LENGTH_LONG).show();
-                            }
-                        });
-            });
-            // Mostrar Editar
             btnEditar.setVisibility(View.VISIBLE);
+
+            // Borrar
+            btnBorrar.setOnClickListener(v ->
+                    animalController.getInstance(requireContext())
+                            .deleteAnimal(animalId, new animalController.AnimalCallback() {
+                                @Override
+                                public void onSuccess() {
+                                    Toast.makeText(getContext(),
+                                                    "Animal borrado",
+                                                    Toast.LENGTH_SHORT)
+                                            .show();
+                                    requireActivity().onBackPressed();
+                                }
+                                @Override
+                                public void onError(String message) {
+                                    Toast.makeText(getContext(),
+                                                    "Error: " + message,
+                                                    Toast.LENGTH_LONG)
+                                            .show();
+                                }
+                            })
+            );
+
+            // Editar → lanzamos UpdateAnimalFragment con el mismo ID
             btnEditar.setOnClickListener(v -> {
-                // Abrir fragment de edición
-                // Abrir fragment de edición pasándole el objeto Animal
-                UpdateAnimalFragment editFrag = UpdateAnimalFragment.newInstance(animal);
+                UpdateAnimalFragment editFrag = UpdateAnimalFragment.newInstance(animalId);
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.nav_host_fragment, editFrag)
                         .addToBackStack(null)
                         .commit();
             });
+
         } else {
             btnBorrar.setVisibility(View.GONE);
             btnEditar.setVisibility(View.GONE);

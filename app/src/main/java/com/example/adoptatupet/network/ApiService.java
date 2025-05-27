@@ -11,6 +11,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 /**
  * ApiService define los endpoints de tu API REST.
@@ -71,4 +72,7 @@ public interface ApiService {
     /** Actualiza un animal existente */
     @POST("update_animal.php")
     Call<Mensaje> updateAnimal(@Body Animal animal);
+
+    @GET("get_animal_by_id.php")
+    Call<Mensaje> getAnimalById(@Query("idAnimal") int idAnimal);
 }

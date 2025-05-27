@@ -24,27 +24,23 @@ import retrofit2.Response;
  * animalController: maneja todas las operaciones relacionadas con animales:
  * - Añadir un animal al backend.
  * - Obtener la lista completa de animales.
+ * - Borrar animal.
+ * - Actualizar animal.
+ * - Obtener un animal por ID (nuevo).
  * - Mantener una caché local (SharedPreferences) para acelerar el arranque.
  */
 public class animalController {
 
-    // Clave de SharedPreferences donde guardamos el JSON de animales
-    private static final String PREFS_NAME        = "animal_cache_prefs";
-    private static final String KEY_CACHED_LIST   = "key_cached_animals";
+    private static final String PREFS_NAME      = "animal_cache_prefs";
+    private static final String KEY_CACHED_LIST  = "key_cached_animals";
 
     private static animalController instance;
     private final ApiService api;
     private final SharedPreferences prefs;
     private final Gson gson;
-
-    // Caché en memoria de la última lista obtenida
     private final List<Animal> cachedAnimals = new ArrayList<>();
 
-    /**
-     * Constructor privado. Inicializa API, SharedPreferences y Gson,
-     * y carga la caché previa (si existe).
-     */
-    public animalController(Context ctx) {
+    private animalController(Context ctx) {
         this.api   = ApiClient.getClient().create(ApiService.class);
         this.prefs = ctx.getApplicationContext()
                 .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -52,9 +48,6 @@ public class animalController {
         loadCacheFromPrefs();
     }
 
-    /**
-     * Devuelve la instancia singleton del controller.
-     */
     public static animalController getInstance(Context ctx) {
         if (instance == null) {
             instance = new animalController(ctx);
@@ -62,7 +55,7 @@ public class animalController {
         return instance;
     }
 
-    /** Callback para operaciones de añadir animal */
+    /** Callback para operaciones de añadir, borrar o actualizar animal */
     public interface AnimalCallback {
         void onSuccess();
         void onError(String message);
@@ -74,15 +67,15 @@ public class animalController {
         void onError(String message);
     }
 
-    /**
-     * Añade un nuevo animal al servidor.
-     * @param animal Objeto a enviar.
-     * @param cb     Callback de respuesta.
-     */
+    /** Callback para obtener un solo Animal por ID */
+    public interface AnimalByIdCallback {
+        void onSuccess(Animal animal);
+        void onError(String message);
+    }
+
     public void addAnimal(Animal animal, AnimalCallback cb) {
         api.addAnimal(animal).enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+            @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
                 if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
                     cb.onSuccess();
                 } else {
@@ -91,131 +84,116 @@ public class animalController {
                             : "Error desconocido al añadir animal");
                 }
             }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
+            @Override public void onFailure(Call<Mensaje> call, Throwable t) {
                 cb.onError("Fallo en servidor: " + t.getMessage());
             }
         });
     }
 
-    /**
-     * Obtiene todos los animales del servidor y actualiza la caché.
-     * @param cb Callback con la lista o el error.
-     */
     public void fetchAllAnimals(FetchCallback cb) {
         api.getAllAnimals().enqueue(new Callback<List<Animal>>() {
-            @Override
-            public void onResponse(Call<List<Animal>> call, Response<List<Animal>> resp) {
-                if (resp.isSuccessful() && resp.body() != null) {
-                    // 1) Actualizar caché en memoria
+            @Override public void onResponse(Call<List<Animal>> call, Response<List<Animal>> resp) {
+                if (resp.isSuccessful() && resp.body()!=null) {
                     cachedAnimals.clear();
                     cachedAnimals.addAll(resp.body());
-                    // 2) Persistir en SharedPreferences
                     saveCacheToPrefs(cachedAnimals);
-                    // 3) Devolver copia al UI
-                    if (cb != null) cb.onSuccess(new ArrayList<>(cachedAnimals));
-                } else {
-                    if (cb != null) cb.onError("Error al cargar animales");
+                    if (cb!=null) cb.onSuccess(new ArrayList<>(cachedAnimals));
+                } else if (cb!=null) {
+                    cb.onError("Error al cargar animales");
                 }
             }
-            @Override
-            public void onFailure(Call<List<Animal>> call, Throwable t) {
-                if (cb != null) cb.onError("Fallo en servidor: " + t.getMessage());
+            @Override public void onFailure(Call<List<Animal>> call, Throwable t) {
+                if (cb!=null) cb.onError("Fallo en servidor: " + t.getMessage());
             }
         });
     }
 
-    /**
-     * Devuelve inmediatamente la lista cacheada en memoria.
-     * @return Lista de animales (copia).
-     */
-    public List<Animal> getCachedAnimals() {
-        return new ArrayList<>(cachedAnimals);
-    }
+    /** Obtiene un solo animal por su ID usando tu clase Mensaje como wrapper */
+    public void fetchAnimalById(int idAnimal, AnimalByIdCallback cb) {
+        api.getAnimalById(idAnimal)
+                .enqueue(new Callback<Mensaje>() {
+                    @Override
+                    public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                        if (resp.isSuccessful() && resp.body() != null) {
+                            Mensaje wrapper = resp.body();
+                            if (wrapper.isSuccess() && wrapper.getAnimal() != null) {
+                                cb.onSuccess(wrapper.getAnimal());
+                            } else {
+                                // Si el servidor devolvió success=false o no vino el animal
+                                cb.onError(wrapper.getMessage() != null
+                                        ? wrapper.getMessage()
+                                        : "Error al obtener el animal");
+                            }
+                        } else {
+                            cb.onError("Respuesta inválida del servidor");
+                        }
+                    }
 
-    /**
-     * Guarda la lista en formato JSON en SharedPreferences.
-     */
-    private void saveCacheToPrefs(List<Animal> list) {
-        String json = gson.toJson(list);
-        prefs.edit()
-                .putString(KEY_CACHED_LIST, json)
-                .apply();
+                    @Override
+                    public void onFailure(Call<Mensaje> call, Throwable t) {
+                        cb.onError("Fallo en servidor: " + t.getMessage());
+                    }
+                });
     }
-
-    /**
-     * Carga la lista cacheada desde SharedPreferences al iniciar.
-     * Si el JSON está corrupto o ausente, inicializa como lista vacía.
-     */
-    private void loadCacheFromPrefs() {
-        String json = prefs.getString(KEY_CACHED_LIST, null);
-        if (json != null) {
-            try {
-                Type type = new TypeToken<List<Animal>>(){}.getType();
-                List<Animal> stored = gson.fromJson(json, type);
-                if (stored != null) {
-                    cachedAnimals.clear();
-                    cachedAnimals.addAll(stored);
-                }
-            } catch (Exception e) {
-                // Si hay error, limpiar entrada corrupta
-                prefs.edit().remove(KEY_CACHED_LIST).apply();
-                cachedAnimals.clear();
-            }
-        }
-    }
-
-    /**
-     * Borra un animal del servidor.
-     * @param idAnimal El ID del animal a eliminar.
-     * @param cb       Callback para notificar éxito o error.
-     */
     public void deleteAnimal(int idAnimal, AnimalCallback cb) {
-        // Preparamos el body con el id del animal
         Map<String,String> body = new HashMap<>();
         body.put("idAnimal", String.valueOf(idAnimal));
-
-        // Llamada al endpoint delete_animal.php
         api.deleteAnimal(body).enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
-                if (resp.isSuccessful() && resp.body() != null && resp.body().isSuccess()) {
+            @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
                     cb.onSuccess();
                 } else {
-                    // Mensaje desde el servidor o genérico
-                    String msg = (resp.body() != null)
+                    cb.onError(resp.body()!=null
                             ? resp.body().getMessage()
-                            : "Error al borrar animal";
-                    cb.onError(msg);
+                            : "Error al borrar animal");
                 }
             }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
+            @Override public void onFailure(Call<Mensaje> call, Throwable t) {
                 cb.onError("Fallo en servidor: " + t.getMessage());
             }
         });
     }
-    /**
-     * Actualiza un animal existente en el servidor.
-     * @param animal Objeto Animal que incluye su id (getId()) y los nuevos datos.
-     * @param cb     Callback para notificar éxito o error.
-     */
+
     public void updateAnimal(Animal animal, AnimalCallback cb) {
         api.updateAnimal(animal).enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
-                if (resp.isSuccessful() && resp.body() != null && resp.body().isSuccess()) {
+            @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
+                if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
                     cb.onSuccess();
                 } else {
-                    cb.onError(resp.body() != null
+                    cb.onError(resp.body()!=null
                             ? resp.body().getMessage()
                             : "Error desconocido al actualizar animal");
                 }
             }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
+            @Override public void onFailure(Call<Mensaje> call, Throwable t) {
                 cb.onError("Fallo en servidor: " + t.getMessage());
             }
         });
+    }
+
+    public List<Animal> getCachedAnimals() {
+        return new ArrayList<>(cachedAnimals);
+    }
+
+    private void saveCacheToPrefs(List<Animal> list) {
+        String json = gson.toJson(list);
+        prefs.edit().putString(KEY_CACHED_LIST, json).apply();
+    }
+
+    private void loadCacheFromPrefs() {
+        String json = prefs.getString(KEY_CACHED_LIST, null);
+        if (json!=null) {
+            try {
+                Type type = new TypeToken<List<Animal>>(){}.getType();
+                List<Animal> stored = gson.fromJson(json, type);
+                if (stored!=null) {
+                    cachedAnimals.clear();
+                    cachedAnimals.addAll(stored);
+                }
+            } catch (Exception e) {
+                prefs.edit().remove(KEY_CACHED_LIST).apply();
+                cachedAnimals.clear();
+            }
+        }
     }
 }
