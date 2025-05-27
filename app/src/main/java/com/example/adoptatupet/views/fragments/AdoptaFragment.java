@@ -28,7 +28,7 @@ import java.util.List;
  * 2) Crea el adapter y le inyecta un listener para reaccionar al click en cada tarjeta.
  * 3) Intenta rellenar la lista desde la caché local (animalController.getCachedAnimals()).
  * 4) Si no hay caché, hace fetchAllAnimals() al servidor y actualiza la lista.
- * 5) Al hacer click en un animal, se abre AnimalDetailFragment pasando solo el ID.
+ * 5) Al hacer click en un animal, se abre AnimalDetailFragment pasando solo el ID del Animal.
  */
 public class AdoptaFragment extends Fragment {
 
@@ -36,18 +36,16 @@ public class AdoptaFragment extends Fragment {
     private animalAdapter adapter;
     private final List<Animal> lista = new ArrayList<>();
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                             @Nullable ViewGroup  container,
+                             @Nullable Bundle     savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_adopta, container, false);
+
         rv = v.findViewById(R.id.adopta_recycler_view);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
-
         adapter = new animalAdapter(lista);
         adapter.setOnItemClickListener(animal -> {
-            // Ahora pasamos solo el ID del animal
             AnimalDetailFragment detail = AnimalDetailFragment.newInstance(animal.getIdAnimal());
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
@@ -57,15 +55,13 @@ public class AdoptaFragment extends Fragment {
         });
         rv.setAdapter(adapter);
 
-        // Carga inicial desde caché
-        List<Animal> cache = animalController.getInstance(requireContext())
-                .getCachedAnimals();
+        // Carga inicial desde caché o servidor
+        List<Animal> cache = animalController.getInstance(requireContext()).getCachedAnimals();
         if (cache != null && !cache.isEmpty()) {
             lista.clear();
             lista.addAll(cache);
             adapter.notifyDataSetChanged();
         } else {
-            // Fetch desde servidor
             animalController.getInstance(requireContext())
                     .fetchAllAnimals(new animalController.FetchCallback() {
                         @Override
@@ -76,7 +72,10 @@ public class AdoptaFragment extends Fragment {
                         }
                         @Override
                         public void onError(String msg) {
-                            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                            // Sólo mostrar si el fragment sigue añadido
+                            if (isAdded()) {
+                                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
         }
@@ -87,6 +86,7 @@ public class AdoptaFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // Refrescar siempre al volver al fragment
         animalController.getInstance(requireContext())
                 .fetchAllAnimals(new animalController.FetchCallback() {
                     @Override
@@ -97,7 +97,9 @@ public class AdoptaFragment extends Fragment {
                     }
                     @Override
                     public void onError(String msg) {
-                        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                        if (isAdded()) {
+                            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
     }
