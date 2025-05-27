@@ -1,78 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollHome"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#E6F7FA"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:paddingBottom="80dp"
+    android:fillViewport="true">
 
-<LinearLayout
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="vertical"
-android:gravity="center_horizontal">
+    <LinearLayout
+        android:id="@+id/llHome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
-<!-- Imagen del gatito -->
-<ImageView
-    android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:scaleType="centerCrop"
-    android:src="@drawable/gato_1" />
+        <!-- Imagen del gatito -->
+        <ImageView
+            android:id="@+id/ivHomeGato"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/gato_1" />
 
-<!-- Texto de bienvenida -->
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Únete a nuestra comunidad y forma parte del cambio. Ya sea adoptando, difundiendo o colaborando, cada ayuda cuenta."
-    android:textAlignment="center"
-    android:padding="12dp"
-    android:textSize="16sp"
-    android:textColor="#333" />
+        <!-- Texto de bienvenida -->
+        <TextView
+            android:id="@+id/tvHomeBienvenida"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Únete a nuestra comunidad y forma parte del cambio. Ya sea adoptando, difundiendo o colaborando, cada ayuda cuenta."
+            android:textAlignment="center"
+            android:padding="12dp"
+            android:textSize="16sp"
+            android:textColor="#333" />
 
-<!-- Botón CONÓCENOS -->
-<Button
-    android:id="@+id/conocenos_button"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="CONÓCENOS"
-    android:backgroundTint="#FF9800"
-    android:textColor="#FFF"
-    android:layout_marginBottom="20dp" />
+        <!-- Botón CONÓCENOS -->
+        <Button
+            android:id="@+id/conocenos_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONÓCENOS"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFF"
+            android:layout_marginBottom="20dp" />
 
-<!-- Título sección perros -->
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Adopta un perro"
-    android:textStyle="bold"
-    android:textSize="20sp"
-    android:textColor="#03A9F4"
-    android:layout_marginTop="20dp" />
+        <!-- Título sección perros -->
+        <TextView
+            android:id="@+id/tvHomeTituloPerros"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Adopta un perro"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:textColor="#03A9F4"
+            android:layout_marginTop="20dp" />
 
-<!-- Imagen perros -->
-<ImageView
-    android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:scaleType="centerCrop"
-    android:src="@drawable/perro_1" />
+        <!-- Imagen perros -->
+        <ImageView
+            android:id="@+id/ivHomePerro"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/perro_1" />
 
-<!-- Descripción -->
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Adopta un perro adulto o cachorro vacunado, desparasitado, con análisis de leishmaniosis, chip y esterilizado."
-    android:textAlignment="center"
-    android:padding="12dp"
-    android:textSize="16sp"
-    android:textColor="#333" />
+        <!-- Descripción -->
+        <TextView
+            android:id="@+id/tvHomeDescPerros"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Adopta un perro adulto o cachorro vacunado, desparasitado, con análisis de leishmaniosis, chip y esterilizado."
+            android:textAlignment="center"
+            android:padding="12dp"
+            android:textSize="16sp"
+            android:textColor="#333" />
 
-<!-- Botón VER PERROS -->
-<Button
-    android:id="@+id/ver_perros_button"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="VER PERROS"
-    android:backgroundTint="#FF9800"
-    android:textColor="#FFF"
-    android:layout_marginBottom="20dp" />
-</LinearLayout>
-    </ScrollView>
+        <!-- Botón VER PERROS -->
+        <Button
+            android:id="@+id/ver_perros_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="VER PERROS"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFF"
+            android:layout_marginBottom="20dp" />
+
+    </LinearLayout>
+</ScrollView>
