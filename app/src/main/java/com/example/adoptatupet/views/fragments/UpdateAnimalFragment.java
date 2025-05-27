@@ -2,10 +2,12 @@ package com.example.adoptatupet.views.fragments;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,26 +38,33 @@ import java.util.List;
 
 /**
  * Fragment para editar un Animal existente.
- * Recibe solo el ID (ARG_ID) para evitar TransactionTooLargeException.
- * Al guardar cambios valida campos y llama a updateAnimal.
+ * - Rellena el formulario con datos de caché (instantáneo).
+ * - Luego refresca desde servidor y actualiza los campos.
  */
 public class UpdateAnimalFragment extends Fragment {
 
     private static final String ARG_ID = "animal_id";
     private int animalId;
-    private Animal animal;
+    private Animal animal;                  // Animal actual (cacheado o fetch)
 
+    // Vistas del formulario
     private EditText    etNombre, etDescripcion;
     private Spinner     spinnerLocalidad, spinnerRaza;
     private RadioGroup  rgEspecie, rgEdad, rgSexo, rgTamano;
-    private RadioButton rbPerro, rbGato, rbCachorro, rbJoven, rbAdulto, rbMacho, rbHembra, rbPequeno, rbMediano, rbGrande;
+    private RadioButton rbPerro, rbGato, rbCachorro, rbJoven,
+            rbAdulto, rbMacho, rbHembra,
+            rbPequeno, rbMediano, rbGrande;
     private ImageView   ivFoto;
     private Button      btnSeleccionarImagen, btnGuardar, btnCancelar;
+
+    // Solo se llenará al seleccionar una nueva imagen
     private String      imagenBase64 = null;
 
+    // Launcher para la galería
     private final ActivityResultLauncher<Intent> imagePickerLauncher =
             registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(), result -> {
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
                         if (result.getResultCode() == requireActivity().RESULT_OK
                                 && result.getData() != null) {
                             Uri uri = result.getData().getData();
@@ -69,9 +78,7 @@ public class UpdateAnimalFragment extends Fragment {
         // Required empty constructor
     }
 
-    /**
-     * Instancia pasando solo el ID del Animal.
-     */
+    /** Crea instancia pasando solo el ID para evitar TransactionTooLarge */
     public static UpdateAnimalFragment newInstance(int idAnimal) {
         UpdateAnimalFragment f = new UpdateAnimalFragment();
         Bundle args = new Bundle();
@@ -88,14 +95,13 @@ public class UpdateAnimalFragment extends Fragment {
         }
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_update_animal, container, false);
 
-        // Bind vistas
+        // 1) Referencias a vistas
         etNombre             = view.findViewById(R.id.edit2TextAnimalNombre);
         spinnerLocalidad     = view.findViewById(R.id.editTextAnimalLocalidad);
         spinnerRaza          = view.findViewById(R.id.editTextAnimalRaza);
@@ -119,91 +125,204 @@ public class UpdateAnimalFragment extends Fragment {
         btnGuardar           = view.findViewById(R.id.btnEditGuardarCambios);
         btnCancelar          = view.findViewById(R.id.btnCancelarEdicion);
 
-        // TODO: fetch animal details by ID and then prefill fields
-        // Por ejemplo:
-        // animalController.getInstance(requireContext())
-        //   .fetchAnimalById(animalId, new animalController.AnimalByIdCallback() { ... });
+        // 2) Prefill inmediato desde caché
+        animalController controller = animalController.getInstance(requireContext());
+        List<Animal> cache = controller.getCachedAnimals();
+        for (Animal a : cache) {
+            if (a.getIdAnimal() == animalId) {
+                animal = a;
+                break;
+            }
+        }
+        if (animal != null) {
+            populateFields(animal);
+        }
 
-        // Inicia imagen default
-        ivFoto.setImageResource(R.drawable.default_avatar);
-
-        // Escucha cambios especie para recargar razas
-        rgEspecie.setOnCheckedChangeListener((g, id) -> {
-            String[] newBreeds = (id == R.id.rbPerroEdit)
-                    ? getResources().getStringArray(R.array.dog_breeds)
-                    : getResources().getStringArray(R.array.cat_breeds);
-            ArrayAdapter<String> newAdapter = new ArrayAdapter<>(
-                    requireContext(), android.R.layout.simple_spinner_item,
-                    Arrays.asList(newBreeds)
-            );
-            newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerRaza.setAdapter(newAdapter);
+        // 3) Refrescar desde servidor
+        controller.fetchAnimalById(animalId, new animalController.AnimalByIdCallback() {
+            @Override
+            public void onSuccess(Animal a) {
+                animal = a;
+                populateFields(a);
+            }
+            @Override
+            public void onError(String msg) {
+                Toast.makeText(requireContext(),
+                        "Error cargando datos actualizados: " + msg,
+                        Toast.LENGTH_LONG).show();
+            }
         });
 
-        // Selección de imagen
+        // 4) Cuando cambie especie, recargar raza
+        rgEspecie.setOnCheckedChangeListener((grp, checkedId) -> {
+            String[] newBreeds = (checkedId == R.id.rbPerroEdit)
+                    ? getResources().getStringArray(R.array.dog_breeds)
+                    : getResources().getStringArray(R.array.cat_breeds);
+            ArrayAdapter<String> razaAdapter = new ArrayAdapter<>(
+                    requireContext(),
+                    android.R.layout.simple_spinner_item,
+                    Arrays.asList(newBreeds)
+            );
+            razaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerRaza.setAdapter(razaAdapter);
+        });
+
+        // 5) Selector de imagen
         btnSeleccionarImagen.setOnClickListener(v ->
                 imagePickerLauncher.launch(
-                        new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                        new Intent(Intent.ACTION_PICK,
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 )
         );
 
-        // Guardar
+        // 6) Botón Guardar cambios
         btnGuardar.setOnClickListener(v -> {
-            // Validaciones...
+            // Validaciones básicas
             String nombre = etNombre.getText().toString().trim();
-            if (TextUtils.isEmpty(nombre)) { etNombre.setError("Requerido"); return; }
-            // Resto de validaciones
+            if (TextUtils.isEmpty(nombre)) {
+                etNombre.setError("Requerido");
+                return;
+            }
+            String especie = rbPerro.isChecked() ? "Perro" : "Gato";
+            String raza    = spinnerRaza.getSelectedItem().toString();
+            String edad    = ((RadioButton) requireView()
+                    .findViewById(rgEdad.getCheckedRadioButtonId()))
+                    .getText().toString();
+            String localidad = spinnerLocalidad.getSelectedItem().toString();
+            String sexo      = ((RadioButton) requireView()
+                    .findViewById(rgSexo.getCheckedRadioButtonId()))
+                    .getText().toString();
+            String tamano    = ((RadioButton) requireView()
+                    .findViewById(rgTamano.getCheckedRadioButtonId()))
+                    .getText().toString();
+            String desc = etDescripcion.getText().toString().trim();
+            if (TextUtils.isEmpty(desc)) {
+                etDescripcion.setError("Requerido");
+                return;
+            }
 
-            // Construir Animal actualizado (usar imagenBase64 o existente)
-            // TODO: asegurarse de que 'animal' no sea null si no se ha fetcheado
+            // Si no cambió la imagen, usar la original en 'animal'
+            String fotoBase64 = (imagenBase64 != null)
+                    ? imagenBase64
+                    : (animal != null ? animal.getImagen() : null);
+
+            // Construir Animal actualizado
             Animal actualizado = new Animal(
-                    animalId,
+                    animal.getIdAnimal(),
                     nombre,
-                    rbPerro.isChecked() ? "Perro" : "Gato",
-                    spinnerRaza.getSelectedItem().toString(),
-                    ((RadioButton) requireView().findViewById(rgEdad.getCheckedRadioButtonId())).getText().toString(),
-                    spinnerLocalidad.getSelectedItem().toString(),
-                    ((RadioButton) requireView().findViewById(rgSexo.getCheckedRadioButtonId())).getText().toString(),
-                    ((RadioButton) requireView().findViewById(rgTamano.getCheckedRadioButtonId())).getText().toString(),
-                    etDescripcion.getText().toString().trim(),
-                    imagenBase64 != null ? imagenBase64 : (animal != null ? animal.getImagen() : null),
-                    animal != null ? animal.getIdUsuario() : -1
+                    especie,
+                    raza,
+                    edad,
+                    localidad,
+                    sexo,
+                    tamano,
+                    desc,
+                    fotoBase64,
+                    animal.getIdUsuario()
             );
 
+            // Mostrar loader
             ((MainActivity) requireActivity()).showLoading();
-            animalController.getInstance(requireContext())
-                    .updateAnimal(actualizado, new animalController.AnimalCallback() {
-                        @Override public void onSuccess() {
-                            ((MainActivity) requireActivity()).hideLoading();
-                            Toast.makeText(getContext(), "Animal actualizado", Toast.LENGTH_SHORT).show();
-                            requireActivity().getSupportFragmentManager().popBackStack();
-                        }
-                        @Override public void onError(String msg) {
-                            ((MainActivity) requireActivity()).hideLoading();
-                            Toast.makeText(getContext(), "Error: " + msg, Toast.LENGTH_LONG).show();
-                        }
-                    });
+
+            // Llamada a updateAnimal
+            controller.updateAnimal(actualizado, new animalController.AnimalCallback() {
+                @Override
+                public void onSuccess() {
+                    ((MainActivity) requireActivity()).hideLoading();
+                    Toast.makeText(getContext(),
+                            "Animal actualizado", Toast.LENGTH_SHORT).show();
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                }
+                @Override
+                public void onError(String msg) {
+                    ((MainActivity) requireActivity()).hideLoading();
+                    Toast.makeText(getContext(),
+                            "Error: " + msg, Toast.LENGTH_LONG).show();
+                }
+            });
         });
 
-        btnCancelar.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        // 7) Cancelar edición
+        btnCancelar.setOnClickListener(v ->
+                requireActivity().getSupportFragmentManager().popBackStack()
+        );
+
         return view;
     }
 
-    private void convertirImagenABase64(Uri uri) {
+    /**
+     * Helper para rellenar **todos** los campos del formulario
+     * con los datos del objeto Animal dado.
+     */
+    private void populateFields(@NonNull Animal a) {
+        // Texto
+        etNombre.setText(a.getNombre());
+        etDescripcion.setText(a.getDescripcion());
+
+        // Especie y recarga Raza
+        boolean isDog = "Perro".equalsIgnoreCase(a.getEspecie());
+        rbPerro.setChecked(isDog);
+        rbGato .setChecked(!isDog);
+        String[] breeds = isDog
+                ? getResources().getStringArray(R.array.dog_breeds)
+                : getResources().getStringArray(R.array.cat_breeds);
+        ArrayAdapter<String> razaAdapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                Arrays.asList(breeds)
+        );
+        razaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerRaza.setAdapter(razaAdapter);
+        spinnerRaza.setSelection(Arrays.asList(breeds).indexOf(a.getRaza()));
+
+        // Edad
+        selectRadio(rgEdad, a.getEdad());
+        // Localidad (XML usa entries="@array/spain_localities")
+        List<String> locs = Arrays.asList(
+                getResources().getStringArray(R.array.spain_localities)
+        );
+        spinnerLocalidad.setSelection(locs.indexOf(a.getLocalidad()));
+        // Sexo
+        selectRadio(rgSexo, a.getSexo());
+        // Tamaño
+        selectRadio(rgTamano, a.getTamano());
+
+        // Imagen Base64 → Bitmap
+        String b64 = a.getImagen();
+        if (b64 != null && !b64.isEmpty()) {
+            byte[] data = Base64.decode(b64, Base64.DEFAULT);
+            ivFoto.setImageBitmap(
+                    BitmapFactory.decodeByteArray(data, 0, data.length)
+            );
+        } else {
+            ivFoto.setImageResource(R.drawable.default_avatar);
+        }
+
+        // Reiniciar bandera de nueva imagen para que solo cambie al seleccionar
+        imagenBase64 = null;
+    }
+
+    /** Convierte URI a Base64 sin saltos */
+    private void convertirImagenABase64(@NonNull Uri uri) {
         try {
             Bitmap bmp = MediaStore.Images.Media.getBitmap(
-                    requireActivity().getContentResolver(), uri);
+                    requireActivity().getContentResolver(), uri
+            );
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 90, baos);
             imagenBase64 = android.util.Base64.encodeToString(
-                    baos.toByteArray(), android.util.Base64.NO_WRAP);
+                    baos.toByteArray(), android.util.Base64.NO_WRAP
+            );
         } catch (IOException e) {
-            Toast.makeText(getContext(), "Error al cargar imagen", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),
+                    "Error al cargar imagen", Toast.LENGTH_SHORT
+            ).show();
             imagenBase64 = null;
         }
     }
 
-    private void selectRadio(RadioGroup rg, String val) {
+    /** Marca el RadioButton dentro de rg cuyo texto coincide con val */
+    private void selectRadio(@NonNull RadioGroup rg, @NonNull String val) {
         for (int i = 0; i < rg.getChildCount(); i++) {
             if (rg.getChildAt(i) instanceof RadioButton) {
                 RadioButton rb = (RadioButton) rg.getChildAt(i);
