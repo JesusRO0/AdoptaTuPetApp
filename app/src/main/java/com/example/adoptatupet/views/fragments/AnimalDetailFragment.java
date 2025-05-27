@@ -20,19 +20,11 @@ import com.example.adoptatupet.R;
 import com.example.adoptatupet.controllers.animalController;
 import com.example.adoptatupet.controllers.usuarioController;
 import com.example.adoptatupet.models.Animal;
-import com.example.adoptatupet.models.Mensaje;
 import com.google.android.material.button.MaterialButton;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Fragment que muestra el detalle completo de un Animal.
- * Incluye botón de borrado visible solo para admin.
+ * Incluye botones de BORRAR y EDITAR, visibles solo para admin.
  */
 public class AnimalDetailFragment extends Fragment {
 
@@ -122,17 +114,18 @@ public class AnimalDetailFragment extends Fragment {
         Toolbar toolbar = view.findViewById(R.id.toolbar_detail);
         toolbar.setNavigationOnClickListener(v -> requireActivity().onBackPressed());
 
-        // 3) Botón BORRAR ANIMAL (solo admin)
+        // 3) Botones (solo admin)
         MaterialButton btnBorrar = view.findViewById(R.id.btnBorrarAnimal);
-        // Obtener email del usuario actual
+        MaterialButton btnEditar = view.findViewById(R.id.btnEditarAnimal);
         String email = usuarioController
                 .getInstance(requireContext())
                 .loadFromPrefs()
                 .getEmail();
+
         if ("admin@gmail.com".equalsIgnoreCase(email)) {
+            // Mostrar Borrar
             btnBorrar.setVisibility(View.VISIBLE);
             btnBorrar.setOnClickListener(v -> {
-                // Llamar al controlador para borrar
                 animalController.getInstance(requireContext())
                         .deleteAnimal(animal.getIdAnimal(), new animalController.AnimalCallback() {
                             @Override
@@ -140,13 +133,27 @@ public class AnimalDetailFragment extends Fragment {
                                 Toast.makeText(getContext(), "Animal borrado", Toast.LENGTH_SHORT).show();
                                 requireActivity().onBackPressed();
                             }
-
                             @Override
                             public void onError(String message) {
                                 Toast.makeText(getContext(), "Error: " + message, Toast.LENGTH_LONG).show();
                             }
                         });
             });
+            // Mostrar Editar
+            btnEditar.setVisibility(View.VISIBLE);
+            btnEditar.setOnClickListener(v -> {
+                // Abrir fragment de edición
+                // Abrir fragment de edición pasándole el objeto Animal
+                UpdateAnimalFragment editFrag = UpdateAnimalFragment.newInstance(animal);
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.nav_host_fragment, editFrag)
+                        .addToBackStack(null)
+                        .commit();
+            });
+        } else {
+            btnBorrar.setVisibility(View.GONE);
+            btnEditar.setVisibility(View.GONE);
         }
     }
 }
