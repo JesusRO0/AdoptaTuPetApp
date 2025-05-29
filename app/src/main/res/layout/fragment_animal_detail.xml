@@ -21,6 +21,7 @@
             app:scrimVisibleHeightTrigger="0dp"
             android:fitsSystemWindows="true">
 
+            <!-- Foto del animal -->
             <ImageView
                 android:id="@+id/ivDetailFoto"
                 android:layout_width="match_parent"
@@ -30,13 +31,35 @@
                 app:layout_collapseMode="parallax"
                 android:fitsSystemWindows="true" />
 
+            <!-- Toolbar colapsable -->
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar_detail"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@android:color/transparent"
-                app:navigationIcon="@drawable/ic_arrow_back"
-                app:layout_collapseMode="pin" />
+                android:fitsSystemWindows="true"
+                app:layout_collapseMode="pin">
+
+                <!-- Contenedor para la flecha con fondo blanco -->
+                <FrameLayout
+                    android:id="@+id/back_icon_container"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginStart="8dp"
+                    android:clipToOutline="true"
+                    android:elevation="4dp">
+
+                    <ImageView
+                        android:id="@+id/btnBack"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:src="@drawable/atras" />
+
+                </FrameLayout>
+
+            </androidx.appcompat.widget.Toolbar>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
@@ -66,7 +89,7 @@
                 android:layout_marginBottom="20dp"
                 android:text="" />
 
-            <!-- Tarjeta de detalles básicos (sin redondeo) -->
+            <!-- Tarjeta de detalles básicos -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -93,41 +116,44 @@
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.LabelLarge"
                             android:text="Especie"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="4dp"/>
+
                         <TextView
                             android:id="@+id/tvDetailEspecie"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.Body1"
                             android:layout_marginBottom="12dp"
-                            android:text="" />
+                            android:text=""/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.LabelLarge"
                             android:text="Raza"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="4dp"/>
+
                         <TextView
                             android:id="@+id/tvDetailRaza"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.Body1"
                             android:layout_marginBottom="12dp"
-                            android:text="" />
+                            android:text=""/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.LabelLarge"
                             android:text="Localidad"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="4dp"/>
+
                         <TextView
                             android:id="@+id/tvDetailLocalidad"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.Body1"
-                            android:text="" />
+                            android:text=""/>
 
                     </LinearLayout>
 
@@ -144,42 +170,45 @@
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.LabelLarge"
                             android:text="Edad"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="4dp"/>
+
                         <TextView
                             android:id="@+id/tvDetailEdad"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.Body1"
                             android:layout_marginBottom="12dp"
-                            android:text="" />
+                            android:text=""/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.LabelLarge"
                             android:text="Tamaño"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="4dp"/>
+
                         <TextView
                             android:id="@+id/tvDetailTamano"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.Body1"
                             android:layout_marginBottom="12dp"
-                            android:text="" />
+                            android:text=""/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.LabelLarge"
                             android:text="Sexo"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_marginBottom="4dp"/>
+
                         <TextView
                             android:id="@+id/tvDetailSexo"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             style="@style/TextAppearance.MaterialComponents.Body1"
                             android:layout_marginBottom="12dp"
-                            android:text="" />
+                            android:text=""/>
 
                     </LinearLayout>
                 </LinearLayout>
@@ -193,7 +222,7 @@
                 style="@style/TextAppearance.MaterialComponents.Subtitle1"
                 android:text="Descripción"
                 android:textStyle="bold"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"/>
 
             <TextView
                 android:id="@+id/tvDetailDescripcion"
@@ -202,14 +231,14 @@
                 style="@style/TextAppearance.MaterialComponents.Body2"
                 android:lineSpacingExtra="4dp"
                 android:layout_marginBottom="24dp"
-                android:text="" />
+                android:text=""/>
 
-            <!-- Botón de adopción -->
+            <!-- Botones -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnAdoptar"
-                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.Button"
                 android:text="ADOPTAR"
                 android:textAllCaps="true"
                 android:textStyle="bold"
@@ -218,15 +247,13 @@
                 android:textColor="@color/white"
                 android:padding="14dp" />
 
-            <!-- NUEVO: Botón de borrado, sólo visible para admin -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBorrarAnimal"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:text="BORRAR ANIMAL"
                 android:textAllCaps="true"
-                android:textStyle="bold"
                 app:strokeColor="@color/error"
                 app:strokeWidth="1dp"
                 android:textColor="@color/error"
@@ -235,12 +262,11 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditarAnimal"
-                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.Button"
                 android:text="EDITAR ANIMAL"
                 android:textAllCaps="true"
-                android:textStyle="bold"
                 app:cornerRadius="24dp"
                 android:backgroundTint="@color/colorPrimaryVariant"
                 android:textColor="@color/white"

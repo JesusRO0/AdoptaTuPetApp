@@ -20,14 +20,15 @@ import com.example.adoptatupet.R;
 import com.example.adoptatupet.controllers.animalController;
 import com.example.adoptatupet.controllers.usuarioController;
 import com.example.adoptatupet.models.Animal;
+import com.example.adoptatupet.models.Usuario;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.List;
 
 /**
  * Fragment que muestra el detalle completo de un Animal.
+ * Carga primero desde caché local, luego refresca desde el servidor.
  * Incluye botones BORRAR y EDITAR solo para admin.
- * Ahora muestra primero datos de caché y luego refresca desde el servidor.
  */
 public class AnimalDetailFragment extends Fragment {
 
@@ -39,9 +40,7 @@ public class AnimalDetailFragment extends Fragment {
         // Required empty constructor
     }
 
-    /**
-     * Instancia pasando solo el ID del Animal.
-     */
+    /** Instancia pasando solo el ID del Animal. */
     public static AnimalDetailFragment newInstance(int idAnimal) {
         AnimalDetailFragment fragment = new AnimalDetailFragment();
         Bundle args = new Bundle();
@@ -76,42 +75,13 @@ public class AnimalDetailFragment extends Fragment {
         TextView  tvTamano      = view.findViewById(R.id.tvDetailTamano);
         TextView  tvDescripcion = view.findViewById(R.id.tvDetailDescripcion);
 
-        // 1) Mostrar inmediatamente datos de la caché local (AdoptaFragment)
-        animalController controller = animalController.getInstance(requireContext());
-        List<Animal> cache = controller.getCachedAnimals();
+        // 1) Intent: mostrar instantáneamente desde caché local si existe
+        List<Animal> cache = animalController.getInstance(requireContext())
+                .getCachedAnimals();
         for (Animal a : cache) {
             if (a.getIdAnimal() == animalId) {
                 animal = a;
-                break;
-            }
-        }
-        if (animal != null) {
-            // Rellenamos UI con datos cacheados
-            tvNombre.setText(animal.getNombre());
-            tvEspecie.setText(animal.getEspecie());
-            tvRaza.setText(animal.getRaza());
-            tvEdad.setText(animal.getEdad());
-            tvLocalidad.setText(animal.getLocalidad());
-            tvSexo.setText(animal.getSexo());
-            tvTamano.setText(animal.getTamano());
-            tvDescripcion.setText(animal.getDescripcion());
-            String b64c = animal.getImagen();
-            if (b64c != null && !b64c.isEmpty()) {
-                byte[] data = Base64.decode(b64c, Base64.DEFAULT);
-                ivFoto.setImageBitmap(
-                        android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length)
-                );
-            } else {
-                ivFoto.setImageResource(R.drawable.default_avatar);
-            }
-        }
-
-        // 2) Ahora refrescamos desde el servidor y actualizamos UI al llegar
-        controller.fetchAnimalById(animalId, new animalController.AnimalByIdCallback() {
-            @Override
-            public void onSuccess(Animal a) {
-                animal = a;
-                // Actualizar vistas con datos frescos
+                // Rellenar UI con cache
                 tvNombre.setText(a.getNombre());
                 tvEspecie.setText(a.getEspecie());
                 tvRaza.setText(a.getRaza());
@@ -129,14 +99,42 @@ public class AnimalDetailFragment extends Fragment {
                 } else {
                     ivFoto.setImageResource(R.drawable.default_avatar);
                 }
+                break;
             }
-            @Override
-            public void onError(String msg) {
-                Toast.makeText(requireContext(),
-                        "Error cargando datos actualizados: " + msg,
-                        Toast.LENGTH_LONG).show();
-            }
-        });
+        }
+
+        // 2) Luego refrescar desde servidor
+        animalController.getInstance(requireContext())
+                .fetchAnimalById(animalId, new animalController.AnimalByIdCallback() {
+                    @Override
+                    public void onSuccess(Animal a) {
+                        animal = a;
+                        // Mostrar datos actualizados
+                        tvNombre.setText(a.getNombre());
+                        tvEspecie.setText(a.getEspecie());
+                        tvRaza.setText(a.getRaza());
+                        tvEdad.setText(a.getEdad());
+                        tvLocalidad.setText(a.getLocalidad());
+                        tvSexo.setText(a.getSexo());
+                        tvTamano.setText(a.getTamano());
+                        tvDescripcion.setText(a.getDescripcion());
+                        String b64 = a.getImagen();
+                        if (b64 != null && !b64.isEmpty()) {
+                            byte[] data = Base64.decode(b64, Base64.DEFAULT);
+                            ivFoto.setImageBitmap(
+                                    android.graphics.BitmapFactory.decodeByteArray(data, 0, data.length)
+                            );
+                        } else {
+                            ivFoto.setImageResource(R.drawable.default_avatar);
+                        }
+                    }
+                    @Override
+                    public void onError(String msg) {
+                        Toast.makeText(requireContext(),
+                                "Error cargando animal: " + msg,
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
 
         return view;
     }
@@ -152,39 +150,47 @@ public class AnimalDetailFragment extends Fragment {
         root.setOverScrollMode(View.OVER_SCROLL_NEVER);
 
         // Toolbar atrás
-        Toolbar toolbar = view.findViewById(R.id.toolbar_detail);
-        toolbar.setNavigationOnClickListener(v -> requireActivity().onBackPressed());
+        View backContainer = view.findViewById(R.id.back_icon_container);
+        backContainer.setOnClickListener(v -> requireActivity().onBackPressed());
 
         // Botones admin
         MaterialButton btnBorrar = view.findViewById(R.id.btnBorrarAnimal);
         MaterialButton btnEditar = view.findViewById(R.id.btnEditarAnimal);
-        String email = usuarioController.getInstance(requireContext())
-                .loadFromPrefs()
-                .getEmail();
 
+        // Comprobar usuario logueado
+        Usuario currentUser = usuarioController.getInstance(requireContext())
+                .loadFromPrefs();
+        String email = (currentUser != null && currentUser.getEmail() != null)
+                ? currentUser.getEmail()
+                : "";
+
+        // Mostrar solo si es admin
         if ("admin@gmail.com".equalsIgnoreCase(email)) {
-            btnBorrar.setVisibility(View.VISIBLE);
-            btnEditar.setVisibility(View.VISIBLE);
 
+            btnBorrar.setVisibility(View.VISIBLE);
             btnBorrar.setOnClickListener(v ->
                     animalController.getInstance(requireContext())
                             .deleteAnimal(animalId, new animalController.AnimalCallback() {
                                 @Override
                                 public void onSuccess() {
                                     Toast.makeText(getContext(),
-                                            "Animal borrado", Toast.LENGTH_SHORT).show();
+                                            "Animal borrado",
+                                            Toast.LENGTH_SHORT).show();
                                     requireActivity().onBackPressed();
                                 }
                                 @Override
                                 public void onError(String message) {
                                     Toast.makeText(getContext(),
-                                            "Error: " + message, Toast.LENGTH_LONG).show();
+                                            "Error: " + message,
+                                            Toast.LENGTH_LONG).show();
                                 }
                             })
             );
 
+            btnEditar.setVisibility(View.VISIBLE);
             btnEditar.setOnClickListener(v -> {
-                UpdateAnimalFragment editFrag = UpdateAnimalFragment.newInstance(animalId);
+                UpdateAnimalFragment editFrag =
+                        UpdateAnimalFragment.newInstance(animalId);
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.nav_host_fragment, editFrag)
