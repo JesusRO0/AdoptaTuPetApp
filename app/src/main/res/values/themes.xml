@@ -4,6 +4,12 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
         <item name="colorSecondary">@color/colorSecondary</item>
+        <!-- Color de tu toolbar / status bar -->
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+        <!-- Para que los iconos de la status bar vayan en blanco (false) o negro (true) -->
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- ► DIBUJAR FONDOS DE BARRA DE SISTEMA -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
     <!-- Si todavía quieres un TextAppearance específico para etiquetas: -->

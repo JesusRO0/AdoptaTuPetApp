@@ -3,12 +3,17 @@ package com.example.adoptatupet.views;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import androidx.core.content.ContextCompat;
+
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -52,6 +57,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // ——— Forzar color de status bar ———
+        Window window = getWindow();
+        // Habilita que dibuje el fondo de la barra de estado
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        // Y aquí le asignas tu colorPrimary
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        // ——————————————————————————————————
+
         setContentView(R.layout.activity_main);
 
         // Instancia singleton del controller de usuario
