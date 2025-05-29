@@ -14,31 +14,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Relleno igual al color primario para status bar -->
+        <!-- relleno para status bar -->
         <View
             android:layout_width="match_parent"
             android:layout_height="24dp"
             android:background="?attr/colorPrimary" />
 
-        <!-- AppBar con Toolbar -->
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/topAppBar"
-            android:fitsSystemWindows="true"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:paddingTop="16dp"
-            android:paddingBottom="8dp"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        <!-- En lugar de usar directamente el MaterialToolbar, incluimos tu toolbar_main.xml -->
+        <include
+            layout="@layout/toolbar_main"
+            android:id="@+id/topAppBar"/>
 
-        <!-- Contenedor de los fragments con margen top y bottom -->
+        <!-- Contenedor de fragments, con margen para la toolbar -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="66dp"
-            android:layout_marginBottom="56dp"
+            android:layout_marginTop="?attr/actionBarSize"
             app:defaultNavHost="true"
             app:navGraph="@navigation/nav_graph" />
 
@@ -48,21 +41,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="#3F51B5"
-            app:menu="@menu/bottom_nav_menu" />
+            app:menu="@menu/bottom_nav_menu"
+            app:itemIconTint="@color/colorPrimaryVariant"
+            app:itemTextColor="@color/colorPrimaryVariant"
+            android:background="@color/colorPrimary" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <!-- Menú lateral -->
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/drawer_menu" />
-
-    <!-- Barra de carga -->
+    <!-- ProgressBar central -->
     <ProgressBar
         android:id="@+id/progressBar"
         style="@style/Widget.AppCompat.ProgressBar"

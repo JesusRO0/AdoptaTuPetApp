@@ -3,32 +3,26 @@ package com.example.adoptatupet.views;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import androidx.core.content.ContextCompat;
-
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.adoptatupet.R;
 import com.example.adoptatupet.controllers.animalController;
+import com.example.adoptatupet.controllers.usuarioController;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.views.fragments.AdoptaFragment;
@@ -37,81 +31,54 @@ import com.example.adoptatupet.views.fragments.ForoFragment;
 import com.example.adoptatupet.views.fragments.HomeFragment;
 import com.example.adoptatupet.views.fragments.PerfilFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationView;
 
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DrawerLayout      drawerLayout;
-    private NavigationView    navigationView;
-    private Toolbar           topAppBar;
-    private TextView          navUserName;
-    private ImageView         navUserImage;
-    private com.example.adoptatupet.controllers.usuarioController usuarioController;
-
-    // ProgressDialog para mostrar rueda de carga
+    private Toolbar topAppBar;
+    private ImageView toolbarProfileImage;
+    private TextView toolbarTitle;
+    private usuarioController usuarioController;
     private ProgressDialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Aplica layout /activity_main que usa toolbar_main para el AppBar
         setContentView(R.layout.activity_main);
 
-        // ——— Forzar color de status bar ———
+        // ——— Forzar color de status bar igual que colorPrimary ———
         Window window = getWindow();
-        // Habilita que dibuje el fondo de la barra de estado
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        // Y aquí le asignas tu colorPrimary
         window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
-        // ——————————————————————————————————
-
-        setContentView(R.layout.activity_main);
+        // ————————————————————————————————————————————————
 
         // Instancia singleton del controller de usuario
-        usuarioController = com.example.adoptatupet.controllers.usuarioController.getInstance(this);
+        usuarioController = usuarioController.getInstance(this);
 
-        // Configura la barra superior y el drawer
-        topAppBar     = findViewById(R.id.topAppBar);
-        drawerLayout  = findViewById(R.id.drawer_layout);
-        navigationView= findViewById(R.id.nav_view);
+        // Referencias del Toolbar
+        topAppBar = findViewById(R.id.topAppBar);
+        toolbarTitle = topAppBar.findViewById(R.id.toolbar_title);
+        toolbarProfileImage = topAppBar.findViewById(R.id.toolbar_profile_image);
         setSupportActionBar(topAppBar);
+        // Quita el título por defecto para usar el TextView custom
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawerLayout, topAppBar,
-                R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close
-        );
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-
-        // Header del drawer
-        View headerView = navigationView.getHeaderView(0);
-        navUserName  = headerView.findViewById(R.id.nav_user_name);
-        navUserImage = headerView.findViewById(R.id.nav_user_image);
-
-        // Listener menú lateral usando if en lugar de switch
-        navigationView.setNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-            drawerLayout.closeDrawers();
-
-            if (id == R.id.nav_login) {
-                showLoginDialog(); return true;
+        // Cuando pulsen la imagen de perfil:
+        toolbarProfileImage.setOnClickListener(v -> {
+            Usuario u = usuarioController.loadFromPrefs();
+            if (u == null) {
+                // Si no hay usuario logueado, abrimos diálogo de login/registro
+                showLoginDialog();
+            } else {
+                // Si ya está logueado, cargamos su perfil
+                loadFragment(new PerfilFragment());
             }
-            if (id == R.id.nav_profile) {
-                loadFragment(new PerfilFragment()); return true;
-            }
-            if (id == R.id.nav_logout) {
-                cerrarSesion(); return true;
-            }
-            if (id == R.id.nav_exit) {
-                finishAffinity(); return true;
-            }
-            return false;
         });
 
-        // Navegación inferior
+        // Configuramos la navegación inferior
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             Fragment destino;
@@ -130,30 +97,25 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        // Selección inicial
+        // Selección inicial de pestaña
         if (savedInstanceState == null) {
             bottomNav.setSelectedItemId(R.id.nav_home);
         }
 
-        // Carga usuario en header
-        cargarUsuarioYActualizarUI();
-
-        // ** Precarga de animales **
+        // Precarga de animales en caché
         animalController.getInstance(this)
-                .fetchAllAnimals(null);  // null porque no necesitamos callback en este punto
+                .fetchAllAnimals(null);
     }
 
-    /** Reemplaza el frame con el fragmento dado. */
-    private void loadFragment(Fragment fragment) {
+    /** Reemplaza el contenedor principal con el fragmento indicado */
+    private void loadFragment(@NonNull Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.nav_host_fragment, fragment)
                 .commit();
     }
 
-    /**
-     * Muestra un diálogo de login/registro con rueda de carga.
-     */
+    /** Diálogo para login / registro */
     private void showLoginDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_login, null);
         EditText nameET  = dialogView.findViewById(R.id.nameEditText);
@@ -169,13 +131,18 @@ public class MainActivity extends AppCompatActivity {
         dialog.setTitle("Iniciar Sesión");
 
         dialog.setOnShowListener(dlg -> {
-            Button btnOK = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            // Botón “Entrar” / “Registrar”
+            View btnOK = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
             btnOK.setOnClickListener(v -> {
                 String email = emailET.getText().toString().trim();
                 String pass  = passET.getText().toString().trim();
 
                 if (nameET.getVisibility() == View.GONE) {
                     // —— LOGIN ——
+                    if (email.isEmpty() || pass.isEmpty()) {
+                        Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     showLoading();
                     usuarioController.login(email, pass, new retrofit2.Callback<Mensaje>() {
                         @Override
@@ -183,39 +150,32 @@ public class MainActivity extends AppCompatActivity {
                             hideLoading();
                             if (resp.isSuccessful() && resp.body()!=null && resp.body().isSuccess()) {
                                 Usuario u = resp.body().getUsuario();
-                                navUserName.setText("¡Bienvenido " + u.getUsuario() + "!");
-                                actualizarFotoDrawer(u.getFotoPerfil());
-                                actualizarOpcionesMenu(true);
-                                Toast.makeText(MainActivity.this,
-                                        "Bienvenido " + u.getUsuario(),
-                                        Toast.LENGTH_SHORT).show();
+                                // Actualiza imagen y título
+                                toolbarTitle.setText("¡Bienvenido " + u.getUsuario() + "!");
+                                actualizarPerfilImage(u.getFotoPerfil());
                                 dialog.dismiss();
                             } else {
-                                Toast.makeText(MainActivity.this,
-                                        "Credenciales inválidas",
-                                        Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "Credenciales inválidas", Toast.LENGTH_SHORT).show();
                             }
                         }
                         @Override
                         public void onFailure(Call<Mensaje> call, Throwable t) {
                             hideLoading();
-                            Toast.makeText(MainActivity.this,
-                                    "Error en servidor",
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Error en servidor", Toast.LENGTH_SHORT).show();
                         }
                     });
                 } else {
                     // —— REGISTRO ——
-                    String nombre = nameET.getText().toString().trim();
-                    if (nombre.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                        Toast.makeText(MainActivity.this,
-                                "Completa todos los campos",
-                                Toast.LENGTH_SHORT).show();
+                    String nombre     = nameET.getText().toString().trim();
+                    String emailReg    = emailET.getText().toString().trim();
+                    String passwordReg= passET.getText().toString().trim();
+                    if (nombre.isEmpty() || emailReg.isEmpty() || passwordReg.isEmpty()) {
+                        Toast.makeText(MainActivity.this, "Completa todos los campos", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     showLoading();
                     usuarioController.register(
-                            email, nombre, "Sin localidad", pass,
+                            emailReg, nombre, "Sin localidad", passwordReg,
                             new retrofit2.Callback<Mensaje>() {
                                 @Override
                                 public void onResponse(Call<Mensaje> call, Response<Mensaje> resp) {
@@ -225,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
                                                 "Registro exitoso, inicie sesión",
                                                 Toast.LENGTH_SHORT).show();
                                         nameET.setVisibility(View.GONE);
-                                        btnOK.setText("Entrar");
                                         dialog.setTitle("Iniciar Sesión");
                                         toggle.setText("¿No tienes cuenta? Regístrate");
                                     } else {
@@ -241,20 +200,20 @@ public class MainActivity extends AppCompatActivity {
                                             "Error en servidor durante registro",
                                             Toast.LENGTH_SHORT).show();
                                 }
-                            });
+                            }
+                    );
                 }
+
             });
 
-            // Alternar Login / Registro
+            // Alternar entre login y registro
             toggle.setOnClickListener(v -> {
                 if (nameET.getVisibility() == View.GONE) {
                     nameET.setVisibility(View.VISIBLE);
-                    btnOK.setText("Registrar");
                     dialog.setTitle("Registro");
                     toggle.setText("¿Ya tienes cuenta? Inicia sesión");
                 } else {
                     nameET.setVisibility(View.GONE);
-                    btnOK.setText("Entrar");
                     dialog.setTitle("Iniciar Sesión");
                     toggle.setText("¿No tienes cuenta? Regístrate");
                 }
@@ -264,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    /** Muestra la rueda de carga. */
+    /** Muestra el ProgressDialog de carga */
     public void showLoading() {
         if (loadingDialog == null) {
             loadingDialog = new ProgressDialog(this);
@@ -274,73 +233,63 @@ public class MainActivity extends AppCompatActivity {
         loadingDialog.show();
     }
 
-    /** Oculta la rueda de carga. */
+    /** Oculta el ProgressDialog */
     public void hideLoading() {
         if (loadingDialog != null && loadingDialog.isShowing()) {
             loadingDialog.dismiss();
         }
     }
 
-    /** Actualiza visibilidad de opciones del drawer. */
-    private void actualizarOpcionesMenu(boolean loggedIn) {
-        Menu menu = navigationView.getMenu();
-        menu.findItem(R.id.nav_profile).setVisible(loggedIn);
-        menu.findItem(R.id.nav_logout).setVisible(loggedIn);
-        menu.findItem(R.id.nav_login).setVisible(!loggedIn);
-        navigationView.invalidate();
-        for (int i = 0; i < menu.size(); i++) {
-            MenuItem mi = menu.getItem(i);
-            Log.d("DEBUG_MENU", "Item " + mi.getTitle() + " visible=" + mi.isVisible());
-        }
-    }
-
-    /** Cierra sesión y vuelve a HomeFragment. */
+    /**
+     * Cierra la sesión del usuario y vuelve al HomeFragment.
+     * Desde PerfilFragment invocan ((MainActivity) requireActivity()).cerrarSesion();
+     */
     public void cerrarSesion() {
+        // Limpia datos de sesión
         usuarioController.logout();
-        navigationView.getMenu().clear();
-        navigationView.inflateMenu(R.menu.drawer_menu);
-        actualizarOpcionesMenu(false);
-        navUserName.setText("¡Bienvenido!");
-        navUserImage.setImageResource(R.drawable.default_avatar);
+        // Restablece toolbar
+        toolbarTitle.setText("AdoptaTuPet");
+        toolbarProfileImage.setImageResource(R.drawable.default_avatar);
+        // Vuelve a la pestaña Home
         loadFragment(new HomeFragment());
-        Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show();
-        drawerLayout.closeDrawers();
     }
 
-    /** Actualiza avatar en el drawer a partir de Base64. */
-    public void actualizarFotoDrawer(String base64Foto) {
-        View header = navigationView.getHeaderView(0);
-        ImageView avatar = header.findViewById(R.id.nav_user_image);
+    /** Actualiza la imagen de perfil del toolbar a partir de Base64 */
+    private void actualizarPerfilImage(String base64Foto) {
         if (base64Foto == null || base64Foto.isEmpty()) {
-            avatar.setImageResource(R.drawable.default_avatar);
+            toolbarProfileImage.setImageResource(R.drawable.default_avatar);
             return;
         }
+        // Decodifica y ajusta
         if (base64Foto.contains(",")) {
-            base64Foto = base64Foto.substring(base64Foto.indexOf(",")+1);
+            base64Foto = base64Foto.substring(base64Foto.indexOf(",") + 1);
         }
-        base64Foto = base64Foto.replaceAll("\\s+","");
+        base64Foto = base64Foto.replaceAll("\\s+", "");
         byte[] bytes = Base64.decode(base64Foto, Base64.NO_WRAP);
-        Bitmap bmp = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
-        avatar.setImageBitmap(bmp!=null?bmp:BitmapFactory.decodeResource(getResources(), R.drawable.default_avatar));
+        Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        toolbarProfileImage.setImageBitmap(bmp != null
+                ? bmp
+                : BitmapFactory.decodeResource(getResources(), R.drawable.default_avatar));
     }
 
-    /** Carga usuario de prefs y actualiza header y menú. */
-    public void cargarUsuarioYActualizarUI() {
-        Usuario u = usuarioController.loadFromPrefs();
-        if (u != null) {
-            navUserName.setText("¡Bienvenido " + u.getUsuario() + "!");
-            actualizarFotoDrawer(u.getFotoPerfil());
-            actualizarOpcionesMenu(true);
-        } else {
-            navUserName.setText("¡Bienvenido!");
-            navUserImage.setImageResource(R.drawable.default_avatar);
-            actualizarOpcionesMenu(false);
-        }
+    /**
+     * Método público que permite a PerfilFragment llamar
+     * a la actualización de la foto desde el toolbar.
+     */
+    public void actualizarFotoDrawer(String base64Foto) {
+        actualizarPerfilImage(base64Foto);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        cargarUsuarioYActualizarUI();
+        // Al volver, refresca datos del usuario en toolbar
+        Usuario u = usuarioController.loadFromPrefs();
+        toolbarTitle.setText("AdoptaTuPet");
+        if (u != null) {
+            actualizarPerfilImage(u.getFotoPerfil());
+        } else {
+            toolbarProfileImage.setImageResource(R.drawable.default_avatar);
+        }
     }
 }

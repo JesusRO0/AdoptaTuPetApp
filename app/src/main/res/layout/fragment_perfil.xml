@@ -1,269 +1,222 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp"
     android:background="@color/white">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal">
+    <!-- ScrollView constraintado full-screen, con padding y margen bottom -->
+    <ScrollView
+        android:id="@+id/scrollPerfil"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:paddingTop="2dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Foto perfil con sombra y círculo -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="140dp"
-            android:layout_height="140dp"
-            app:cardCornerRadius="70dp"
-            app:cardElevation="6dp"
-            android:layout_marginBottom="20dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/imageViewPerfil"
+            <!-- Foto perfil con sombra y círculo -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="70dp"
+                app:cardElevation="6dp">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/imageViewPerfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Foto de perfil"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/default_avatar" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <Button
+                android:id="@+id/btnCambiarFoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="?attr/colorSecondary"
+                android:text="Cambiar Foto"
+                android:textColor="?attr/colorPrimary" />
+
+            <!-- Nombre -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:contentDescription="Foto de perfil"
-                android:src="@drawable/default_avatar" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <Button
-            android:id="@+id/btnCambiarFoto"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cambiar Foto"
-            android:backgroundTint="?attr/colorSecondary"
-            android:textColor="?attr/colorPrimary"
-            android:paddingLeft="24dp"
-            android:paddingRight="24dp"
-            android:layout_marginBottom="30dp"
-            android:fontFamily="sans-serif-medium" />
-
-        <!-- Nombre -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvNombre"
-                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Nombre: "
-                android:textSize="18sp"
-                android:textColor="@color/black"
-                android:fontFamily="sans-serif-medium" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    android:id="@+id/tvNombre"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Nombre: "
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btnEditarNombre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Editar"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/editTextNombre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nuevo nombre"
+                android:visibility="gone" />
+
+            <!-- Email -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    android:id="@+id/tvEmail"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Email: "
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btnEditarEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Editar"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/editTextEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nuevo email"
+                android:visibility="gone" />
+
+            <!-- Contraseña -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    android:id="@+id/tvPassword"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Contraseña: ********"
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btnEditarPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Editar"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/editTextPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nueva contraseña"
+                android:visibility="gone" />
+
+            <!-- Localidad -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="12dp">
+
+                <TextView
+                    android:id="@+id/tvLocalidad"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Localidad: "
+                    android:textColor="@color/black"
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/btnEditarLocalidad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Editar"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/editTextLocalidad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nueva localidad"
+                android:visibility="gone" />
+
+            <!-- Botones finales -->
+            <Button
+                android:id="@+id/btnGuardarCambios"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="32dp"
+                android:text="Guardar Cambios"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCerrarSesion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Cerrar sesión" />
 
             <Button
-                android:id="@+id/btnEditarNombre"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Editar"
-                android:textAllCaps="false"
-                android:background="?attr/selectableItemBackground"
-                android:textColor="?attr/colorPrimary"
-                android:padding="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp" />
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/editTextNombre"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:hint="Nuevo nombre"
-            android:background="@drawable/edittext_background"
-            android:padding="12dp"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif" />
-
-        <!-- Email -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvEmail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Email: "
-                android:textSize="18sp"
-                android:textColor="@color/black"
-                android:fontFamily="sans-serif-medium" />
+                android:id="@+id/btnBorrarCuenta"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="5dp"
+                android:text="BORRAR CUENTA" />
 
             <Button
-                android:id="@+id/btnEditarEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Editar"
-                android:textAllCaps="false"
-                android:background="?attr/selectableItemBackground"
-                android:textColor="?attr/colorPrimary"
-                android:padding="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp" />
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/editTextEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:hint="Nuevo email"
-            android:inputType="textEmailAddress"
-            android:background="@drawable/edittext_background"
-            android:padding="12dp"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif" />
-
-        <!-- Contraseña -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvPassword"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Contraseña: ********"
-                android:textSize="18sp"
-                android:textColor="@color/black"
-                android:fontFamily="sans-serif-medium" />
+                android:id="@+id/btnAñadirAnimal"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="5dp"
+                android:text="AÑADIR ANIMAL" />
 
             <Button
-                android:id="@+id/btnEditarPassword"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Editar"
-                android:textAllCaps="false"
-                android:background="?attr/selectableItemBackground"
-                android:textColor="?attr/colorPrimary"
-                android:padding="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp" />
+                android:id="@+id/btnEliminarUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="5dp"
+                android:text="ELIMINAR USUARIO" />
+
         </LinearLayout>
-
-        <EditText
-            android:id="@+id/editTextPassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:hint="Nueva contraseña"
-            android:inputType="textPassword"
-            android:background="@drawable/edittext_background"
-            android:padding="12dp"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif" />
-
-        <!-- Localidad -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingBottom="12dp">
-
-            <TextView
-                android:id="@+id/tvLocalidad"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Localidad: "
-                android:textSize="18sp"
-                android:textColor="@color/black"
-                android:fontFamily="sans-serif-medium" />
-
-            <Button
-                android:id="@+id/btnEditarLocalidad"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Editar"
-                android:textAllCaps="false"
-                android:background="?attr/selectableItemBackground"
-                android:textColor="?attr/colorPrimary"
-                android:padding="8dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp" />
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/editTextLocalidad"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:hint="Nueva localidad"
-            android:background="@drawable/edittext_background"
-            android:padding="12dp"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif" />
-
-        <!-- Botón Guardar general -->
-        <Button
-            android:id="@+id/btnGuardarCambios"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Guardar Cambios"
-            android:layout_marginTop="32dp"
-            android:textColor="@android:color/white"
-            android:backgroundTint="?attr/colorSecondary"
-            android:visibility="gone"
-            android:textAllCaps="false"
-            android:fontFamily="sans-serif-medium"
-            android:elevation="4dp" />
-
-        <!-- Botón para borrar cuenta -->
-        <Button
-            android:id="@+id/btnBorrarCuenta"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="BORRAR CUENTA"
-            android:textAllCaps="false"
-            android:backgroundTint="#D32F2F"
-            android:textColor="@android:color/white"
-            android:layout_marginTop="16dp"
-            android:fontFamily="sans-serif-medium"
-            android:elevation="2dp" />
-
-        <!-- Botón para añadir un animal -->
-        <Button
-            android:id="@+id/btnAñadirAnimal"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="AÑADIR ANIMAL"
-            android:layout_marginTop="16dp"
-            android:textColor="@android:color/white"
-            android:backgroundTint="@color/teal_700"
-            android:visibility="gone"
-            android:textAllCaps="true"
-            android:fontFamily="sans-serif-medium"
-            android:elevation="4dp" />
-
-        <!-- Botón para eliminar usuarios -->
-        <Button
-            android:id="@+id/btnEliminarUsuario"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="ELIMINAR USUARIO"
-            android:layout_marginTop="16dp"
-            android:textAllCaps="false"
-            android:backgroundTint="?attr/colorSecondary"
-            android:textColor="@android:color/white"
-            android:visibility="gone"
-            android:fontFamily="sans-serif-medium"
-            android:elevation="4dp" />
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

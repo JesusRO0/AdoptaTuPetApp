@@ -10,6 +10,7 @@
     <string name="contacto">Contacto</string>
     <string name="navigation_drawer_open">Abrir menú</string>
     <string name="navigation_drawer_close">Cerrar menú</string>
+    <string name="nav_header_desc">Imagen de perfil</string>
     <style name="Toolbar.Title.Right" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:gravity">end</item>
         <item name="android:textAlignment">viewEnd</item>
