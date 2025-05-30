@@ -143,31 +143,15 @@ public class PerfilFragment extends Fragment {
         // referencia a “Cerrar sesión”
         Button btnCerrarSesion = view.findViewById(R.id.btnCerrarSesion);
         btnCerrarSesion.setOnClickListener(v -> {
-            // Limpiamos el mismo SharedPreferences que usas al cargar datos
+            // 1) Limpiar SharedPreferences de sesión
             requireActivity().getSharedPreferences("user", Context.MODE_PRIVATE)
                     .edit().clear().apply();
-            // Si el ProgressDialog sigue abierto, lo ocultamos
+            // 2) Ocultar posibles ProgressDialog abiertos
             ((MainActivity) requireActivity()).hideLoading();
-            // 2) Restablecer la imagen de perfil en este fragment
-            imageViewPerfil.setImageResource(R.drawable.default_avatar);
-
-            // 3) Si hay botón de “Borrar cuenta” o guardados visibles, ocultarlos
-            btnGuardar.setVisibility(View.GONE);
-            btnCambiarFoto.setVisibility(View.GONE);
-            btnEditarNombre.setVisibility(View.GONE);
-            btnEditarEmail.setVisibility(View.GONE);
-            btnEditarPassword.setVisibility(View.GONE);
-            btnEditarLocalidad.setVisibility(View.GONE);
-            btnAñadirAnimal.setVisibility(View.GONE);
-            btnEliminarUsuario.setVisibility(View.GONE);
-            btnBorrarCuenta.setVisibility(View.GONE);
-
-            // 4) Volver al HomeFragment
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.nav_host_fragment, new HomeFragment())
-                    .commit();
+            // 3) Invocar cerrarSesion() de MainActivity que lanza LoginActivity
+            ((MainActivity) requireActivity()).cerrarSesion();
         });
+
 
         // Borrar cuenta
         btnBorrarCuenta.setOnClickListener(v ->
