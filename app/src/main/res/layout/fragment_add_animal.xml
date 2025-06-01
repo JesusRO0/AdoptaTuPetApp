@@ -25,12 +25,33 @@
             android:textColor="@android:color/white"
             android:layout_marginBottom="16dp"/>
 
+        <!-- Imagen -->
+        <ImageView
+            android:id="@+id/imageViewAnimal"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/default_avatar"
+            android:scaleType="centerCrop"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"/>
+
+        <Button
+            android:id="@+id/btnSeleccionarImagenAnimal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Seleccionar Imagen"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"/>
+
         <!-- Nombre -->
         <EditText
             android:id="@+id/editTextAnimalNombre"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nombre" />
+            android:hint="Nombre"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:imeOptions="actionDone" />
 
         <!-- Especie -->
         <TextView
@@ -179,27 +200,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Descripción"
-            android:inputType="textMultiLine"
-            android:minLines="3"
+            android:imeOptions="actionDone"
             android:layout_marginTop="12dp"/>
-
-        <!-- Imagen -->
-        <ImageView
-            android:id="@+id/imageViewAnimal"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:src="@drawable/default_avatar"
-            android:scaleType="centerCrop"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"/>
-
-        <Button
-            android:id="@+id/btnSeleccionarImagenAnimal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Seleccionar Imagen"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp"/>
 
         <!-- Enviar -->
         <Button

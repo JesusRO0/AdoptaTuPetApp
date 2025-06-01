@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/item_mensaje_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@android:color/white">
+
+    <!-- 1) Cabecera: foto de perfil + nombre + fecha/hora -->
+    <LinearLayout
+        android:id="@+id/ll_cabecera_mensaje"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="4dp">
+
+        <!-- Foto de perfil del autor del post (ahora más grande y circular) -->
+        <ImageView
+            android:id="@+id/ivPostUserProfile"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="8dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/default_avatar"
+            android:background="@drawable/circle_mask"
+            android:clipToOutline="true" />
+
+        <!-- Nombre de usuario y fecha en vertical -->
+        <LinearLayout
+            android:id="@+id/ll_usuario_fecha"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="NombreUsuario"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvFechaMensaje"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="31 May 2025 · 18:45"
+                android:textColor="#757575"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 2) Texto del mensaje -->
+    <TextView
+        android:id="@+id/tvTextoMensaje"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Aquí va el texto del mensaje, que puede ocupar varias líneas según lo que el usuario escriba."
+        android:textColor="#212121"
+        android:textSize="15sp" />
+
+    <!-- 3) Imagen adjunta (si existe). Por defecto, visibility="gone" -->
+    <ImageView
+        android:id="@+id/ivMensajeImagen"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <!-- 4) Fila de interacciones: corazón circular + contador -->
+    <LinearLayout
+        android:id="@+id/ll_interacciones"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Corazón como ImageButton con fondo circular -->
+        <ImageButton
+            android:id="@+id/btnLike"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/circle_mask"
+            android:contentDescription="Me gusta"
+            android:padding="6dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_heart_outline" />
+
+        <!-- Contador de “likes” -->
+        <TextView
+            android:id="@+id/tvLikeCount"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:text="0"
+            android:textColor="#757575"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- 5) Línea divisora entre mensajes -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:background="#e0e0e0" />
+</LinearLayout>

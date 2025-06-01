@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
-    <!-- ScrollView constraintado full-screen, con padding y margen bottom -->
+    <!-- 1) ScrollView (ocupa todo el espacio) -->
     <ScrollView
         android:id="@+id/scrollPerfil"
         android:layout_width="0dp"
@@ -16,10 +16,10 @@
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
         android:scrollbars="vertical"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -83,7 +83,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nuevo nombre"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:imeOptions="actionDone" />
 
             <!-- Email -->
             <LinearLayout
@@ -115,7 +118,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nuevo email"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:inputType="textEmailAddress"
+                android:maxLines="1"
+                android:imeOptions="actionDone" />
 
             <!-- Contraseña -->
             <LinearLayout
@@ -147,7 +153,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nueva contraseña"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:inputType="textPassword"
+                android:maxLines="1"
+                android:imeOptions="actionDone" />
 
             <!-- Localidad -->
             <LinearLayout
@@ -179,9 +188,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nueva localidad"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:inputType="text"
+                android:maxLines="1"
+                android:imeOptions="actionDone" />
 
-            <!-- Botones finales -->
+            <!-- Botón para guardar cambios (aparece sólo al editar algún campo) -->
             <Button
                 android:id="@+id/btnGuardarCambios"
                 android:layout_width="match_parent"
@@ -190,33 +202,56 @@
                 android:text="Guardar Cambios"
                 android:visibility="gone" />
 
+            <!-- Botón Cerrar sesión -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCerrarSesion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Cerrar sesión" />
+                android:layout_marginTop="16dp"
+                android:text="Cerrar sesión"
+                app:backgroundTint="@color/design_default_color_primary"
+                android:textColor="@android:color/white" />
 
+            <!-- Botón Borrar cuenta -->
             <Button
                 android:id="@+id/btnBorrarCuenta"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="8dp"
                 android:text="BORRAR CUENTA" />
 
+            <!-- Botón Añadir animal -->
             <Button
                 android:id="@+id/btnAñadirAnimal"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="8dp"
                 android:text="AÑADIR ANIMAL" />
 
+            <!-- Botón Eliminar usuario -->
             <Button
                 android:id="@+id/btnEliminarUsuario"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="8dp"
                 android:text="ELIMINAR USUARIO" />
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- 2) Botón flotante “← Volver” -->
+    <Button
+        android:id="@+id/btnVolver"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="← Volver"
+        android:textAllCaps="false"
+        android:backgroundTint="?attr/colorPrimary"
+        android:textColor="@android:color/white"
+        android:elevation="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

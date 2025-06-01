@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_composer_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="8dp">
+
+    <!-- 1) Área de composición del post -->
+    <LinearLayout
+        android:id="@+id/ll_composer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <!-- 1a) Fila: foto de perfil + EditText (multilínea) -->
+        <LinearLayout
+            android:id="@+id/ll_fila_perfil_texto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <!-- Foto de perfil del usuario -->
+            <ImageView
+                android:id="@+id/ivUserProfile"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/default_avatar"
+                android:background="@drawable/circle_mask"
+                android:clipToOutline="true" />
+
+            <!-- Campo para escribir el texto del nuevo post -->
+            <EditText
+                android:id="@+id/etPostContent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="¿Qué está pasando?"
+                android:imeOptions="flagNoExtractUi|actionSend"
+                android:inputType="textMultiLine"
+                android:maxLines="4"
+                android:textColor="#000000"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- 1b) Fila de acciones: icono para adjuntar imagen + espacio + botón Postear -->
+        <LinearLayout
+            android:id="@+id/ll_acciones"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="56dp"
+            android:paddingRight="4dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
+
+            <!-- Icono para adjuntar imagen -->
+            <ImageButton
+                android:id="@+id/btnAttachImage"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Adjuntar imagen"
+                android:padding="4dp"
+                android:src="@drawable/icono_adjunto" />
+
+            <!-- Espacio para empujar el botón “Postear” a la derecha -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Botón para postear -->
+            <Button
+                android:id="@+id/btnPostear"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Postear"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 2) Línea divisora -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#e0e0e0" />
+
+    <!-- 3) RecyclerView que mostrará los mensajes del foro -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvForo"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp" />
+</LinearLayout>

@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import com.example.adoptatupet.R;
 import com.example.adoptatupet.models.Mensaje;
@@ -33,6 +35,7 @@ import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
 import com.example.adoptatupet.views.MainActivity;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,6 +59,8 @@ public class PerfilFragment extends Fragment {
     private Button    btnGuardar, btnCambiarFoto;
     private Button    btnEditarNombre, btnEditarEmail, btnEditarPassword, btnEditarLocalidad;
     private Button    btnAñadirAnimal, btnEliminarUsuario, btnBorrarCuenta;
+    // Botón “← Volver” para regresar a la pantalla principal
+    private Button    btnVolver;
 
     // Cadena Base64 de la imagen actual
     private String imagenBase64 = null;
@@ -102,6 +107,8 @@ public class PerfilFragment extends Fragment {
         btnAñadirAnimal    = view.findViewById(R.id.btnAñadirAnimal);
         btnEliminarUsuario = view.findViewById(R.id.btnEliminarUsuario);
         btnBorrarCuenta    = view.findViewById(R.id.btnBorrarCuenta);
+        // Referencia al nuevo botón “← Volver”
+        btnVolver          = view.findViewById(R.id.btnVolver);
 
         // Carga inicial de datos
         cargarDatosUsuario();
@@ -152,7 +159,6 @@ public class PerfilFragment extends Fragment {
             ((MainActivity) requireActivity()).cerrarSesion();
         });
 
-
         // Borrar cuenta
         btnBorrarCuenta.setOnClickListener(v ->
                 new AlertDialog.Builder(requireContext())
@@ -167,6 +173,16 @@ public class PerfilFragment extends Fragment {
                         .show()
         );
 
+        // Funcionalidad del botón “← Volver”: regresa a HomeFragment
+        btnVolver.setOnClickListener(v -> {
+            BottomNavigationView bottomNav =
+                    requireActivity().findViewById(R.id.bottomNavigationView);
+            if (bottomNav != null) {
+                // Al seleccionar nav_home aquí, MainActivity recibirá el evento
+                // y cargará HomeFragment automáticamente.
+                bottomNav.setSelectedItemId(R.id.nav_home);
+            }
+        });
         return view;
     }
 
@@ -185,10 +201,10 @@ public class PerfilFragment extends Fragment {
             tv.setVisibility(View.VISIBLE);
             btn.setText("Editar");
             // Si ningún campo queda en edición, ocultar Guardar
-            if (editTextNombre.getVisibility()==View.GONE &&
-                    editTextEmail.getVisibility()==View.GONE &&
-                    editTextPassword.getVisibility()==View.GONE &&
-                    editTextLocalidad.getVisibility()==View.GONE) {
+            if (editTextNombre.getVisibility() == View.GONE &&
+                    editTextEmail.getVisibility() == View.GONE &&
+                    editTextPassword.getVisibility() == View.GONE &&
+                    editTextLocalidad.getVisibility() == View.GONE) {
                 btnGuardar.setVisibility(View.GONE);
             }
         }
@@ -295,16 +311,16 @@ public class PerfilFragment extends Fragment {
             return;
         }
 
-        String nombre = editTextNombre.getVisibility()==View.VISIBLE
+        String nombre = editTextNombre.getVisibility() == View.VISIBLE
                 ? editTextNombre.getText().toString().trim()
                 : prefs.getString("usuario", "");
-        String mail = editTextEmail.getVisibility()==View.VISIBLE
+        String mail = editTextEmail.getVisibility() == View.VISIBLE
                 ? editTextEmail.getText().toString().trim()
                 : prefs.getString("email", "");
-        String pass = editTextPassword.getVisibility()==View.VISIBLE
+        String pass = editTextPassword.getVisibility() == View.VISIBLE
                 ? editTextPassword.getText().toString().trim()
                 : prefs.getString("contrasena", "");
-        String loc  = editTextLocalidad.getVisibility()==View.VISIBLE
+        String loc  = editTextLocalidad.getVisibility() == View.VISIBLE
                 ? editTextLocalidad.getText().toString().trim()
                 : prefs.getString("localidad", "");
 
@@ -327,14 +343,14 @@ public class PerfilFragment extends Fragment {
             @Override public void onResponse(Call<Mensaje> c, Response<Mensaje> r) {
                 // Oculta la rueda
                 ((MainActivity) requireActivity()).hideLoading();
-                if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
+                if (r.isSuccessful() && r.body() != null && r.body().isSuccess()) {
                     // Actualiza prefs con valores nuevos
                     prefs.edit()
-                            .putString("usuario",   nombre)
-                            .putString("email",     mail)
-                            .putString("contrasena",pass)
+                            .putString("usuario", nombre)
+                            .putString("email", mail)
+                            .putString("contrasena", pass)
                             .putString("localidad", loc)
-                            .putString("fotoPerfil",imagenBase64.replaceAll("\\s+",""))
+                            .putString("fotoPerfil", imagenBase64.replaceAll("\\s+", ""))
                             .apply();
                     Toast.makeText(getContext(), "Datos actualizados", Toast.LENGTH_SHORT).show();
                     // Recarga UI mostrando siempre los TextView
@@ -345,7 +361,7 @@ public class PerfilFragment extends Fragment {
             }
             @Override public void onFailure(Call<Mensaje> c, Throwable t) {
                 ((MainActivity) requireActivity()).hideLoading();
-                Toast.makeText(getContext(), "Fallo en servidor: "+t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Fallo en servidor: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -354,41 +370,41 @@ public class PerfilFragment extends Fragment {
     private void guardarFotoDirecta() {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
-        int idUsuario = prefs.getInt("idUsuario",-1);
-        if (idUsuario==-1) {
+        int idUsuario = prefs.getInt("idUsuario", -1);
+        if (idUsuario == -1) {
             ((MainActivity) requireActivity()).hideLoading();
-            Toast.makeText(getContext(),"Sesión no válida",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Sesión no válida", Toast.LENGTH_SHORT).show();
             return;
         }
         Usuario u = new Usuario();
         u.setIdUsuario(idUsuario);
-        u.setUsuario(prefs.getString("usuario",""));
-        u.setEmail(prefs.getString("email",""));
-        u.setContrasena(prefs.getString("contrasena",""));
-        u.setLocalidad(prefs.getString("localidad",""));
+        u.setUsuario(prefs.getString("usuario", ""));
+        u.setEmail(prefs.getString("email", ""));
+        u.setContrasena(prefs.getString("contrasena", ""));
+        u.setLocalidad(prefs.getString("localidad", ""));
         u.setFotoPerfil(imagenBase64);
 
         ApiService api = ApiClient.getClient().create(ApiService.class);
         api.updateUsuario(u).enqueue(new Callback<Mensaje>() {
             @Override public void onResponse(Call<Mensaje> call, Response<Mensaje> r) {
                 ((MainActivity) requireActivity()).hideLoading();
-                if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
+                if (r.isSuccessful() && r.body() != null && r.body().isSuccess()) {
                     // Guardamos la foto en prefs y actualizamos drawer
-                    prefs.edit().putString("fotoPerfil",imagenBase64).apply();
+                    prefs.edit().putString("fotoPerfil", imagenBase64).apply();
                     ((MainActivity) requireActivity()).actualizarFotoDrawer(imagenBase64);
-                    Toast.makeText(getContext(),"Foto actualizada",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Foto actualizada", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(),"Error al actualizar foto",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Error al actualizar foto", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override public void onFailure(Call<Mensaje> call, Throwable t) {
                 ((MainActivity) requireActivity()).hideLoading();
-                Toast.makeText(getContext(),"Fallo en servidor: "+t.getMessage(),Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Fallo en servidor: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    /** Llama a delete_user.php y vuelve a HomeFragment. */
+    /** Llama a delete_user.php y vuelve al LoginActivity. */
     private void borrarCuenta() {
         // mostramos rueda
         ((MainActivity) requireActivity()).showLoading();
@@ -404,11 +420,11 @@ public class PerfilFragment extends Fragment {
                         // ocultar rueda
                         ((MainActivity) requireActivity()).hideLoading();
 
-                        if (r.isSuccessful() && r.body()!=null && r.body().isSuccess()) {
+                        if (r.isSuccessful() && r.body() != null && r.body().isSuccess()) {
                             // en lugar de limpiar y navegar manualmente, llamamos cerrarSesion()
                             ((MainActivity) requireActivity()).cerrarSesion();
                         } else {
-                            String msg = r.body()!=null
+                            String msg = r.body() != null
                                     ? r.body().getMessage()
                                     : "Error al borrar cuenta";
                             Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
@@ -416,9 +432,8 @@ public class PerfilFragment extends Fragment {
                     }
                     @Override public void onFailure(Call<Mensaje> c, Throwable t) {
                         ((MainActivity) requireActivity()).hideLoading();
-                        Toast.makeText(getContext(),"Error de red: "+t.getMessage(),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
-
 }
