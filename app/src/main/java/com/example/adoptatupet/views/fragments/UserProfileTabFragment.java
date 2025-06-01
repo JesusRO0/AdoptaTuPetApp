@@ -36,6 +36,7 @@ import retrofit2.Response;
 
 /**
  * UserProfileTabFragment muestra la información del usuario y su historial de posts.
+ * Ahora, en onResume() recarga los posts para reflejar cambios en “likes”.
  */
 public class UserProfileTabFragment extends Fragment {
 
@@ -57,18 +58,18 @@ public class UserProfileTabFragment extends Fragment {
                              @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_profile_tab, container, false);
 
-        // 1) Referenciamos cada vista usando los IDs del XML:
+        // 1) Referenciamos cada vista usando los mismos IDs del XML:
         ivProfileAvatarTab = view.findViewById(R.id.ivProfileAvatarTab);
         tvProfileNameTab   = view.findViewById(R.id.tvProfileNameTab);
         tvProfileEmailTab  = view.findViewById(R.id.tvProfileEmailTab);
         rvUserPostsTab     = view.findViewById(R.id.rvUserPostsTab);
 
-        // 2) Preparamos el RecyclerView para el historial de posts del usuario:
+        // 2) Preparamos el RecyclerView para el historial de posts:
         rvUserPostsTab.setLayoutManager(new LinearLayoutManager(getContext()));
         postsAdapter = new ForoAdapter(new ArrayList<>(), /* listener= */ null);
         rvUserPostsTab.setAdapter(postsAdapter);
 
-        // 3) Obtenemos el ID del usuario a mostrar:
+        // 3) Obtenemos el userId: primero revisamos si viene en args; si no, lo leemos de SharedPreferences
         Bundle args = getArguments();
         if (args != null && args.containsKey("userId")) {
             currentUserId = args.getInt("userId", -1);
@@ -87,6 +88,27 @@ public class UserProfileTabFragment extends Fragment {
         }
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Cada vez que el fragment se reanude, volvemos a recargar los posts del usuario
+        if (currentUserId != -1) {
+            cargarPostsUsuario(currentUserId);
+        }
+    }
+
+    /**
+     * MÉTODO AÑADIDO: permite que ForoFragment o el ViewPager llamen explícitamente
+     * para refrescar el historial (y así obtener el conteo de “likes” actualizado).
+     */
+    public void recargarUsuarioYPosts() {
+        if (currentUserId != -1) {
+            // No re-cargamos el perfil porque presumimos que no cambió aquí,
+            // solo queremos refrescar el listado de posts.
+            cargarPostsUsuario(currentUserId);
+        }
     }
 
     /**
@@ -131,6 +153,7 @@ public class UserProfileTabFragment extends Fragment {
 
     /**
      * Llama a get_mensajes_usuario.php para obtener solo los posts de este usuario.
+     * Al reanudar el fragment, se invoca de nuevo y así actualiza el conteo de “likes”.
      */
     private void cargarPostsUsuario(int userId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);

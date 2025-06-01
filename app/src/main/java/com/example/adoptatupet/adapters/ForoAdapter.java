@@ -123,7 +123,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             }
         });
 
-        // 7) Click en “like/unlike” (optimistic UI + cache + backend)
+        // 7) Click en “like/unlike” (optimistic UI + backend)
         holder.btnLike.setOnClickListener(v -> {
             boolean currentlyLiked = m.isLikedByUser();
             int currentCount = m.getLikeCount();
@@ -166,6 +166,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
+                        // Revertir si falla de red
                         m.setLikedByUser(true);
                         m.setLikeCount(m.getLikeCount() + 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -180,6 +181,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
+                            // Revertir si falla
                             m.setLikedByUser(false);
                             m.setLikeCount(m.getLikeCount() - 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -190,6 +192,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
+                        // Revertir si falla de red
                         m.setLikedByUser(false);
                         m.setLikeCount(m.getLikeCount() - 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_outline);

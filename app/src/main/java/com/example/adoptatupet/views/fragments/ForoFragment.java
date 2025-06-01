@@ -1,5 +1,7 @@
 package com.example.adoptatupet.views.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,19 +21,22 @@ import com.google.android.material.tabs.TabLayoutMediator;
  * ForoFragment actúa como contenedor de dos pestañas:
  *   - índice 0 → MensajesTabFragment
  *   - índice 1 → UserProfileTabFragment
+ *
+ * Ahora, se añade un callback para que cuando el usuario cambie a “Perfil” (posición 1),
+ * automáticamente invoquemos actualizarUsuario(...) y así recarguemos el historial con los likes
+ * actualizados.
  */
 public class ForoFragment extends Fragment {
 
-    private TabLayout tabLayoutForo;
-    private ViewPager2 viewPagerForo;
+    private TabLayout   tabLayoutForo;
+    private ViewPager2  viewPagerForo;
     private ForoPagerAdapter pagerAdapter;
 
     public ForoFragment() {
         // Constructor vacío
     }
 
-    @Nullable
-    @Override
+    @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup   container,
                              @Nullable Bundle      savedInstanceState) {
@@ -42,7 +47,7 @@ public class ForoFragment extends Fragment {
         tabLayoutForo = view.findViewById(R.id.tabLayoutForo);
         viewPagerForo = view.findViewById(R.id.viewPagerForo);
 
-        // 2) Instanciar el adapter PARA ViewPager2 pasando requireActivity()
+        // 2) Instanciar el adapter para ViewPager2, pasando requireActivity()
         pagerAdapter = new ForoPagerAdapter(requireActivity());
         viewPagerForo.setAdapter(pagerAdapter);
 
@@ -61,12 +66,35 @@ public class ForoFragment extends Fragment {
         viewPagerForo.post(() -> {
             Fragment f0 = getChildFragmentManager().findFragmentByTag("f" + 0);
             if (f0 instanceof MensajesTabFragment) {
-                // Cuando se pulsa un nombre en MensajesTabFragment, mostrar perfil en la segunda pestaña
+                // Cuando se pulsa un nombre en MensajesTabFragment, mostramos perfil en la pestaña 1
                 ((MensajesTabFragment) f0).setOnUserNameClickListener(userId -> {
                     mostrarPerfilUsuario(userId);
                 });
             }
         });
+
+        // ---------- NUEVO: cada vez que cambie de pestaña, comprobamos si es “Perfil” (posición 1)
+        viewPagerForo.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+
+                if (position == 1) {
+                    // Recuperamos el ID del usuario actual desde SharedPreferences
+                    SharedPreferences prefs = requireActivity()
+                            .getSharedPreferences("user", Context.MODE_PRIVATE);
+                    int myUserId = prefs.getInt("idUsuario", -1);
+
+                    // Buscamos el fragment de índice 1 por su tag “f1”
+                    Fragment f1 = getChildFragmentManager().findFragmentByTag("f" + 1);
+                    if (f1 instanceof UserProfileTabFragment && myUserId != -1) {
+                        // Llamamos a actualizarUsuario(userId) para recargar historial (likes incluidos)
+                        ((UserProfileTabFragment) f1).actualizarUsuario(myUserId);
+                    }
+                }
+            }
+        });
+        // ---------- FIN DE CAMBIO
 
         return view;
     }
