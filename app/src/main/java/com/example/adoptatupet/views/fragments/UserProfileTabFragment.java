@@ -1,5 +1,7 @@
 package com.example.adoptatupet.views.fragments;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -33,19 +35,20 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Fragment para la pestaña “Perfil de usuario”:
- * - Muestra foto circular, nombre y email
- * - Debajo, RecyclerView con los posts de ese usuario
+ * UserProfileTabFragment muestra la información del usuario y su historial de posts.
  */
 public class UserProfileTabFragment extends Fragment {
 
-    private ImageView ivProfileAvatarTab;
-    private TextView tvProfileNameTab, tvProfileEmailTab;
+    private ImageView    ivProfileAvatarTab;
+    private TextView     tvProfileNameTab;
+    private TextView     tvProfileEmailTab;
     private RecyclerView rvUserPostsTab;
-    private ForoAdapter postsAdapter;
+    private ForoAdapter  postsAdapter;
     private int currentUserId = -1;
 
-    public UserProfileTabFragment() { /* constructor vacío */ }
+    public UserProfileTabFragment() {
+        // Constructor vacío requerido
+    }
 
     @Nullable
     @Override
@@ -54,27 +57,41 @@ public class UserProfileTabFragment extends Fragment {
                              @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_profile_tab, container, false);
 
+        // 1) Referenciamos cada vista usando los IDs del XML:
         ivProfileAvatarTab = view.findViewById(R.id.ivProfileAvatarTab);
         tvProfileNameTab   = view.findViewById(R.id.tvProfileNameTab);
         tvProfileEmailTab  = view.findViewById(R.id.tvProfileEmailTab);
         rvUserPostsTab     = view.findViewById(R.id.rvUserPostsTab);
 
+        // 2) Preparamos el RecyclerView para el historial de posts del usuario:
         rvUserPostsTab.setLayoutManager(new LinearLayoutManager(getContext()));
-        postsAdapter = new ForoAdapter(new ArrayList<>(), null);
+        postsAdapter = new ForoAdapter(new ArrayList<>(), /* listener= */ null);
         rvUserPostsTab.setAdapter(postsAdapter);
 
-        // Si el contenedor le pasa userId vía argumento, úsalo:
+        // 3) Obtenemos el ID del usuario a mostrar:
         Bundle args = getArguments();
         if (args != null && args.containsKey("userId")) {
             currentUserId = args.getInt("userId", -1);
         }
+        if (currentUserId == -1) {
+            SharedPreferences prefs = requireActivity()
+                    .getSharedPreferences("user", Context.MODE_PRIVATE);
+            currentUserId = prefs.getInt("idUsuario", -1);
+        }
+
         if (currentUserId != -1) {
             cargarDatosUsuario(currentUserId);
             cargarPostsUsuario(currentUserId);
+        } else {
+            Toast.makeText(getContext(), "Usuario inválido para mostrar perfil", Toast.LENGTH_SHORT).show();
         }
+
         return view;
     }
 
+    /**
+     * Llama a get_usuario_by_id.php para obtener nombre, email y foto.
+     */
     private void cargarDatosUsuario(int userId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         Call<Usuario> callUser = api.getUsuarioById(userId);
@@ -87,7 +104,6 @@ public class UserProfileTabFragment extends Fragment {
                     tvProfileNameTab.setText(user.getUsuario());
                     tvProfileEmailTab.setText(user.getEmail());
 
-                    // Cargar fotoBase64
                     String foto64 = user.getFotoPerfil();
                     if (!TextUtils.isEmpty(foto64)) {
                         try {
@@ -104,6 +120,7 @@ public class UserProfileTabFragment extends Fragment {
                     Toast.makeText(getContext(), "No se pudo cargar info de usuario", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(Call<Usuario> call, Throwable t) {
                 if (!isAdded()) return;
@@ -112,6 +129,9 @@ public class UserProfileTabFragment extends Fragment {
         });
     }
 
+    /**
+     * Llama a get_mensajes_usuario.php para obtener solo los posts de este usuario.
+     */
     private void cargarPostsUsuario(int userId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
         Call<List<Mensaje>> callPosts = api.getMensajesUsuario(userId);
@@ -126,6 +146,7 @@ public class UserProfileTabFragment extends Fragment {
                     Toast.makeText(getContext(), "No se pudo cargar historial", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(Call<List<Mensaje>> call, Throwable t) {
                 if (!isAdded()) return;
@@ -135,7 +156,7 @@ public class UserProfileTabFragment extends Fragment {
     }
 
     /**
-     * Para que ForoFragment invoque este método cuando el usuario pulsa un nombre:
+     * Permite a ForoFragment actualizar el userId y recargar datos+posts.
      */
     public void actualizarUsuario(int userId) {
         currentUserId = userId;

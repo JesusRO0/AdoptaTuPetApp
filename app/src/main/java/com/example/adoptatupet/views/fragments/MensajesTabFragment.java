@@ -34,8 +34,6 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -81,12 +79,22 @@ public class MensajesTabFragment extends Fragment {
         // 1a) Cargar la imagen de perfil actual desde SharedPreferences
         cargarImagenPerfil();
 
-        // 1b) Configurar adjuntar imagen (pendiente)
+        // 1b) Al hacer clic sobre la imagen de perfil propia, mostrar perfil del usuario actual
+        ivUserProfile.setOnClickListener(v -> {
+            SharedPreferences prefs = requireActivity()
+                    .getSharedPreferences("user", Context.MODE_PRIVATE);
+            int myId = prefs.getInt("idUsuario", -1);
+            if (myId != -1 && listener != null) {
+                listener.onUserNameClicked(myId);
+            }
+        });
+
+        // 1c) Configurar adjuntar imagen (pendiente)
         btnAttachImage.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Funcionalidad de adjuntar pendiente", Toast.LENGTH_SHORT).show()
         );
 
-        // 1c) Configurar botón “Postear”
+        // 1d) Configurar botón “Postear”
         btnPostear.setOnClickListener(v -> {
             String texto = etPostContent.getText().toString().trim();
             if (TextUtils.isEmpty(texto)) {

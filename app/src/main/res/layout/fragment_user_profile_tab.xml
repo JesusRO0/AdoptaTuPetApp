@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/container_user_profile_tab"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -25,6 +26,7 @@
             android:clipToOutline="true"
             android:src="@drawable/default_avatar" />
 
+        <!-- Bloque de nombre y correo -->
         <LinearLayout
             android:id="@+id/ll_nombre_email_tab"
             android:layout_width="0dp"
