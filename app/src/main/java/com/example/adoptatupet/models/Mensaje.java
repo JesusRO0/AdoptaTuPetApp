@@ -56,12 +56,12 @@ public class Mensaje {
     @SerializedName("imagenMensaje")
     private String imagenMensaje;
 
-    @Expose
     @SerializedName("likeCount")
+    @Expose
     private int likeCount;
 
-    @Expose
     @SerializedName("likedByUser")
+    @Expose
     private boolean likedByUser;
 
     // ----------------- Getters y Setters -----------------

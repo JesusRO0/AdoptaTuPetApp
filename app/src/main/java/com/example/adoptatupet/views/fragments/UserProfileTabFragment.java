@@ -1,7 +1,6 @@
 package com.example.adoptatupet.views.fragments;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -11,8 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,7 +35,8 @@ import retrofit2.Response;
 
 /**
  * UserProfileTabFragment muestra la información del usuario y su historial de posts.
- * Ahora, en onResume() recarga los posts para reflejar cambios en “likes”.
+ * Ahora, al cargar los posts, respetamos el campo likeCount y el flag likedByUser
+ * para que el corazón aparezca relleno si corresponde.
  */
 public class UserProfileTabFragment extends Fragment {
 
@@ -58,28 +58,30 @@ public class UserProfileTabFragment extends Fragment {
                              @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_profile_tab, container, false);
 
-        // 1) Referenciamos cada vista usando los mismos IDs del XML:
+        // 1) Referencias a vistas (mismos IDs que en tu XML)
         ivProfileAvatarTab = view.findViewById(R.id.ivProfileAvatarTab);
         tvProfileNameTab   = view.findViewById(R.id.tvProfileNameTab);
         tvProfileEmailTab  = view.findViewById(R.id.tvProfileEmailTab);
         rvUserPostsTab     = view.findViewById(R.id.rvUserPostsTab);
 
-        // 2) Preparamos el RecyclerView para el historial de posts:
+        // 2) Configuramos el RecyclerView para mostrar historial de posts:
         rvUserPostsTab.setLayoutManager(new LinearLayoutManager(getContext()));
-        postsAdapter = new ForoAdapter(new ArrayList<>(), /* listener= */ null);
+        // Pasamos listener=null porque no necesitamos click en nombre aquí
+        postsAdapter = new ForoAdapter(new ArrayList<>(), /* listenerUsuario= */ null);
         rvUserPostsTab.setAdapter(postsAdapter);
 
-        // 3) Obtenemos el userId: primero revisamos si viene en args; si no, lo leemos de SharedPreferences
+        // 3) Obtenemos el userId de los argumentos o, si no viene, de SharedPreferences
         Bundle args = getArguments();
         if (args != null && args.containsKey("userId")) {
             currentUserId = args.getInt("userId", -1);
         }
         if (currentUserId == -1) {
-            SharedPreferences prefs = requireActivity()
-                    .getSharedPreferences("user", Context.MODE_PRIVATE);
-            currentUserId = prefs.getInt("idUsuario", -1);
+            currentUserId = requireActivity()
+                    .getSharedPreferences("user", Context.MODE_PRIVATE)
+                    .getInt("idUsuario", -1);
         }
 
+        // 4) Si tenemos un userId válido, cargamos datos y posts
         if (currentUserId != -1) {
             cargarDatosUsuario(currentUserId);
             cargarPostsUsuario(currentUserId);
@@ -93,26 +95,15 @@ public class UserProfileTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Cada vez que el fragment se reanude, volvemos a recargar los posts del usuario
+        // Cada vez que el fragment se reanude, recargamos los posts del usuario
+        // para que se actualicen automáticamente los “likes” si han cambiado.
         if (currentUserId != -1) {
             cargarPostsUsuario(currentUserId);
         }
     }
 
     /**
-     * MÉTODO AÑADIDO: permite que ForoFragment o el ViewPager llamen explícitamente
-     * para refrescar el historial (y así obtener el conteo de “likes” actualizado).
-     */
-    public void recargarUsuarioYPosts() {
-        if (currentUserId != -1) {
-            // No re-cargamos el perfil porque presumimos que no cambió aquí,
-            // solo queremos refrescar el listado de posts.
-            cargarPostsUsuario(currentUserId);
-        }
-    }
-
-    /**
-     * Llama a get_usuario_by_id.php para obtener nombre, email y foto.
+     * Llama a get_usuario_by_id.php para obtener nombre, email y foto de perfil.
      */
     private void cargarDatosUsuario(int userId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
@@ -120,12 +111,16 @@ public class UserProfileTabFragment extends Fragment {
         callUser.enqueue(new Callback<Usuario>() {
             @Override
             public void onResponse(Call<Usuario> call, Response<Usuario> response) {
+                // Salvaguarda: si el fragment ya no está adjunto, salimos
                 if (!isAdded()) return;
+
                 if (response.isSuccessful() && response.body() != null) {
                     Usuario user = response.body();
+                    // 1) Nombre y correo
                     tvProfileNameTab.setText(user.getUsuario());
                     tvProfileEmailTab.setText(user.getEmail());
 
+                    // 2) Foto de perfil (Base64 -> Bitmap)
                     String foto64 = user.getFotoPerfil();
                     if (!TextUtils.isEmpty(foto64)) {
                         try {
@@ -152,8 +147,14 @@ public class UserProfileTabFragment extends Fragment {
     }
 
     /**
-     * Llama a get_mensajes_usuario.php para obtener solo los posts de este usuario.
-     * Al reanudar el fragment, se invoca de nuevo y así actualiza el conteo de “likes”.
+     * Llama a get_mensajes_usuario.php para obtener sólo los posts de este usuario.
+     * Ahora, el objeto Mensaje debe traer en cada elemento:
+     *   • likeCount        (cantidad de “me gusta”)
+     *   • likedByUser      (si este usuario ya lo marcó como “me gusta”)
+     *
+     * Una vez obtenido, se asigna directamente al adaptador:
+     * postsAdapter.setListaMensajes(lista);
+     * y el propio ForoAdapter se encarga de mostrar el corazón relleno/contorno.
      */
     private void cargarPostsUsuario(int userId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
@@ -162,8 +163,16 @@ public class UserProfileTabFragment extends Fragment {
             @Override
             public void onResponse(Call<List<Mensaje>> call, Response<List<Mensaje>> response) {
                 if (!isAdded()) return;
+
                 if (response.isSuccessful() && response.body() != null) {
                     List<Mensaje> lista = response.body();
+
+                    // IMPORTANTE: aquí cada Mensaje debe traer:
+                    //   • m.getLikeCount()    → número de likes
+                    //   • m.isLikedByUser()   → true/false
+                    // Si la API no te está devolviendo estos campos, tendrás que
+                    // ajustarla para que incluy a “likeCount” y “likedByUser” en el JSON.
+
                     postsAdapter.setListaMensajes(lista);
                 } else {
                     Toast.makeText(getContext(), "No se pudo cargar historial", Toast.LENGTH_SHORT).show();
@@ -179,7 +188,7 @@ public class UserProfileTabFragment extends Fragment {
     }
 
     /**
-     * Permite a ForoFragment actualizar el userId y recargar datos+posts.
+     * Permite a ForoFragment invocar manualmente la recarga si se necesita.
      */
     public void actualizarUsuario(int userId) {
         currentUserId = userId;

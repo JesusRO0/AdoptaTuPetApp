@@ -32,7 +32,9 @@ import retrofit2.Response;
 
 public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHolder> {
 
-    // Interfaz para notificar clicks en el nombre de usuario
+    /**
+     * Interfaz para notificar clicks en el nombre de usuario del post.
+     */
     public interface OnUserNameClickListener {
         void onUserNameClicked(int userId);
     }
@@ -54,7 +56,6 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         return listaMensajes;
     }
 
-    // Permite cambiar el listener en tiempo de ejecución
     public void setOnUserNameClickListener(OnUserNameClickListener l) {
         this.listener = l;
     }
@@ -123,12 +124,12 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             }
         });
 
-        // 7) Click en “like/unlike” (optimistic UI + backend)
+        // 7) Click en “like/unlike” (optimistic UI + cache + backend)
         holder.btnLike.setOnClickListener(v -> {
             boolean currentlyLiked = m.isLikedByUser();
             int currentCount = m.getLikeCount();
 
-            // a) Actualizar UI local
+            // a) Actualizar UI local (optimistic)
             if (currentlyLiked) {
                 m.setLikedByUser(false);
                 m.setLikeCount(currentCount - 1);
@@ -143,7 +144,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                 holder.tvLikeCount.setText(String.valueOf(m.getLikeCount()));
             }
 
-            // b) Llamada al backend
+            // b) Llamada al backend para persisitir el cambio
             Map<String, Integer> body = new HashMap<>();
             body.put("usuarioId", m.getUsuarioId());
             body.put("idPost", m.getIdMensaje());
@@ -166,7 +167,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
-                        // Revertir si falla de red
+                        // Revertir si falla
                         m.setLikedByUser(true);
                         m.setLikeCount(m.getLikeCount() + 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -192,7 +193,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
-                        // Revertir si falla de red
+                        // Revertir si falla
                         m.setLikedByUser(false);
                         m.setLikeCount(m.getLikeCount() - 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -207,7 +208,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
 
     @Override
     public int getItemCount() {
-        return listaMensajes.size();
+        return listaMensajes != null ? listaMensajes.size() : 0;
     }
 
     static class MensajeViewHolder extends RecyclerView.ViewHolder {
