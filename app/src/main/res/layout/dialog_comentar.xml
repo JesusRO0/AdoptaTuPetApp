@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_comentario_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="16dp">
+
+    <!-- == CABECERA: Avatar circular + Nombre + (Email, por ahora vacío) == -->
+    <LinearLayout
+        android:id="@+id/ll_header_comentario"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp">
+
+        <!-- Avatar del usuario al que respondemos (CircleImageView) -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivAvatarDestino"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/default_avatar" />
+
+        <!-- Nombre y email del destinatario (email, de momento, vacío) -->
+        <LinearLayout
+            android:id="@+id/ll_nombre_email_destino"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Nombre del destinatario -->
+            <TextView
+                android:id="@+id/tvDestinoNombre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre Usuario"
+                android:textColor="#212121"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Email del destinatario (queda vacío si no pasas el dato) -->
+            <TextView
+                android:id="@+id/tvDestinoEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#757575"
+                android:textSize="14sp"
+                android:paddingTop="2dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- == Campo de texto multilínea para escribir la respuesta == -->
+    <EditText
+        android:id="@+id/etComentario"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="8dp"
+        android:gravity="top|start"
+        android:hint="Escribe tu respuesta..."
+        android:inputType="textMultiLine"
+        android:maxLines="6"
+        android:padding="8dp"
+        android:textColor="#000000"
+        android:textSize="14sp" />
+
+    <!-- == Botón “Responder” alineado a la derecha == -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btnResponderDialog"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:text="Responder"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>

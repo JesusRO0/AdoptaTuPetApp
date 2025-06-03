@@ -1,5 +1,6 @@
 package com.example.adoptatupet.views.fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,12 +35,19 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * MensajesTabFragment: muestra la lista de mensajes del foro
+ * y permite postear nuevos.
+ * También invoca el diálogo de comentario al pulsar el icono de comentario.
+ */
 public class MensajesTabFragment extends Fragment {
 
     private static final String CACHE_PREFS = "foro_cache";
@@ -57,7 +66,7 @@ public class MensajesTabFragment extends Fragment {
     private final Gson gson = new Gson();
 
     /** Listener para clicks en nombre de usuario (inyectado desde ForoFragment) */
-    private ForoAdapter.OnUserNameClickListener listener;
+    private ForoAdapter.OnUserNameClickListener listenerUsuario;
 
     public MensajesTabFragment() {
         // Constructor vacío
@@ -84,12 +93,12 @@ public class MensajesTabFragment extends Fragment {
             SharedPreferences prefs = requireActivity()
                     .getSharedPreferences("user", Context.MODE_PRIVATE);
             int myId = prefs.getInt("idUsuario", -1);
-            if (myId != -1 && listener != null) {
-                listener.onUserNameClicked(myId);
+            if (myId != -1 && listenerUsuario != null) {
+                listenerUsuario.onUserNameClicked(myId);
             }
         });
 
-        // 1c) Configurar adjuntar imagen (pendiente)
+        // 1c) Configurar “Adjuntar imagen” (de momento pendiente)
         btnAttachImage.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Funcionalidad de adjuntar pendiente", Toast.LENGTH_SHORT).show()
         );
@@ -107,11 +116,21 @@ public class MensajesTabFragment extends Fragment {
         // 2) Inicializar RecyclerView para mostrar mensajes
         rvMensajesTab = view.findViewById(R.id.rvForo);
         rvMensajesTab.setLayoutManager(new LinearLayoutManager(getContext()));
-        foroAdapter = new ForoAdapter(new ArrayList<>(), usuarioId -> {
-            if (listener != null) {
-                listener.onUserNameClicked(usuarioId);
-            }
-        });
+
+        // 2a) Instanciar ForoAdapter con DOS listeners: usuario y comentario
+        foroAdapter = new ForoAdapter(
+                new ArrayList<>(),
+                usuarioId -> {
+                    // Propagar click en nombre de usuario hacia ForoFragment
+                    if (listenerUsuario != null) {
+                        listenerUsuario.onUserNameClicked(usuarioId);
+                    }
+                },
+                (postId, usuarioNombre, fotoPerfilBase64) -> {
+                    // Al pulsar el botón de comentario: mostramos diálogo
+                    mostrarDialogoComentario(postId, usuarioNombre, fotoPerfilBase64);
+                }
+        );
         rvMensajesTab.setAdapter(foroAdapter);
 
         // 3) Cargar mensajes desde caché y luego refrescar desde servidor
@@ -128,9 +147,9 @@ public class MensajesTabFragment extends Fragment {
         cargarImagenPerfil();
     }
 
-    /** Permite que ForoFragment inyecte el listener para clicks en nombres */
+    /** Inyecta listener desde ForoFragment para clicks en nombre de usuario */
     public void setOnUserNameClickListener(ForoAdapter.OnUserNameClickListener l) {
-        this.listener = l;
+        this.listenerUsuario = l;
         if (foroAdapter != null) {
             foroAdapter.setOnUserNameClickListener(l);
         }
@@ -190,7 +209,7 @@ public class MensajesTabFragment extends Fragment {
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null) {
                     List<Mensaje> lista = response.body();
-                    // 1) Actualizar el adapter
+                    // 1) Actualizar adapter
                     foroAdapter.setListaMensajes(lista);
                     rvMensajesTab.scrollToPosition(lista.size() - 1);
                     // 2) Guardar en caché
@@ -258,5 +277,74 @@ public class MensajesTabFragment extends Fragment {
                 Toast.makeText(getContext(), "Error de red al enviar", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario.
+     *
+     * @param postId             El ID del post al que se responde.
+     * @param usuarioNombre      El nombre del autor original.
+     * @param fotoPerfilBase64   El Base64 del avatar del autor original.
+     */
+    private void mostrarDialogoComentario(int postId, String usuarioNombre, String fotoPerfilBase64) {
+        // Inflamos el layout dialog_comentar.xml (con ImageView, TextView, EditText y Button)
+        View dialogView = LayoutInflater.from(getContext())
+                .inflate(R.layout.dialog_comentar, null);
+
+        ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
+        TextView tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
+        // El campo de email no se usa, pero el layout contiene tvDestinoEmail
+        TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
+        EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
+        Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
+
+        // 1) Poner nombre del usuario al que se responde
+        tvDestinoNombre.setText(usuarioNombre);
+        // 2) No mostramos email en esta versión
+        tvDestinoEmail.setText("");
+
+        // 3) Cargar avatar del destinatario
+        if (!TextUtils.isEmpty(fotoPerfilBase64)) {
+            try {
+                byte[] decoded = Base64.decode(fotoPerfilBase64, Base64.NO_WRAP);
+                Bitmap bmpAvatar = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+                ivAvatarDestino.setImageBitmap(bmpAvatar);
+            } catch (IllegalArgumentException e) {
+                ivAvatarDestino.setImageResource(R.drawable.default_avatar);
+            }
+        } else {
+            ivAvatarDestino.setImageResource(R.drawable.default_avatar);
+        }
+
+        // 4) Construir y mostrar el AlertDialog con dicho layout
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+
+        // 5) Al pulsar “Responder”:
+        btnResponder.setOnClickListener(v -> {
+            String textoComent = etComentario.getText().toString().trim();
+            if (TextUtils.isEmpty(textoComent)) {
+                Toast.makeText(getContext(), "Escribe algo antes de enviar", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // TODO: Llamar a API para guardar el comentario:
+            // Map<String, Object> body = new HashMap<>();
+            // body.put("idUsuario", <tu ID>);
+            // body.put("idPost", postId);
+            // body.put("texto", textoComent);
+            // ApiService api = ApiClient.getClient().create(ApiService.class);
+            // api.postComentario(body).enqueue(...);
+
+            Toast.makeText(
+                    getContext(),
+                    "Comentario enviado: \"" + textoComent + "\"",
+                    Toast.LENGTH_SHORT
+            ).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 }

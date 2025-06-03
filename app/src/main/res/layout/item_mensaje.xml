@@ -7,7 +7,7 @@
     android:padding="8dp"
     android:background="@android:color/white">
 
-    <!-- 1) Cabecera: foto de perfil + nombre + fecha/hora -->
+    <!-- 1) Cabecera: foto de perfil + nombre + fecha/hora (sin botón derecho) -->
     <LinearLayout
         android:id="@+id/ll_cabecera_mensaje"
         android:layout_width="match_parent"
@@ -16,16 +16,14 @@
         android:gravity="center_vertical"
         android:paddingBottom="4dp">
 
-        <!-- Foto de perfil del autor del post (ahora más grande y circular) -->
-        <ImageView
+        <!-- Foto de perfil del autor del post -->
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/ivPostUserProfile"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginEnd="8dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/default_avatar"
-            android:background="@drawable/circle_mask"
-            android:clipToOutline="true" />
+            android:src="@drawable/default_avatar" />
 
         <!-- Nombre de usuario y fecha en vertical -->
         <LinearLayout
@@ -72,9 +70,10 @@
         android:layout_marginTop="8dp"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
+        android:src="@drawable/icono_adjunto"
         android:visibility="gone" />
 
-    <!-- 4) Fila de interacciones: corazón circular + contador -->
+    <!-- 4) Fila de interacciones: botones comentar + like + contadores -->
     <LinearLayout
         android:id="@+id/ll_interacciones"
         android:layout_width="match_parent"
@@ -83,24 +82,51 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <!-- Corazón como ImageButton con fondo circular -->
+        <!-- Botón de “Comentar” -->
+        <ImageButton
+            android:id="@+id/btnComment"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Comentar"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/comentario" />
+
+        <!-- Opcional: contador de comentarios -->
+        <TextView
+            android:id="@+id/tvCommentCount"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:text="0"
+            android:textColor="#757575"
+            android:textSize="14sp" />
+
+        <!-- Espacio entre comentarios y like -->
+        <View
+            android:layout_width="16dp"
+            android:layout_height="0dp" />
+
+        <!-- Botón de “Like” (corazón) -->
         <ImageButton
             android:id="@+id/btnLike"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:background="@drawable/circle_mask"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Me gusta"
-            android:padding="6dp"
+            android:padding="4dp"
             android:scaleType="centerInside"
             android:src="@drawable/ic_heart_outline" />
 
-        <!-- Contador de “likes” -->
+        <!-- Cantidad de “likes” -->
         <TextView
             android:id="@+id/tvLikeCount"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
             android:gravity="center_vertical"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:text="0"
             android:textColor="#757575"
             android:textSize="14sp" />

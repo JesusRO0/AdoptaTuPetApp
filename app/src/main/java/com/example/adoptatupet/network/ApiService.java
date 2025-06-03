@@ -1,6 +1,7 @@
 package com.example.adoptatupet.network;
 
 import com.example.adoptatupet.models.Animal;
+import com.example.adoptatupet.models.Comment;
 import com.example.adoptatupet.models.Usuario;
 import com.example.adoptatupet.models.Mensaje;
 
@@ -124,4 +125,18 @@ public interface ApiService {
      */
     @GET("api/get_mensajes_usuario.php")
     Call<List<Mensaje>> getMensajesUsuario(@Query("idUsuario") int idUsuario);
+
+    /**
+     * Envía un comentario a un post existente.
+     * POST https://…/api/post_comentario.php
+     */
+    @POST("api/post_comentario.php")
+    Call<Mensaje> postComentario(@Body Map<String, Object> body);
+
+    /**
+     * Obtiene todos los comentarios de un post dado su id.
+     * GET …/api/get_comentarios.php?idPost=…
+     */
+    @GET("api/get_comentarios.php")
+    Call<List<Comment>> getComentarios(@Query("idPost") int idPost);
 }
