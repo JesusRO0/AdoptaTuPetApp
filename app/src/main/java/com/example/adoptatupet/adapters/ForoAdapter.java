@@ -1,3 +1,4 @@
+// ForoAdapter.java
 package com.example.adoptatupet.adapters;
 
 import android.content.Context;
@@ -31,48 +32,44 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * Adaptador para los mensajes del foro.
- * Permite:
- *   • Mostrar foto, usuario, fecha, texto, imagen adjunta, contador de likes y corazón de like.
- *   • Botón de like/unlike (optimistic UI y persistencia en back).
- *   • Botón de comentario (invoca OnCommentClickListener).
- *   • Click en nombre de usuario (invoca OnUserNameClickListener).
+ * Adaptador que muestra cada Mensaje en un RecyclerView del foro.
+ * Ahora incluye cuatro listeners:
+ *  1) OnUserNameClickListener: click sobre el nombre de usuario
+ *  2) OnCommentClickListener: click sobre el icono de comentario
+ *  3) OnLikeClick: gestión de me gusta/unlike interna
+ *  4) OnPostClickListener: click sobre todo el bloque del post
  */
 public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHolder> {
 
-    /** Llamado al hacer clic en el nombre de usuario de un post */
     public interface OnUserNameClickListener {
         void onUserNameClicked(int userId);
     }
 
-    /** Llamado al hacer clic en el botón de comentar de un post */
     public interface OnCommentClickListener {
-        /**
-         * @param postId        ID del post en el que se quiere comentar
-         * @param usuarioNombre Nombre del autor original (para mostrar en diálogo)
-         * @param fotoPerfil    Avatar del autor original en Base64 (para mostrar en diálogo)
-         */
-        void onCommentClicked(int postId, String usuarioNombre, String fotoPerfil);
+        void onCommentClicked(Mensaje mensaje);
+    }
+
+    public interface OnPostClickListener {
+        void onPostClicked(Mensaje mensaje);
     }
 
     private List<Mensaje> listaMensajes;
-    private OnUserNameClickListener listenerUsuario;
-    private OnCommentClickListener listenerComentario;
+    private OnUserNameClickListener userListener;
+    private OnCommentClickListener commentListener;
+    private OnPostClickListener postListener;
 
-    /**
-     * @param inicialList       Lista inicial de mensajes (puede venir vacía)
-     * @param lUsuario          Listener para clicks en nombre de usuario
-     * @param lComentario       Listener para clicks en botón de comentario
-     */
-    public ForoAdapter(List<Mensaje> inicialList,
-                       OnUserNameClickListener lUsuario,
-                       OnCommentClickListener lComentario) {
+    public ForoAdapter(
+            List<Mensaje> inicialList,
+            OnUserNameClickListener uListener,
+            OnCommentClickListener cListener,
+            OnPostClickListener pListener
+    ) {
         this.listaMensajes = inicialList;
-        this.listenerUsuario = lUsuario;
-        this.listenerComentario = lComentario;
+        this.userListener = uListener;
+        this.commentListener = cListener;
+        this.postListener = pListener;
     }
 
-    /** Reemplaza la lista entera y refresca */
     public void setListaMensajes(List<Mensaje> nuevaLista) {
         this.listaMensajes = nuevaLista;
         notifyDataSetChanged();
@@ -82,14 +79,16 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         return listaMensajes;
     }
 
-    /** Permite cambiar el listener de usuario en tiempo de ejecución */
     public void setOnUserNameClickListener(OnUserNameClickListener l) {
-        this.listenerUsuario = l;
+        this.userListener = l;
     }
 
-    /** Permite cambiar el listener de comentario en tiempo de ejecución */
     public void setOnCommentClickListener(OnCommentClickListener l) {
-        this.listenerComentario = l;
+        this.commentListener = l;
+    }
+
+    public void setOnPostClickListener(OnPostClickListener l) {
+        this.postListener = l;
     }
 
     @NonNull
@@ -139,7 +138,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             holder.ivMensajeImagen.setVisibility(View.GONE);
         }
 
-        // 5) Like: contador y estado según 'likedByUser'
+        // 5) Like: estado inicial
         holder.tvLikeCount.setText(String.valueOf(m.getLikeCount()));
         if (m.isLikedByUser()) {
             holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -149,30 +148,19 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             holder.btnLike.setColorFilter(ContextCompat.getColor(ctx, R.color.gray_500));
         }
 
-        // 6) Click en nombre de usuario → avisa al listenerUsuario
+        // 6) Click en nombre de usuario → avisar al listener
         holder.tvUserName.setOnClickListener(v -> {
-            if (listenerUsuario != null) {
-                listenerUsuario.onUserNameClicked(m.getUsuarioId());
+            if (userListener != null) {
+                userListener.onUserNameClicked(m.getUsuarioId());
             }
         });
 
-        // 7) Click en botón de comentario → avisa al listenerComentario
-        holder.btnComment.setOnClickListener(v -> {
-            if (listenerComentario != null) {
-                listenerComentario.onCommentClicked(
-                        m.getIdMensaje(),
-                        m.getUsuarioNombre(),
-                        m.getFotoPerfil()
-                );
-            }
-        });
-
-        // 8) Click en “like/unlike” (optimistic UI + persistencia en back)
+        // 7) Click en “like/unlike” (optimistic UI + backend)
         holder.btnLike.setOnClickListener(v -> {
             boolean currentlyLiked = m.isLikedByUser();
             int currentCount = m.getLikeCount();
 
-            // a) Optimistic UI: actualizar contador local y corazón
+            // a) Actualizar UI local (optimistic)
             if (currentlyLiked) {
                 m.setLikedByUser(false);
                 m.setLikeCount(currentCount - 1);
@@ -199,7 +187,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
-                            // Si falla, revertir UI
+                            // Revertir si falla
                             m.setLikedByUser(true);
                             m.setLikeCount(m.getLikeCount() + 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -210,7 +198,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
-                        // Si falla, revertir UI
+                        // Revertir si falla
                         m.setLikedByUser(true);
                         m.setLikeCount(m.getLikeCount() + 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -225,7 +213,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
-                            // Si falla, revertir UI
+                            // Revertir si falla
                             m.setLikedByUser(false);
                             m.setLikeCount(m.getLikeCount() - 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -236,7 +224,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
-                        // Si falla, revertir UI
+                        // Revertir si falla
                         m.setLikedByUser(false);
                         m.setLikeCount(m.getLikeCount() - 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -247,6 +235,20 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                 });
             }
         });
+
+        // 8) Click en icono de comentario → avisar al listener
+        holder.btnComment.setOnClickListener(v -> {
+            if (commentListener != null) {
+                commentListener.onCommentClicked(m);
+            }
+        });
+
+        // 9) Click en TODO el bloque del post → abrir ComentariosFragment
+        holder.itemView.setOnClickListener(v -> {
+            if (postListener != null) {
+                postListener.onPostClicked(m);
+            }
+        });
     }
 
     @Override
@@ -254,7 +256,6 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         return listaMensajes != null ? listaMensajes.size() : 0;
     }
 
-    /** ViewHolder que contiene todos los views de un ítem de mensaje */
     static class MensajeViewHolder extends RecyclerView.ViewHolder {
         ImageView ivPostUserProfile, ivMensajeImagen;
         TextView tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
@@ -268,9 +269,8 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             tvTextoMensaje    = itemView.findViewById(R.id.tvTextoMensaje);
             ivMensajeImagen   = itemView.findViewById(R.id.ivMensajeImagen);
             btnLike           = itemView.findViewById(R.id.btnLike);
-            tvLikeCount       = itemView.findViewById(R.id.tvLikeCount);
-            // “Comentario” debe estar definido en item_mensaje.xml con id btnComment
             btnComment        = itemView.findViewById(R.id.btnComment);
+            tvLikeCount       = itemView.findViewById(R.id.tvLikeCount);
         }
     }
 }

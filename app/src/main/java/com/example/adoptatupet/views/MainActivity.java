@@ -106,8 +106,11 @@ public class MainActivity extends AppCompatActivity {
         animalController.getInstance(this).fetchAllAnimals(null);
     }
 
-    /** Reemplaza el contenedor principal con el fragmento indicado */
-    private void loadFragment(@NonNull Fragment fragment) {
+    /**
+     * Cambié este método de `private` a `public` para que pueda usarse desde otros fragmentos.
+     * Reemplaza el contenedor principal con el fragmento indicado
+     */
+    public void loadFragment(@NonNull Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.nav_host_fragment, fragment)

@@ -29,9 +29,7 @@ import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +44,7 @@ import retrofit2.Response;
  *  1) El post original en la parte superior (usando layout item_mensaje).
  *  2) Un RecyclerView con todos los comentarios asociados a ese post.
  *  3) Zona inferior para escribir un nuevo comentario y enviarlo.
+ *  4) Flecha de retroceso para volver al foro.
  */
 public class ComentariosFragment extends Fragment {
 
@@ -53,15 +52,16 @@ public class ComentariosFragment extends Fragment {
 
     private Mensaje postOriginal;
     private ImageView ivPostUserProfile;
-    private TextView  tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
+    private TextView tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
     private ImageView ivPostImage;
     private RecyclerView rvComentarios;
     private CommentsAdapter commentsAdapter;
     private List<Comment> commentList = new ArrayList<>();
 
     private ImageView ivMyProfileForComment;
-    private EditText  etNewComment;
-    private Button    btnEnviarComentario;
+    private EditText etNewComment;
+    private Button btnEnviarComentario;
+    private ImageView btnAtras; // Flecha de retroceso
 
     private static final Gson gson = new Gson();
 
@@ -97,13 +97,28 @@ public class ComentariosFragment extends Fragment {
                              @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_comentarios, container, false);
 
-        // ————— 1) Setear datos del post original en include (item_mensaje) —————
+        // ======================
+        // 0) Flecha de retroceso
+        // ======================
+        btnAtras = view.findViewById(R.id.atras);
+        btnAtras.setOnClickListener(v -> {
+            // Reemplaza el contenedor principal con el fragmento ForoFragment
+            getActivity()
+                    .getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.nav_host_fragment, new com.example.adoptatupet.views.fragments.ForoFragment())
+                    .commit();
+        });
+
+        // ======================
+        // 1) Setear datos del post original en include (item_mensaje)
+        // ======================
         ivPostUserProfile = view.findViewById(R.id.ivPostUserProfile);
         tvUserName        = view.findViewById(R.id.tvUserName);
         tvFechaMensaje    = view.findViewById(R.id.tvFechaMensaje);
         tvTextoMensaje    = view.findViewById(R.id.tvTextoMensaje);
         ivPostImage       = view.findViewById(R.id.ivMensajeImagen);
-        tvLikeCount       = view.findViewById(R.id.tvLikeCount); // opcional, si quieres mostrar contador
+        tvLikeCount       = view.findViewById(R.id.tvLikeCount);
 
         if (postOriginal != null) {
             // Nombre y fecha
@@ -142,18 +157,24 @@ public class ComentariosFragment extends Fragment {
             tvLikeCount.setText(String.valueOf(postOriginal.getLikeCount()));
         }
 
-        // ————— 2) RecyclerView para comentarios —————
+        // ======================
+        // 2) RecyclerView para comentarios
+        // ======================
         rvComentarios = view.findViewById(R.id.rvComentarios);
         rvComentarios.setLayoutManager(new LinearLayoutManager(getContext()));
         commentsAdapter = new CommentsAdapter(commentList);
         rvComentarios.setAdapter(commentsAdapter);
 
-        // ————— 3) Cargar comentarios del servidor —————
+        // ======================
+        // 3) Cargar comentarios del servidor
+        // ======================
         if (postOriginal != null) {
             cargarComentariosDesdeServidor(postOriginal.getIdMensaje());
         }
 
-        // ————— 4) Zona para enviar comentario nuevo —————
+        // ======================
+        // 4) Zona para enviar comentario nuevo
+        // ======================
         ivMyProfileForComment = view.findViewById(R.id.ivMyProfileForComment);
         etNewComment          = view.findViewById(R.id.etNewComment);
         btnEnviarComentario   = view.findViewById(R.id.btnEnviarComentario);
@@ -245,7 +266,7 @@ public class ComentariosFragment extends Fragment {
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     etNewComment.setText("");
-                    // Refrescar lista de comentarios tras insertar
+                    // Refrescar lista de comentarios
                     cargarComentariosDesdeServidor(postId);
                 } else {
                     Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();

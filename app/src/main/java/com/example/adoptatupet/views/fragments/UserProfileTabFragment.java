@@ -36,7 +36,7 @@ import retrofit2.Response;
 
 /**
  * UserProfileTabFragment muestra la información del usuario y su historial de posts.
- * Ahora, en onResume() recarga los posts para reflejar cambios en “likes”.
+ * En la pestaña “Perfil” se listan los mensajes de ese usuario y se conservan los estados de “like”.
  */
 public class UserProfileTabFragment extends Fragment {
 
@@ -58,24 +58,29 @@ public class UserProfileTabFragment extends Fragment {
                              @Nullable Bundle      savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_profile_tab, container, false);
 
-        // 1) Referenciamos cada vista usando los mismos IDs del XML:
+        // 1) Referencias a cada vista usando los IDs del XML
         ivProfileAvatarTab = view.findViewById(R.id.ivProfileAvatarTab);
         tvProfileNameTab   = view.findViewById(R.id.tvProfileNameTab);
         tvProfileEmailTab  = view.findViewById(R.id.tvProfileEmailTab);
         rvUserPostsTab     = view.findViewById(R.id.rvUserPostsTab);
 
-        // 2) Preparamos el RecyclerView para el historial de posts:
+        // 2) Configurar RecyclerView para mostrar historial de posts
         rvUserPostsTab.setLayoutManager(new LinearLayoutManager(getContext()));
-        // Ahora el constructor de ForoAdapter recibe 3 parámetros: lista, listenerUsuario y listenerComentario.
-        // En el perfil solo mostramos posts y likes, por eso pasamos null para ambos listeners.
+        // Instanciamos ForoAdapter con 4 parámetros:
+        //  - listenerUsuario: null (no deseamos click en nombre en este contexto)
+        //  - listenerComentario: null (no deseamos diálogo aquí)
+        //  - listenerPost: null (no deseamos navegación desde el historial)
         postsAdapter = new ForoAdapter(
                 new ArrayList<>(),
                 /* listenerUsuario= */ null,
-                /* listenerComentario= */ null
+                /* listenerComentario= */ null,
+                /* listenerPost= */ null
         );
         rvUserPostsTab.setAdapter(postsAdapter);
 
-        // 3) Obtenemos el userId: primero revisamos si viene en args; si no, lo leemos de SharedPreferences
+        // 3) Obtener el userId:
+        //    Si viene en args (invocado desde ForoFragment), lo usamos;
+        //    Si no, lo leemos de SharedPreferences
         Bundle args = getArguments();
         if (args != null && args.containsKey("userId")) {
             currentUserId = args.getInt("userId", -1);
@@ -99,7 +104,7 @@ public class UserProfileTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Cada vez que el fragment se reanude, volvemos a recargar los posts del usuario
+        // Cada vez que el fragment se reanude, recargamos los posts para reflejar cambios de “like”
         if (currentUserId != -1) {
             cargarPostsUsuario(currentUserId);
         }

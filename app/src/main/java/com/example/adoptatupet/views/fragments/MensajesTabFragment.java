@@ -1,3 +1,4 @@
+// MensajesTabFragment.java
 package com.example.adoptatupet.views.fragments;
 
 import android.app.AlertDialog;
@@ -22,11 +23,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.adoptatupet.R;
 import com.example.adoptatupet.adapters.ForoAdapter;
+import com.example.adoptatupet.models.Comment;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
@@ -47,8 +50,8 @@ import retrofit2.Response;
 /**
  * MensajesTabFragment: muestra la lista de mensajes del foro
  * y permite postear nuevos.
- * También invoca el diálogo de comentario al pulsar el icono de comentario.
- * Ahora incluye un indicador de “Cargando...” únicamente al publicar un comentario.
+ * Al pulsar todo el bloque de un post, abre ComentariosFragment.
+ * Al pulsar el icono de comentario, muestra el pop-up de comentario.
  */
 public class MensajesTabFragment extends Fragment {
 
@@ -119,18 +122,30 @@ public class MensajesTabFragment extends Fragment {
         rvMensajesTab = view.findViewById(R.id.rvForo);
         rvMensajesTab.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // 2a) Instanciar ForoAdapter con DOS listeners: usuario y comentario
+        // 2a) Instanciar ForoAdapter con CUATRO listeners: usuario, comentario, like e item completo
         foroAdapter = new ForoAdapter(
                 new ArrayList<>(),
+                // OnUserNameClickListener
                 usuarioId -> {
-                    // Propagar click en nombre de usuario hacia ForoFragment
                     if (listenerUsuario != null) {
                         listenerUsuario.onUserNameClicked(usuarioId);
                     }
                 },
-                (postId, usuarioNombre, fotoPerfilBase64) -> {
-                    // Al pulsar el botón de comentario: mostramos diálogo
-                    mostrarDialogoComentario(postId, usuarioNombre, fotoPerfilBase64);
+                // OnCommentClickListener: abre pop-up
+                mensaje -> mostrarDialogoComentario(
+                        mensaje.getIdMensaje(),
+                        mensaje.getUsuarioNombre(),
+                        mensaje.getFotoPerfil()
+                ),
+                // OnPostClickListener: abre ComentariosFragment
+                mensaje -> {
+                    ComentariosFragment comentariosFragment = ComentariosFragment.newInstance(mensaje);
+                    FragmentTransaction ft = requireActivity()
+                            .getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.nav_host_fragment, comentariosFragment)
+                            .addToBackStack(null);
+                    ft.commit();
                 }
         );
         rvMensajesTab.setAdapter(foroAdapter);
@@ -164,7 +179,7 @@ public class MensajesTabFragment extends Fragment {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
         String fotoPerfilBase64 = prefs.getString("fotoPerfil", null);
-        if (fotoPerfilBase64 != null && !fotoPerfilBase64.isEmpty()) {
+        if (!TextUtils.isEmpty(fotoPerfilBase64)) {
             try {
                 byte[] decodedBytes = Base64.decode(fotoPerfilBase64, Base64.NO_WRAP);
                 Bitmap bmp = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
@@ -255,7 +270,6 @@ public class MensajesTabFragment extends Fragment {
         Mensaje nuevo = new Mensaje();
         nuevo.setUsuarioId(userId);
         nuevo.setTexto(texto);
-        // Si en el futuro incluyes imagen: nuevo.setImagenMensaje(base64De(imagen));
 
         ApiService api = ApiClient.getClient().create(ApiService.class);
         Call<Mensaje> call = api.postMensaje(nuevo);
@@ -264,10 +278,8 @@ public class MensajesTabFragment extends Fragment {
             public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null) {
-                    // Limpiar el campo de texto y URI adjunta
                     etPostContent.setText("");
                     attachedImageUri = null;
-                    // Refrescar la lista completa de mensajes
                     refrescarMensajesDesdeServidor();
                 } else {
                     Toast.makeText(getContext(), "No se pudo enviar el mensaje", Toast.LENGTH_SHORT).show();
@@ -283,20 +295,19 @@ public class MensajesTabFragment extends Fragment {
 
     /**
      * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario.
-     * Al pulsar “Responder”, se muestra un indicador “Cargando…” y se envía el comentario.
      *
      * @param postId             El ID del post al que se responde.
      * @param usuarioNombre      El nombre del autor original.
      * @param fotoPerfilBase64   El Base64 del avatar del autor original.
      */
     private void mostrarDialogoComentario(int postId, String usuarioNombre, String fotoPerfilBase64) {
-        // Inflamos el layout dialog_comentar.xml (con ImageView, TextView, EditText y Button)
+        // Inflamos el layout dialog_comentar.xml
         View dialogView = LayoutInflater.from(getContext())
                 .inflate(R.layout.dialog_comentar, null);
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
         TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
-        TextView tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
+        TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
         EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
         Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
 
@@ -324,20 +335,14 @@ public class MensajesTabFragment extends Fragment {
                 .setCancelable(true)
                 .create();
 
-        // 5) Al pulsar “Responder”:
+        // 5) Al pulsar “Responder” dentro del diálogo:
         btnResponder.setOnClickListener(v -> {
             String textoComent = etComentario.getText().toString().trim();
             if (TextUtils.isEmpty(textoComent)) {
                 Toast.makeText(getContext(), "Escribe algo antes de enviar", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            // 5a) Mostrar indicador de “Cargando…”
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).showLoading();
-            }
-
-            // 5b) Preparar datos para enviar a API
+            // Construir body para enviar a la API
             SharedPreferences prefs = requireActivity()
                     .getSharedPreferences("user", Context.MODE_PRIVATE);
             int myUserId = prefs.getInt("idUsuario", -1);
@@ -347,29 +352,32 @@ public class MensajesTabFragment extends Fragment {
             body.put("idPost", postId);
             body.put("texto", textoComent);
 
-            // 5c) Llamar a API para guardar el comentario
+            // Mostrar loading en MainActivity mientras se envía
+            if (getActivity() != null) {
+                ((MainActivity) getActivity()).showLoading();
+            }
+
             ApiService api = ApiClient.getClient().create(ApiService.class);
             Call<Mensaje> callComentario = api.postComentario(body);
             callComentario.enqueue(new Callback<Mensaje>() {
                 @Override
                 public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                    // 5d) Ocultar indicador de “Cargando…”
-                    if (getActivity() instanceof MainActivity) {
+                    // Ocultar loading
+                    if (getActivity() != null) {
                         ((MainActivity) getActivity()).hideLoading();
                     }
                     if (!isAdded()) return;
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                        Toast.makeText(getContext(), "Comentario publicado", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                     } else {
                         Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
                     }
                 }
-
                 @Override
                 public void onFailure(Call<Mensaje> call, Throwable t) {
-                    // 5e) Ocultar indicador de “Cargando…”
-                    if (getActivity() instanceof MainActivity) {
+                    // Ocultar loading
+                    if (getActivity() != null) {
                         ((MainActivity) getActivity()).hideLoading();
                     }
                     if (!isAdded()) return;
