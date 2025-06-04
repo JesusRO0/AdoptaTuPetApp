@@ -1,4 +1,3 @@
-// MensajesTabFragment.java
 package com.example.adoptatupet.views.fragments;
 
 import android.app.AlertDialog;
@@ -122,9 +121,16 @@ public class MensajesTabFragment extends Fragment {
         rvMensajesTab = view.findViewById(R.id.rvForo);
         rvMensajesTab.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // 2a) Instanciar ForoAdapter con CUATRO listeners: usuario, comentario, like e item completo
+        // ====== CAMBIO PRINCIPAL AQUI: Leemos el ID del usuario logueado ======
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        int userIdActual = prefs.getInt("idUsuario", -1);
+
+        // 2a) Instanciar ForoAdapter con CINCO parámetros:
+        //     -> lista vacía, userIdActual, OnUserNameClickListener, OnCommentClickListener, OnPostClickListener
         foroAdapter = new ForoAdapter(
                 new ArrayList<>(),
+                userIdActual,   // <-- Pasamos aquí el ID real del usuario que da “like”
                 // OnUserNameClickListener
                 usuarioId -> {
                     if (listenerUsuario != null) {
@@ -149,6 +155,7 @@ public class MensajesTabFragment extends Fragment {
                 }
         );
         rvMensajesTab.setAdapter(foroAdapter);
+        // ====== FIN CAMBIO ======
 
         // 3) Cargar mensajes desde caché y luego refrescar desde servidor
         cargarMensajesDesdeCache();

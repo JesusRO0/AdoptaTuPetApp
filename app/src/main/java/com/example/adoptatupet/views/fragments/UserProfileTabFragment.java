@@ -66,12 +66,16 @@ public class UserProfileTabFragment extends Fragment {
 
         // 2) Configurar RecyclerView para mostrar historial de posts
         rvUserPostsTab.setLayoutManager(new LinearLayoutManager(getContext()));
-        // Instanciamos ForoAdapter con 4 parámetros:
+        // Instanciamos ForoAdapter con CINCO parámetros:
+        //  - Lista inicial vacía
+        //  - currentUserId (se asignará más abajo)
         //  - listenerUsuario: null (no deseamos click en nombre en este contexto)
         //  - listenerComentario: null (no deseamos diálogo aquí)
         //  - listenerPost: null (no deseamos navegación desde el historial)
+        // Por ahora usamos un placeholder 0 para currentUserId; lo actualizaremos inmediatamente
         postsAdapter = new ForoAdapter(
                 new ArrayList<>(),
+                0,
                 /* listenerUsuario= */ null,
                 /* listenerComentario= */ null,
                 /* listenerPost= */ null
@@ -92,6 +96,16 @@ public class UserProfileTabFragment extends Fragment {
         }
 
         if (currentUserId != -1) {
+            // Ahora que tenemos currentUserId real, ajustamos el adapter
+            postsAdapter = new ForoAdapter(
+                    new ArrayList<>(),
+                    currentUserId,
+                    /* listenerUsuario= */ null,
+                    /* listenerComentario= */ null,
+                    /* listenerPost= */ null
+            );
+            rvUserPostsTab.setAdapter(postsAdapter);
+
             cargarDatosUsuario(currentUserId);
             cargarPostsUsuario(currentUserId);
         } else {

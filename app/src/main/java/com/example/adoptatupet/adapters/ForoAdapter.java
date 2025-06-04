@@ -1,4 +1,3 @@
-// ForoAdapter.java
 package com.example.adoptatupet.adapters;
 
 import android.content.Context;
@@ -33,11 +32,12 @@ import retrofit2.Response;
 
 /**
  * Adaptador que muestra cada Mensaje en un RecyclerView del foro.
- * Ahora incluye cuatro listeners:
- *  1) OnUserNameClickListener: click sobre el nombre de usuario
- *  2) OnCommentClickListener: click sobre el icono de comentario
- *  3) OnLikeClick: gestión de me gusta/unlike interna
- *  4) OnPostClickListener: click sobre todo el bloque del post
+ * Ahora incluye cinco parámetros en el constructor:
+ *  1) Lista de Mensaje
+ *  2) currentUserId: ID del usuario logueado (se usará en like/unlike)
+ *  3) OnUserNameClickListener: click sobre el nombre de usuario
+ *  4) OnCommentClickListener: click sobre el icono de comentario
+ *  5) OnPostClickListener: click sobre todo el bloque del post
  */
 public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHolder> {
 
@@ -54,20 +54,23 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
     }
 
     private List<Mensaje> listaMensajes;
+    private int currentUserId;  // <— ID del usuario logueado
     private OnUserNameClickListener userListener;
     private OnCommentClickListener commentListener;
     private OnPostClickListener postListener;
 
     public ForoAdapter(
             List<Mensaje> inicialList,
+            int currentUserId,                        // <— nuevo parámetro
             OnUserNameClickListener uListener,
             OnCommentClickListener cListener,
             OnPostClickListener pListener
     ) {
-        this.listaMensajes = inicialList;
-        this.userListener = uListener;
+        this.listaMensajes   = inicialList;
+        this.currentUserId   = currentUserId;     // <— guardamos el ID aquí
+        this.userListener    = uListener;
         this.commentListener = cListener;
-        this.postListener = pListener;
+        this.postListener    = pListener;
     }
 
     public void setListaMensajes(List<Mensaje> nuevaLista) {
@@ -175,9 +178,9 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                 holder.tvLikeCount.setText(String.valueOf(m.getLikeCount()));
             }
 
-            // b) Llamada al backend para persistir el cambio
+            // b) Llamada al backend para persistir el cambio (usando currentUserId)
             Map<String, Integer> body = new HashMap<>();
-            body.put("usuarioId", m.getUsuarioId());
+            body.put("usuarioId", currentUserId);   // <— ahora uso currentUserId
             body.put("idPost", m.getIdMensaje());
 
             ApiService api = ApiClient.getClient().create(ApiService.class);
@@ -257,8 +260,8 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
     }
 
     static class MensajeViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivPostUserProfile, ivMensajeImagen;
-        TextView tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
+        ImageView   ivPostUserProfile, ivMensajeImagen;
+        TextView    tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
         ImageButton btnLike, btnComment;
 
         public MensajeViewHolder(@NonNull View itemView) {
