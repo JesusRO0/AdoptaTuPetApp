@@ -34,7 +34,6 @@ public interface ApiService {
     @POST("api/login.php")
     Call<Mensaje> login(@Body Usuario usuario);
 
-
     /**
      * Actualiza los datos del usuario (incluida la foto).
      * POST https://…/api/update_usuario.php

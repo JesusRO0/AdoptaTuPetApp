@@ -29,7 +29,9 @@ import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,9 +43,9 @@ import retrofit2.Response;
 
 /**
  * ComentariosFragment muestra:
- *   1) El post original en la parte superior (usando parte de item_mensaje.xml).
- *   2) Un RecyclerView con todos los comentarios asociados a ese post.
- *   3) Zona inferior para escribir un nuevo comentario y enviarlo.
+ *  1) El post original en la parte superior (usando layout item_mensaje).
+ *  2) Un RecyclerView con todos los comentarios asociados a ese post.
+ *  3) Zona inferior para escribir un nuevo comentario y enviarlo.
  */
 public class ComentariosFragment extends Fragment {
 
@@ -51,15 +53,15 @@ public class ComentariosFragment extends Fragment {
 
     private Mensaje postOriginal;
     private ImageView ivPostUserProfile;
-    private TextView tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
+    private TextView  tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
     private ImageView ivPostImage;
     private RecyclerView rvComentarios;
     private CommentsAdapter commentsAdapter;
     private List<Comment> commentList = new ArrayList<>();
 
     private ImageView ivMyProfileForComment;
-    private EditText etNewComment;
-    private Button btnEnviarComentario;
+    private EditText  etNewComment;
+    private Button    btnEnviarComentario;
 
     private static final Gson gson = new Gson();
 
@@ -68,7 +70,7 @@ public class ComentariosFragment extends Fragment {
     }
 
     /**
-     * Crea una nueva instancia de ComentariosFragment, recibiendo el Mensaje original.
+     * Instancia el fragment recibiendo el objeto Mensaje (post original).
      */
     public static ComentariosFragment newInstance(Mensaje post) {
         ComentariosFragment fragment = new ComentariosFragment();
@@ -88,7 +90,8 @@ public class ComentariosFragment extends Fragment {
         }
     }
 
-    @Nullable @Override
+    @Nullable
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup   container,
                              @Nullable Bundle      savedInstanceState) {
@@ -100,7 +103,7 @@ public class ComentariosFragment extends Fragment {
         tvFechaMensaje    = view.findViewById(R.id.tvFechaMensaje);
         tvTextoMensaje    = view.findViewById(R.id.tvTextoMensaje);
         ivPostImage       = view.findViewById(R.id.ivMensajeImagen);
-        tvLikeCount       = view.findViewById(R.id.tvLikeCount); // opcional, si se desea mostrar contador
+        tvLikeCount       = view.findViewById(R.id.tvLikeCount); // opcional, si quieres mostrar contador
 
         if (postOriginal != null) {
             // Nombre y fecha
@@ -165,7 +168,9 @@ public class ComentariosFragment extends Fragment {
                 Toast.makeText(getContext(), "Escribe algo antes de enviar", Toast.LENGTH_SHORT).show();
                 return;
             }
-            enviarNuevoComentario(postOriginal.getIdMensaje(), textoComent);
+            if (postOriginal != null) {
+                enviarNuevoComentario(postOriginal.getIdMensaje(), textoComent);
+            }
         });
 
         return view;
@@ -240,7 +245,7 @@ public class ComentariosFragment extends Fragment {
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     etNewComment.setText("");
-                    // Refrescar lista de comentarios
+                    // Refrescar lista de comentarios tras insertar
                     cargarComentariosDesdeServidor(postId);
                 } else {
                     Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();

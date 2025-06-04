@@ -30,6 +30,7 @@ import com.example.adoptatupet.adapters.ForoAdapter;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
+import com.example.adoptatupet.views.MainActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -47,6 +48,7 @@ import retrofit2.Response;
  * MensajesTabFragment: muestra la lista de mensajes del foro
  * y permite postear nuevos.
  * También invoca el diálogo de comentario al pulsar el icono de comentario.
+ * Ahora incluye un indicador de “Cargando...” únicamente al publicar un comentario.
  */
 public class MensajesTabFragment extends Fragment {
 
@@ -281,6 +283,7 @@ public class MensajesTabFragment extends Fragment {
 
     /**
      * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario.
+     * Al pulsar “Responder”, se muestra un indicador “Cargando…” y se envía el comentario.
      *
      * @param postId             El ID del post al que se responde.
      * @param usuarioNombre      El nombre del autor original.
@@ -292,9 +295,8 @@ public class MensajesTabFragment extends Fragment {
                 .inflate(R.layout.dialog_comentar, null);
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
-        TextView tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
-        // El campo de email no se usa, pero el layout contiene tvDestinoEmail
-        TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
+        TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
+        TextView tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
         EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
         Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
 
@@ -329,20 +331,51 @@ public class MensajesTabFragment extends Fragment {
                 Toast.makeText(getContext(), "Escribe algo antes de enviar", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // TODO: Llamar a API para guardar el comentario:
-            // Map<String, Object> body = new HashMap<>();
-            // body.put("idUsuario", <tu ID>);
-            // body.put("idPost", postId);
-            // body.put("texto", textoComent);
-            // ApiService api = ApiClient.getClient().create(ApiService.class);
-            // api.postComentario(body).enqueue(...);
 
-            Toast.makeText(
-                    getContext(),
-                    "Comentario enviado: \"" + textoComent + "\"",
-                    Toast.LENGTH_SHORT
-            ).show();
-            dialog.dismiss();
+            // 5a) Mostrar indicador de “Cargando…”
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).showLoading();
+            }
+
+            // 5b) Preparar datos para enviar a API
+            SharedPreferences prefs = requireActivity()
+                    .getSharedPreferences("user", Context.MODE_PRIVATE);
+            int myUserId = prefs.getInt("idUsuario", -1);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("idUsuario", myUserId);
+            body.put("idPost", postId);
+            body.put("texto", textoComent);
+
+            // 5c) Llamar a API para guardar el comentario
+            ApiService api = ApiClient.getClient().create(ApiService.class);
+            Call<Mensaje> callComentario = api.postComentario(body);
+            callComentario.enqueue(new Callback<Mensaje>() {
+                @Override
+                public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
+                    // 5d) Ocultar indicador de “Cargando…”
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).hideLoading();
+                    }
+                    if (!isAdded()) return;
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        Toast.makeText(getContext(), "Comentario publicado", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    } else {
+                        Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Mensaje> call, Throwable t) {
+                    // 5e) Ocultar indicador de “Cargando…”
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).hideLoading();
+                    }
+                    if (!isAdded()) return;
+                    Toast.makeText(getContext(), "Fallo de red al enviar comentario", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         dialog.show();
