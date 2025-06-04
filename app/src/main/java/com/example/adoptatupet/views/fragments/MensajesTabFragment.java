@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -50,6 +51,7 @@ import retrofit2.Response;
  * y permite postear nuevos.
  * Al pulsar todo el bloque de un post, abre ComentariosFragment.
  * Al pulsar el icono de comentario, muestra el pop-up de comentario.
+ * Ahora también permite eliminar posts propios.
  */
 public class MensajesTabFragment extends Fragment {
 
@@ -125,11 +127,12 @@ public class MensajesTabFragment extends Fragment {
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
         int userIdActual = prefs.getInt("idUsuario", -1);
 
-        // 2a) Instanciar ForoAdapter con CINCO parámetros:
-        //     -> lista vacía, userIdActual, OnUserNameClickListener, OnCommentClickListener, OnPostClickListener
+        // 2a) Instanciar ForoAdapter con SEIS parámetros:
+        //     -> lista vacía, userIdActual, OnUserNameClickListener,
+        //        OnCommentClickListener, OnPostClickListener, OnDeletePostClickListener
         foroAdapter = new ForoAdapter(
                 new ArrayList<>(),
-                userIdActual,   // <-- Pasamos aquí el ID real del usuario que da “like”
+                userIdActual,   // <-- Pasamos aquí el ID real del usuario que da “like” o elimina
                 // OnUserNameClickListener
                 usuarioId -> {
                     if (listenerUsuario != null) {
@@ -151,6 +154,10 @@ public class MensajesTabFragment extends Fragment {
                             .replace(R.id.nav_host_fragment, comentariosFragment)
                             .addToBackStack(null);
                     ft.commit();
+                },
+                // OnDeletePostClickListener: confirma y elimina post
+                mensaje -> {
+                    showConfirmDeletePost(mensaje.getIdMensaje());
                 }
         );
         rvMensajesTab.setAdapter(foroAdapter);
@@ -312,7 +319,7 @@ public class MensajesTabFragment extends Fragment {
                 .inflate(R.layout.dialog_comentar, null);
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
-        TextView tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
+        TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
         TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
         EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
         Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
@@ -376,8 +383,6 @@ public class MensajesTabFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
-                        // REFRESCAR lista de mensajes para actualizar commentCount
-                        refrescarMensajesDesdeServidor();
                     } else {
                         Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
                     }
@@ -395,5 +400,62 @@ public class MensajesTabFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    /**
+     * Muestra un diálogo de confirmación y borra el post indicado.
+     */
+    private void showConfirmDeletePost(int postId) {
+        new AlertDialog.Builder(getContext())
+                .setTitle("Eliminar publicación")
+                .setMessage("¿Seguro que quieres eliminar esta publicación?")
+                .setPositiveButton("Eliminar", (dialog, which) -> {
+                    eliminarPost(postId);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    /**
+     * Llama al endpoint para eliminar el post y, al éxito, actualiza la lista.
+     */
+    private void eliminarPost(int postId) {
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        int myUserId = prefs.getInt("idUsuario", -1);
+
+        Map<String, Integer> body = new HashMap<>();
+        body.put("usuarioId", myUserId);
+        body.put("idPost", postId);
+
+        if (getActivity() != null) {
+            ((MainActivity) getActivity()).showLoading();
+        }
+
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        Call<Mensaje> call = api.deletePost(body);
+        call.enqueue(new Callback<Mensaje>() {
+            @Override
+            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
+                if (getActivity() != null) {
+                    ((MainActivity) getActivity()).hideLoading();
+                }
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Publicación eliminada", Toast.LENGTH_SHORT).show();
+                    refrescarMensajesDesdeServidor();
+                } else {
+                    Toast.makeText(getContext(), "Error al eliminar publicación", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<Mensaje> call, Throwable t) {
+                if (getActivity() != null) {
+                    ((MainActivity) getActivity()).hideLoading();
+                }
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Fallo de red al eliminar publicación", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

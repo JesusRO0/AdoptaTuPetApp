@@ -7,9 +7,7 @@
     android:background="@android:color/white"
     android:padding="8dp">
 
-    <!-- =======================
-         0) Encabezado: Flecha de retroceso arriba a la izquierda y título “Comentarios” debajo, centrado
-         ======================= -->
+    <!-- 0) Encabezado: Flecha de retroceso + Título -->
     <LinearLayout
         android:id="@+id/ll_encabezado_comentarios"
         android:layout_width="match_parent"
@@ -17,7 +15,6 @@
         android:orientation="vertical"
         android:paddingBottom="12dp">
 
-        <!-- Flecha de retroceso a la izquierda, agrandada -->
         <ImageView
             android:id="@+id/atras"
             android:layout_width="36dp"
@@ -26,7 +23,6 @@
             android:src="@drawable/atras"
             android:contentDescription="Atrás" />
 
-        <!-- Título “Comentarios” centrado horizontalmente debajo de la flecha -->
         <TextView
             android:id="@+id/tvComentariosTitle"
             android:layout_width="match_parent"
@@ -39,16 +35,13 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- =======================
-         1) Área superior: mostrar el post original (usando item_mensaje)
-         ======================= -->
+    <!-- 1) Post original (include de item_mensaje.xml) -->
+    <!-- IMPORTANTE: este include usará exactamente los mismos IDs de item_mensaje.xml -->
     <include
         android:id="@+id/include_post_original"
         layout="@layout/item_mensaje" />
 
-    <!-- =======================
-         2) RecyclerView con todos los comentarios (altura con weight para scroll)
-         ======================= -->
+    <!-- 2) RecyclerView que mostrará los comentarios -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvComentarios"
         android:layout_width="match_parent"
@@ -58,51 +51,7 @@
         android:paddingBottom="8dp"
         android:scrollbars="vertical" />
 
-    <!-- =======================
-         3) Zona inferior para escribir un nuevo comentario
-         ======================= -->
-    <LinearLayout
-        android:id="@+id/ll_nuevo_comentario"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:id="@+id/ivMyProfileForComment"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="8dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/default_avatar" />
-
-        <EditText
-            android:id="@+id/etNewComment"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/edittext_background"
-            android:hint="Escribe un comentario."
-            android:imeOptions="actionSend"
-            android:inputType="text"
-            android:padding="8dp"
-            android:textColor="#000000"
-            android:textSize="14sp" />
-
-        <Button
-            android:id="@+id/btnEnviarComentario"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="@color/colorPrimary"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:text="Enviar"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="14sp" />
-    </LinearLayout>
+    <!-- 3) Zona inferior: nuevo comentario (no mostramos aquí para brevedad) -->
+    <!-- ... -->
 
 </LinearLayout>

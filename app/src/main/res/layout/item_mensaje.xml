@@ -7,7 +7,7 @@
     android:padding="8dp"
     android:background="@android:color/white">
 
-    <!-- 1) Cabecera: foto de perfil + nombre + fecha/hora (sin botón derecho) -->
+    <!-- 1) Cabecera: foto de perfil + nombre + fecha/hora -->
     <LinearLayout
         android:id="@+id/ll_cabecera_mensaje"
         android:layout_width="match_parent"
@@ -73,7 +73,7 @@
         android:src="@drawable/icono_adjunto"
         android:visibility="gone" />
 
-    <!-- 4) Fila de interacciones: botones comentar + like + contadores -->
+    <!-- 4) Fila de interacciones: comentar, likes, comentarios y botón eliminar -->
     <LinearLayout
         android:id="@+id/ll_interacciones"
         android:layout_width="match_parent"
@@ -93,7 +93,7 @@
             android:scaleType="centerInside"
             android:src="@drawable/comentario" />
 
-        <!-- Opcional: contador de comentarios -->
+        <!-- Contador de comentarios -->
         <TextView
             android:id="@+id/tvCommentCount"
             android:layout_width="wrap_content"
@@ -104,7 +104,7 @@
             android:textColor="#757575"
             android:textSize="14sp" />
 
-        <!-- Espacio entre comentarios y like -->
+        <!-- Espacio fijo entre comentarios y likes -->
         <View
             android:layout_width="16dp"
             android:layout_height="0dp" />
@@ -130,6 +130,24 @@
             android:text="0"
             android:textColor="#757575"
             android:textSize="14sp" />
+
+        <!-- View espaciador (peso) para empujar el botón eliminar al extremo derecho -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Botón de “Eliminar” (icono de papelera) -->
+        <ImageButton
+            android:id="@+id/btnDeleteMessage"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Eliminar"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/papelera"
+            android:visibility="gone" />
     </LinearLayout>
 
     <!-- 5) Línea divisora entre mensajes -->

@@ -74,7 +74,8 @@ public class UserProfileTabFragment extends Fragment {
                 0,
                 /* listenerUsuario= */ null,
                 /* listenerComentario= */ null,
-                /* listenerPost= */ null
+                /* listenerPost= */ null,
+                /* listenerDelete= */ null
         );
         rvUserPostsTab.setAdapter(postsAdapter);
 
@@ -98,7 +99,8 @@ public class UserProfileTabFragment extends Fragment {
                     currentUserId,
                     /* listenerUsuario= */ null,
                     /* listenerComentario= */ null,
-                    /* listenerPost= */ null
+                    /* listenerPost= */ null,
+                    /* listenerDelete= */ null
             );
             rvUserPostsTab.setAdapter(postsAdapter);
 

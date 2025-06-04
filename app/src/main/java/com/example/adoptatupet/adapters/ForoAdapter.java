@@ -32,12 +32,13 @@ import retrofit2.Response;
 
 /**
  * Adaptador que muestra cada Mensaje en un RecyclerView del foro.
- * Ahora incluye cinco parámetros en el constructor:
+ * Ahora incluye seis parámetros en el constructor:
  *  1) Lista de Mensaje
- *  2) currentUserId: ID del usuario logueado (se usará en like/unlike)
+ *  2) currentUserId: ID del usuario logueado (se usará en like/unlike y para mostrar el botón eliminar)
  *  3) OnUserNameClickListener: click sobre el nombre de usuario
  *  4) OnCommentClickListener: click sobre el icono de comentario
  *  5) OnPostClickListener: click sobre todo el bloque del post
+ *  6) OnDeleteClickListener: click sobre el icono de eliminar (papelera)
  */
 public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHolder> {
 
@@ -53,24 +54,31 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         void onPostClicked(Mensaje mensaje);
     }
 
+    public interface OnDeleteClickListener {
+        void onDeleteClicked(Mensaje mensaje);
+    }
+
     private List<Mensaje> listaMensajes;
     private int currentUserId;  // ID del usuario logueado
     private OnUserNameClickListener userListener;
     private OnCommentClickListener commentListener;
     private OnPostClickListener postListener;
+    private OnDeleteClickListener deleteListener;
 
     public ForoAdapter(
             List<Mensaje> inicialList,
             int currentUserId,
             OnUserNameClickListener uListener,
             OnCommentClickListener cListener,
-            OnPostClickListener pListener
+            OnPostClickListener pListener,
+            OnDeleteClickListener dListener
     ) {
         this.listaMensajes   = inicialList;
         this.currentUserId   = currentUserId;
         this.userListener    = uListener;
         this.commentListener = cListener;
         this.postListener    = pListener;
+        this.deleteListener  = dListener;
     }
 
     public void setListaMensajes(List<Mensaje> nuevaLista) {
@@ -92,6 +100,10 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
 
     public void setOnPostClickListener(OnPostClickListener l) {
         this.postListener = l;
+    }
+
+    public void setOnDeleteClickListener(OnDeleteClickListener l) {
+        this.deleteListener = l;
     }
 
     @NonNull
@@ -154,14 +166,21 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         // 6) CommentCount: mostrar el número de comentarios
         holder.tvCommentCount.setText(String.valueOf(m.getCommentCount()));
 
-        // 7) Click en nombre de usuario → avisar al listener
+        // 7) Mostrar/ocultar botón eliminar: sólo si currentUserId == autor del post
+        if (m.getUsuarioId() == currentUserId) {
+            holder.btnDeleteMessage.setVisibility(View.VISIBLE);
+        } else {
+            holder.btnDeleteMessage.setVisibility(View.GONE);
+        }
+
+        // 8) Click en nombre de usuario → avisar al listener
         holder.tvUserName.setOnClickListener(v -> {
             if (userListener != null) {
                 userListener.onUserNameClicked(m.getUsuarioId());
             }
         });
 
-        // 8) Click en “like/unlike” (optimistic UI + backend)
+        // 9) Click en “like/unlike” (optimistic UI + backend)
         holder.btnLike.setOnClickListener(v -> {
             boolean currentlyLiked = m.isLikedByUser();
             int currentCount = m.getLikeCount();
@@ -193,6 +212,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
+                            // Revertir si falla
                             m.setLikedByUser(true);
                             m.setLikeCount(m.getLikeCount() + 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -203,6 +223,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
+                        // Revertir si falla
                         m.setLikedByUser(true);
                         m.setLikeCount(m.getLikeCount() + 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -217,6 +238,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
+                            // Revertir si falla
                             m.setLikedByUser(false);
                             m.setLikeCount(m.getLikeCount() - 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -227,6 +249,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
+                        // Revertir si falla
                         m.setLikedByUser(false);
                         m.setLikeCount(m.getLikeCount() - 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -238,17 +261,24 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             }
         });
 
-        // 9) Click en icono de comentario → avisar al listener
+        // 10) Click en icono de comentario → avisar al listener
         holder.btnComment.setOnClickListener(v -> {
             if (commentListener != null) {
                 commentListener.onCommentClicked(m);
             }
         });
 
-        // 10) Click en TODO el bloque del post → abrir ComentariosFragment
+        // 11) Click en TODO el bloque del post → abrir ComentariosFragment
         holder.itemView.setOnClickListener(v -> {
             if (postListener != null) {
                 postListener.onPostClicked(m);
+            }
+        });
+
+        // 12) Click en icono de eliminar → avisar al listener de eliminación
+        holder.btnDeleteMessage.setOnClickListener(v -> {
+            if (deleteListener != null) {
+                deleteListener.onDeleteClicked(m);
             }
         });
     }
@@ -261,7 +291,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
     static class MensajeViewHolder extends RecyclerView.ViewHolder {
         ImageView   ivPostUserProfile, ivMensajeImagen;
         TextView    tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount, tvCommentCount;
-        ImageButton btnLike, btnComment;
+        ImageButton btnLike, btnComment, btnDeleteMessage;
 
         public MensajeViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -273,7 +303,8 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             btnLike           = itemView.findViewById(R.id.btnLike);
             btnComment        = itemView.findViewById(R.id.btnComment);
             tvLikeCount       = itemView.findViewById(R.id.tvLikeCount);
-            tvCommentCount    = itemView.findViewById(R.id.tvCommentCount);  // ID existente en item_mensaje.xml
+            tvCommentCount    = itemView.findViewById(R.id.tvCommentCount);
+            btnDeleteMessage  = itemView.findViewById(R.id.btnDeleteMessage);
         }
     }
 }

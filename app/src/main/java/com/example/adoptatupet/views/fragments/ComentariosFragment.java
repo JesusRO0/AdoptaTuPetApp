@@ -31,7 +31,6 @@ import com.example.adoptatupet.models.Comment;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
-import com.example.adoptatupet.views.MainActivity;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -46,10 +45,9 @@ import retrofit2.Response;
 /**
  * ComentariosFragment muestra:
  *  1) El post original en la parte superior (usando layout item_mensaje).
- *     Ahora con funcionalidad de “like/unlike”, “commentCount” y “pop-up de comentario”.
+ *     Ahora con funcionalidad de “like/unlike” y “commentCount”.
  *  2) Un RecyclerView con todos los comentarios asociados a ese post.
- *  3) Zona inferior para escribir un nuevo comentario y enviarlo.
- *  4) Flecha de retroceso para volver al foro.
+ *  3) Flecha de retroceso para volver al foro.
  */
 public class ComentariosFragment extends Fragment {
 
@@ -63,20 +61,15 @@ public class ComentariosFragment extends Fragment {
             tvFechaMensaje,
             tvTextoMensaje,
             tvLikeCount,
-            tvCommentCount;       // <— Nuevo TextView para contador de comentarios
+            tvCommentCount;       // Contador de comentarios
     private ImageView ivPostImage;
-    private ImageButton btnLike;          // Botón de “like” (icono de corazón)
-    private ImageButton btnComment;       // Botón de “comentario” (icono de bocadillo)
+    private ImageButton btnLike;          // Botón de “like” (corazón)
+    private ImageButton btnComment;       // Botón de “comentario” (bocadillo)
 
     // ===== Vistas del listado de comentarios =====
     private RecyclerView     rvComentarios;
     private CommentsAdapter  commentsAdapter;
     private List<Comment>    commentList = new ArrayList<>();
-
-    // ===== Vistas para enviar comentario nuevo =====
-    private ImageView ivMyProfileForComment;
-    private EditText  etNewComment;
-    private Button    btnEnviarComentario;
 
     // ===== Flecha de retroceso =====
     private ImageView btnAtras;
@@ -132,16 +125,15 @@ public class ComentariosFragment extends Fragment {
         // ======================
         // 1) Setear datos del post original en include (item_mensaje)
         // ======================
-        // ID iguales a los de item_mensaje.xml
+        // Los IDs corresponden al layout item_mensaje.xml
         ivPostUserProfile = view.findViewById(R.id.ivPostUserProfile);
         tvUserName        = view.findViewById(R.id.tvUserName);
         tvFechaMensaje    = view.findViewById(R.id.tvFechaMensaje);
         tvTextoMensaje    = view.findViewById(R.id.tvTextoMensaje);
         ivPostImage       = view.findViewById(R.id.ivMensajeImagen);
         tvLikeCount       = view.findViewById(R.id.tvLikeCount);
-        tvCommentCount    = view.findViewById(R.id.tvCommentCount);  // <— Encontrar TextView de comentarios
+        tvCommentCount    = view.findViewById(R.id.tvCommentCount);
 
-        // Botones “like” y “comentario”
         btnLike    = view.findViewById(R.id.btnLike);
         btnComment = view.findViewById(R.id.btnComment);
 
@@ -312,28 +304,6 @@ public class ComentariosFragment extends Fragment {
             cargarComentariosDesdeServidor(postOriginal.getIdMensaje());
         }
 
-        // ======================
-        // 4) Zona para enviar comentario nuevo
-        // ======================
-        ivMyProfileForComment = view.findViewById(R.id.ivMyProfileForComment);
-        etNewComment          = view.findViewById(R.id.etNewComment);
-        btnEnviarComentario   = view.findViewById(R.id.btnEnviarComentario);
-
-        // 4a) Cargar avatar propio
-        cargarMiAvatarEnComentario();
-
-        // 4b) Enviar comentario
-        btnEnviarComentario.setOnClickListener(v -> {
-            String textoComent = etNewComment.getText().toString().trim();
-            if (TextUtils.isEmpty(textoComent)) {
-                Toast.makeText(getContext(), "Escribe algo antes de enviar", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (postOriginal != null) {
-                enviarNuevoComentario(postOriginal.getIdMensaje(), textoComent);
-            }
-        });
-
         return view;
     }
 
@@ -365,85 +335,9 @@ public class ComentariosFragment extends Fragment {
         });
     }
 
-    /** Carga el avatar propio en ivMyProfileForComment */
-    private void cargarMiAvatarEnComentario() {
-        SharedPreferences prefs = requireActivity()
-                .getSharedPreferences("user", Context.MODE_PRIVATE);
-        String fotoPerfilBase64 = prefs.getString("fotoPerfil", null);
-        if (fotoPerfilBase64 != null && !fotoPerfilBase64.isEmpty()) {
-            try {
-                byte[] decodedBytes = Base64.decode(fotoPerfilBase64, Base64.NO_WRAP);
-                Bitmap bmp = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
-                ivMyProfileForComment.setImageBitmap(bmp);
-            } catch (IllegalArgumentException e) {
-                ivMyProfileForComment.setImageResource(R.drawable.default_avatar);
-            }
-        } else {
-            ivMyProfileForComment.setImageResource(R.drawable.default_avatar);
-        }
-    }
-
-    /**
-     * Envía un comentario nuevo al servidor:
-     * POST https://…/api/post_comentario.php
-     * body: { "idUsuario":…, "idPost":…, "texto":… }
-     * También actualiza el contador de comentarios en el encabezado.
-     */
-    private void enviarNuevoComentario(int postId, String textoComent) {
-        SharedPreferences prefs = requireActivity()
-                .getSharedPreferences("user", Context.MODE_PRIVATE);
-        int myUserId = prefs.getInt("idUsuario", -1);
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("idUsuario", myUserId);
-        body.put("idPost", postId);
-        body.put("texto", textoComent);
-
-        // Mostrar loading en MainActivity mientras se envía
-        if (getActivity() != null) {
-            ((MainActivity) getActivity()).showLoading();
-        }
-
-        ApiService api = ApiClient.getClient().create(ApiService.class);
-        Call<Mensaje> call = api.postComentario(body);
-        call.enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                // Ocultar loading
-                if (getActivity() != null) {
-                    ((MainActivity) getActivity()).hideLoading();
-                }
-                if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
-                    etNewComment.setText("");
-
-                    // 1) Incrementar localmente el contador de comentarios y actualizar UI
-                    postOriginal.setCommentCount(postOriginal.getCommentCount() + 1);
-                    tvCommentCount.setText(String.valueOf(postOriginal.getCommentCount()));
-
-                    // 2) Refrescar lista de comentarios
-                    cargarComentariosDesdeServidor(postId);
-                } else {
-                    Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
-                }
-            }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
-                // Ocultar loading
-                if (getActivity() != null) {
-                    ((MainActivity) getActivity()).hideLoading();
-                }
-                if (!isAdded()) return;
-                Toast.makeText(getContext(), "Fallo de red al enviar comentario", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     /**
      * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario
-     * al post original (igual que en MensajesTabFragment).
-     * Después de enviar, también actualiza el contador de comentarios en el encabezado.
+     * al post original. (Sin zona de envío en este layout, solo demo de popup).
      */
     private void mostrarDialogoComentario(int postId, String usuarioNombre, String fotoPerfilBase64) {
         // Inflamos el layout dialog_comentar.xml
@@ -453,8 +347,8 @@ public class ComentariosFragment extends Fragment {
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
         TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
         TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
-        EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
-        Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
+        EditText etComentario     = dialogView.findViewById(R.id.etComentario);
+        Button btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
 
         // 1) Poner nombre del usuario al que se responde
         tvDestinoNombre.setText(usuarioNombre);
@@ -497,30 +391,19 @@ public class ComentariosFragment extends Fragment {
             body.put("idPost", postId);
             body.put("texto", textoComent);
 
-            // Mostrar loading en MainActivity mientras se envía
-            if (getActivity() != null) {
-                ((MainActivity) getActivity()).showLoading();
-            }
-
             ApiService api = ApiClient.getClient().create(ApiService.class);
             Call<Mensaje> callComentario = api.postComentario(body);
             callComentario.enqueue(new Callback<Mensaje>() {
                 @Override
                 public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                    // Ocultar loading
-                    if (getActivity() != null) {
-                        ((MainActivity) getActivity()).hideLoading();
-                    }
                     if (!isAdded()) return;
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
-
-                        // 1) Incrementar localmente el contador de comentarios y actualizar UI
+                        // Incrementar localmente el contador de comentarios y actualizar UI
                         postOriginal.setCommentCount(postOriginal.getCommentCount() + 1);
                         tvCommentCount.setText(String.valueOf(postOriginal.getCommentCount()));
-
-                        // 2) Refrescar lista de comentarios
+                        // Refrescar lista de comentarios
                         cargarComentariosDesdeServidor(postId);
                     } else {
                         Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
@@ -528,10 +411,6 @@ public class ComentariosFragment extends Fragment {
                 }
                 @Override
                 public void onFailure(Call<Mensaje> call, Throwable t) {
-                    // Ocultar loading
-                    if (getActivity() != null) {
-                        ((MainActivity) getActivity()).hideLoading();
-                    }
                     if (!isAdded()) return;
                     Toast.makeText(getContext(), "Fallo de red al enviar comentario", Toast.LENGTH_SHORT).show();
                 }

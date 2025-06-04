@@ -145,4 +145,7 @@ public interface ApiService {
      */
     @GET("api/get_comentarios.php")
     Call<List<Comment>> getComentarios(@Query("idPost") int idPost);
+
+    @POST("api/delete_post.php")
+    Call<Mensaje> deletePost(@Body Map<String, Integer> body);
 }
