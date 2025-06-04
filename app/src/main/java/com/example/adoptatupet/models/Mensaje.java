@@ -64,6 +64,11 @@ public class Mensaje {
     @Expose
     private boolean likedByUser;
 
+    // ----- NUEVO CAMPO: contador de comentarios -----
+    @SerializedName("commentCount")
+    @Expose
+    private int commentCount;
+
     // ----------------- Getters y Setters -----------------
 
     // Campos genéricos
@@ -170,5 +175,14 @@ public class Mensaje {
 
     public void setLikedByUser(boolean likedByUser) {
         this.likedByUser = likedByUser;
+    }
+
+    // Getter y Setter para el nuevo campo commentCount
+    public int getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(int commentCount) {
+        this.commentCount = commentCount;
     }
 }

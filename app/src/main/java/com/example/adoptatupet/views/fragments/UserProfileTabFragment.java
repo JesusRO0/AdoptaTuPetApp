@@ -36,7 +36,8 @@ import retrofit2.Response;
 
 /**
  * UserProfileTabFragment muestra la información del usuario y su historial de posts.
- * En la pestaña “Perfil” se listan los mensajes de ese usuario y se conservan los estados de “like”.
+ * En la pestaña “Perfil” se listan los mensajes de ese usuario, incluyendo likeCount y commentCount.
+ * Cada vez que el fragment se reanuda, recarga los posts para reflejar cambios en likes y comentarios.
  */
 public class UserProfileTabFragment extends Fragment {
 
@@ -66,13 +67,8 @@ public class UserProfileTabFragment extends Fragment {
 
         // 2) Configurar RecyclerView para mostrar historial de posts
         rvUserPostsTab.setLayoutManager(new LinearLayoutManager(getContext()));
-        // Instanciamos ForoAdapter con CINCO parámetros:
-        //  - Lista inicial vacía
-        //  - currentUserId (se asignará más abajo)
-        //  - listenerUsuario: null (no deseamos click en nombre en este contexto)
-        //  - listenerComentario: null (no deseamos diálogo aquí)
-        //  - listenerPost: null (no deseamos navegación desde el historial)
-        // Por ahora usamos un placeholder 0 para currentUserId; lo actualizaremos inmediatamente
+
+        // Instanciamos ForoAdapter inicialmente con currentUserId = 0 (placeholder)
         postsAdapter = new ForoAdapter(
                 new ArrayList<>(),
                 0,
@@ -96,7 +92,7 @@ public class UserProfileTabFragment extends Fragment {
         }
 
         if (currentUserId != -1) {
-            // Ahora que tenemos currentUserId real, ajustamos el adapter
+            // Ahora que tenemos el ID real, volvemos a crear el adapter con currentUserId correcto
             postsAdapter = new ForoAdapter(
                     new ArrayList<>(),
                     currentUserId,
@@ -118,7 +114,7 @@ public class UserProfileTabFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Cada vez que el fragment se reanude, recargamos los posts para reflejar cambios de “like”
+        // Cada vez que el fragment se reanude, recargamos los posts para reflejar cambios de “like” y “commentCount”
         if (currentUserId != -1) {
             cargarPostsUsuario(currentUserId);
         }
@@ -165,8 +161,8 @@ public class UserProfileTabFragment extends Fragment {
     }
 
     /**
-     * Llama a get_mensajes_usuario.php para obtener solo los posts de este usuario.
-     * Al reanudar el fragment, se invoca de nuevo y así actualiza el conteo de “likes”.
+     * Llama a get_mensajes_usuario.php para obtener solo los posts de este usuario,
+     * ahora incluyendo likeCount y commentCount. Actualiza el adapter al recibir respuesta.
      */
     private void cargarPostsUsuario(int userId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);

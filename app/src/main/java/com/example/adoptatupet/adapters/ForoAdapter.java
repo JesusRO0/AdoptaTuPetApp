@@ -54,20 +54,20 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
     }
 
     private List<Mensaje> listaMensajes;
-    private int currentUserId;  // <— ID del usuario logueado
+    private int currentUserId;  // ID del usuario logueado
     private OnUserNameClickListener userListener;
     private OnCommentClickListener commentListener;
     private OnPostClickListener postListener;
 
     public ForoAdapter(
             List<Mensaje> inicialList,
-            int currentUserId,                        // <— nuevo parámetro
+            int currentUserId,
             OnUserNameClickListener uListener,
             OnCommentClickListener cListener,
             OnPostClickListener pListener
     ) {
         this.listaMensajes   = inicialList;
-        this.currentUserId   = currentUserId;     // <— guardamos el ID aquí
+        this.currentUserId   = currentUserId;
         this.userListener    = uListener;
         this.commentListener = cListener;
         this.postListener    = pListener;
@@ -151,14 +151,17 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             holder.btnLike.setColorFilter(ContextCompat.getColor(ctx, R.color.gray_500));
         }
 
-        // 6) Click en nombre de usuario → avisar al listener
+        // 6) CommentCount: mostrar el número de comentarios
+        holder.tvCommentCount.setText(String.valueOf(m.getCommentCount()));
+
+        // 7) Click en nombre de usuario → avisar al listener
         holder.tvUserName.setOnClickListener(v -> {
             if (userListener != null) {
                 userListener.onUserNameClicked(m.getUsuarioId());
             }
         });
 
-        // 7) Click en “like/unlike” (optimistic UI + backend)
+        // 8) Click en “like/unlike” (optimistic UI + backend)
         holder.btnLike.setOnClickListener(v -> {
             boolean currentlyLiked = m.isLikedByUser();
             int currentCount = m.getLikeCount();
@@ -180,7 +183,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
 
             // b) Llamada al backend para persistir el cambio (usando currentUserId)
             Map<String, Integer> body = new HashMap<>();
-            body.put("usuarioId", currentUserId);   // <— ahora uso currentUserId
+            body.put("usuarioId", currentUserId);
             body.put("idPost", m.getIdMensaje());
 
             ApiService api = ApiClient.getClient().create(ApiService.class);
@@ -190,7 +193,6 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
-                            // Revertir si falla
                             m.setLikedByUser(true);
                             m.setLikeCount(m.getLikeCount() + 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -201,7 +203,6 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
-                        // Revertir si falla
                         m.setLikedByUser(true);
                         m.setLikeCount(m.getLikeCount() + 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_filled);
@@ -216,7 +217,6 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     @Override
                     public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                         if (!(response.isSuccessful() && response.body() != null && response.body().isSuccess())) {
-                            // Revertir si falla
                             m.setLikedByUser(false);
                             m.setLikeCount(m.getLikeCount() - 1);
                             holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -227,7 +227,6 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
                     }
                     @Override
                     public void onFailure(Call<Mensaje> call, Throwable t) {
-                        // Revertir si falla
                         m.setLikedByUser(false);
                         m.setLikeCount(m.getLikeCount() - 1);
                         holder.btnLike.setImageResource(R.drawable.ic_heart_outline);
@@ -239,14 +238,14 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             }
         });
 
-        // 8) Click en icono de comentario → avisar al listener
+        // 9) Click en icono de comentario → avisar al listener
         holder.btnComment.setOnClickListener(v -> {
             if (commentListener != null) {
                 commentListener.onCommentClicked(m);
             }
         });
 
-        // 9) Click en TODO el bloque del post → abrir ComentariosFragment
+        // 10) Click en TODO el bloque del post → abrir ComentariosFragment
         holder.itemView.setOnClickListener(v -> {
             if (postListener != null) {
                 postListener.onPostClicked(m);
@@ -261,7 +260,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
 
     static class MensajeViewHolder extends RecyclerView.ViewHolder {
         ImageView   ivPostUserProfile, ivMensajeImagen;
-        TextView    tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount;
+        TextView    tvUserName, tvFechaMensaje, tvTextoMensaje, tvLikeCount, tvCommentCount;
         ImageButton btnLike, btnComment;
 
         public MensajeViewHolder(@NonNull View itemView) {
@@ -274,6 +273,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             btnLike           = itemView.findViewById(R.id.btnLike);
             btnComment        = itemView.findViewById(R.id.btnComment);
             tvLikeCount       = itemView.findViewById(R.id.tvLikeCount);
+            tvCommentCount    = itemView.findViewById(R.id.tvCommentCount);  // ID existente en item_mensaje.xml
         }
     }
 }

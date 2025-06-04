@@ -28,7 +28,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.adoptatupet.R;
 import com.example.adoptatupet.adapters.ForoAdapter;
-import com.example.adoptatupet.models.Comment;
 import com.example.adoptatupet.models.Mensaje;
 import com.example.adoptatupet.network.ApiClient;
 import com.example.adoptatupet.network.ApiService;
@@ -313,7 +312,7 @@ public class MensajesTabFragment extends Fragment {
                 .inflate(R.layout.dialog_comentar, null);
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
-        TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
+        TextView tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
         TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
         EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
         Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
@@ -377,6 +376,8 @@ public class MensajesTabFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
+                        // REFRESCAR lista de mensajes para actualizar commentCount
+                        refrescarMensajesDesdeServidor();
                     } else {
                         Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
                     }

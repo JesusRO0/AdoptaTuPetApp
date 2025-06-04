@@ -112,6 +112,13 @@ public interface ApiService {
     Call<Mensaje> unlikePost(@Body Map<String, Integer> body);
 
     /**
+     * Borra un comentario de un post.
+     * POST https://…/api/delete_comentario.php
+     */
+    @POST("api/delete_comentario.php")
+    Call<Mensaje> deleteComentario(@Body Map<String, Integer> body);
+
+    /**
      * Obtiene los datos de un usuario dado su ID.
      * GET https://…/api/get_usuario_by_id.php?idUsuario=…
      */
@@ -134,7 +141,7 @@ public interface ApiService {
 
     /**
      * Obtiene todos los comentarios de un post dado su id.
-     * GET …/api/get_comentarios.php?idPost=…
+     * GET https://…/api/get_comentarios.php?idPost=…
      */
     @GET("api/get_comentarios.php")
     Call<List<Comment>> getComentarios(@Query("idPost") int idPost);

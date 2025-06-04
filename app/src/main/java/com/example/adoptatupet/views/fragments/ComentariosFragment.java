@@ -46,7 +46,7 @@ import retrofit2.Response;
 /**
  * ComentariosFragment muestra:
  *  1) El post original en la parte superior (usando layout item_mensaje).
- *     Ahora con funcionalidad de “like/unlike” y “pop-up de comentario”.
+ *     Ahora con funcionalidad de “like/unlike”, “commentCount” y “pop-up de comentario”.
  *  2) Un RecyclerView con todos los comentarios asociados a ese post.
  *  3) Zona inferior para escribir un nuevo comentario y enviarlo.
  *  4) Flecha de retroceso para volver al foro.
@@ -62,7 +62,8 @@ public class ComentariosFragment extends Fragment {
     private TextView  tvUserName,
             tvFechaMensaje,
             tvTextoMensaje,
-            tvLikeCount;
+            tvLikeCount,
+            tvCommentCount;       // <— Nuevo TextView para contador de comentarios
     private ImageView ivPostImage;
     private ImageButton btnLike;          // Botón de “like” (icono de corazón)
     private ImageButton btnComment;       // Botón de “comentario” (icono de bocadillo)
@@ -138,6 +139,7 @@ public class ComentariosFragment extends Fragment {
         tvTextoMensaje    = view.findViewById(R.id.tvTextoMensaje);
         ivPostImage       = view.findViewById(R.id.ivMensajeImagen);
         tvLikeCount       = view.findViewById(R.id.tvLikeCount);
+        tvCommentCount    = view.findViewById(R.id.tvCommentCount);  // <— Encontrar TextView de comentarios
 
         // Botones “like” y “comentario”
         btnLike    = view.findViewById(R.id.btnLike);
@@ -182,6 +184,9 @@ public class ComentariosFragment extends Fragment {
 
             // –– Contador de likes
             tvLikeCount.setText(String.valueOf(postOriginal.getLikeCount()));
+
+            // –– Contador de comentarios
+            tvCommentCount.setText(String.valueOf(postOriginal.getCommentCount()));
 
             // –– Estado inicial del icono “like”
             Context ctx = getContext();
@@ -382,6 +387,7 @@ public class ComentariosFragment extends Fragment {
      * Envía un comentario nuevo al servidor:
      * POST https://…/api/post_comentario.php
      * body: { "idUsuario":…, "idPost":…, "texto":… }
+     * También actualiza el contador de comentarios en el encabezado.
      */
     private void enviarNuevoComentario(int postId, String textoComent) {
         SharedPreferences prefs = requireActivity()
@@ -411,7 +417,12 @@ public class ComentariosFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                     etNewComment.setText("");
-                    // Refrescar lista de comentarios
+
+                    // 1) Incrementar localmente el contador de comentarios y actualizar UI
+                    postOriginal.setCommentCount(postOriginal.getCommentCount() + 1);
+                    tvCommentCount.setText(String.valueOf(postOriginal.getCommentCount()));
+
+                    // 2) Refrescar lista de comentarios
                     cargarComentariosDesdeServidor(postId);
                 } else {
                     Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
@@ -432,6 +443,7 @@ public class ComentariosFragment extends Fragment {
     /**
      * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario
      * al post original (igual que en MensajesTabFragment).
+     * Después de enviar, también actualiza el contador de comentarios en el encabezado.
      */
     private void mostrarDialogoComentario(int postId, String usuarioNombre, String fotoPerfilBase64) {
         // Inflamos el layout dialog_comentar.xml
@@ -503,7 +515,12 @@ public class ComentariosFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
-                        // Refrescar lista de comentarios:
+
+                        // 1) Incrementar localmente el contador de comentarios y actualizar UI
+                        postOriginal.setCommentCount(postOriginal.getCommentCount() + 1);
+                        tvCommentCount.setText(String.valueOf(postOriginal.getCommentCount()));
+
+                        // 2) Refrescar lista de comentarios
                         cargarComentariosDesdeServidor(postId);
                     } else {
                         Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
