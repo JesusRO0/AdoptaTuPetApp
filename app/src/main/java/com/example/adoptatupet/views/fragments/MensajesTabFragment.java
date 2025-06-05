@@ -2,6 +2,7 @@ package com.example.adoptatupet.views.fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,7 +22,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -49,21 +49,19 @@ import retrofit2.Response;
 /**
  * MensajesTabFragment: muestra la lista de mensajes del foro
  * y permite postear nuevos.
- * Al pulsar todo el bloque de un post, abre ComentariosFragment.
- * Al pulsar el icono de comentario, muestra el pop-up de comentario.
- * Ahora también permite eliminar posts propios.
+ * Ahora incluye opción para eliminar cada post (con confirmación).
  */
 public class MensajesTabFragment extends Fragment {
 
     private static final String CACHE_PREFS = "foro_cache";
     private static final String KEY_CACHED_MENSAJES = "cachedMensajeList";
 
-    private ImageView ivUserProfile;
-    private EditText etPostContent;
-    private ImageButton btnAttachImage;
-    private Button btnPostear;
+    private ImageView    ivUserProfile;
+    private EditText     etPostContent;
+    private ImageButton  btnAttachImage;
+    private Button       btnPostear;
     private RecyclerView rvMensajesTab;
-    private ForoAdapter foroAdapter;
+    private ForoAdapter  foroAdapter;
 
     // Para futura funcionalidad de adjuntar foto al post
     private Uri attachedImageUri = null;
@@ -128,11 +126,10 @@ public class MensajesTabFragment extends Fragment {
         int userIdActual = prefs.getInt("idUsuario", -1);
 
         // 2a) Instanciar ForoAdapter con SEIS parámetros:
-        //     -> lista vacía, userIdActual, OnUserNameClickListener,
-        //        OnCommentClickListener, OnPostClickListener, OnDeletePostClickListener
+        //     -> lista vacía, userIdActual, OnUserNameClickListener, OnCommentClickListener, OnPostClickListener, OnDeleteClickListener
         foroAdapter = new ForoAdapter(
                 new ArrayList<>(),
-                userIdActual,   // <-- Pasamos aquí el ID real del usuario que da “like” o elimina
+                userIdActual,   // <-- Pasamos aquí el ID real del usuario que da “like”
                 // OnUserNameClickListener
                 usuarioId -> {
                     if (listenerUsuario != null) {
@@ -155,9 +152,16 @@ public class MensajesTabFragment extends Fragment {
                             .addToBackStack(null);
                     ft.commit();
                 },
-                // OnDeletePostClickListener: confirma y elimina post
-                mensaje -> {
-                    showConfirmDeletePost(mensaje.getIdMensaje());
+                // OnDeleteClickListener: confirma y elimina post
+                (mensaje, position) -> {
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("Eliminar post")
+                            .setMessage("¿Estás seguro de que quieres eliminar este post?")
+                            .setPositiveButton("Sí", (dialog, which) -> {
+                                deletePostFromServer(mensaje.getIdMensaje(), position);
+                            })
+                            .setNegativeButton("No", null)
+                            .show();
                 }
         );
         rvMensajesTab.setAdapter(foroAdapter);
@@ -307,6 +311,45 @@ public class MensajesTabFragment extends Fragment {
     }
 
     /**
+     * Elimina un post en el servidor (requiere usuarioId + idPost).
+     * Si la operación es exitosa, quita el elemento de la lista local.
+     *
+     * @param postId   ID del post a eliminar
+     * @param position Posición en el RecyclerView
+     */
+    private void deletePostFromServer(int postId, int position) {
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        int currentUserId = prefs.getInt("idUsuario", -1);
+
+        Map<String, Integer> body = new HashMap<>();
+        body.put("usuarioId", currentUserId);
+        body.put("idPost", postId);
+
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        Call<Mensaje> callDelete = api.deletePost(body);
+        callDelete.enqueue(new Callback<Mensaje>() {
+            @Override
+            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    // Borrado exitoso en backend: quitar de la lista local
+                    foroAdapter.getListaMensajes().remove(position);
+                    foroAdapter.notifyItemRemoved(position);
+                    Toast.makeText(getContext(), "Post eliminado", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "No se pudo eliminar el post", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<Mensaje> call, Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Error de red al eliminar post", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /**
      * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario.
      *
      * @param postId             El ID del post al que se responde.
@@ -400,62 +443,5 @@ public class MensajesTabFragment extends Fragment {
         });
 
         dialog.show();
-    }
-
-    /**
-     * Muestra un diálogo de confirmación y borra el post indicado.
-     */
-    private void showConfirmDeletePost(int postId) {
-        new AlertDialog.Builder(getContext())
-                .setTitle("Eliminar publicación")
-                .setMessage("¿Seguro que quieres eliminar esta publicación?")
-                .setPositiveButton("Eliminar", (dialog, which) -> {
-                    eliminarPost(postId);
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
-    /**
-     * Llama al endpoint para eliminar el post y, al éxito, actualiza la lista.
-     */
-    private void eliminarPost(int postId) {
-        SharedPreferences prefs = requireActivity()
-                .getSharedPreferences("user", Context.MODE_PRIVATE);
-        int myUserId = prefs.getInt("idUsuario", -1);
-
-        Map<String, Integer> body = new HashMap<>();
-        body.put("usuarioId", myUserId);
-        body.put("idPost", postId);
-
-        if (getActivity() != null) {
-            ((MainActivity) getActivity()).showLoading();
-        }
-
-        ApiService api = ApiClient.getClient().create(ApiService.class);
-        Call<Mensaje> call = api.deletePost(body);
-        call.enqueue(new Callback<Mensaje>() {
-            @Override
-            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
-                if (getActivity() != null) {
-                    ((MainActivity) getActivity()).hideLoading();
-                }
-                if (!isAdded()) return;
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(), "Publicación eliminada", Toast.LENGTH_SHORT).show();
-                    refrescarMensajesDesdeServidor();
-                } else {
-                    Toast.makeText(getContext(), "Error al eliminar publicación", Toast.LENGTH_SHORT).show();
-                }
-            }
-            @Override
-            public void onFailure(Call<Mensaje> call, Throwable t) {
-                if (getActivity() != null) {
-                    ((MainActivity) getActivity()).hideLoading();
-                }
-                if (!isAdded()) return;
-                Toast.makeText(getContext(), "Fallo de red al eliminar publicación", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 }

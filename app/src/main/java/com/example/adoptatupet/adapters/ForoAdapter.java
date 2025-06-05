@@ -32,13 +32,13 @@ import retrofit2.Response;
 
 /**
  * Adaptador que muestra cada Mensaje en un RecyclerView del foro.
- * Ahora incluye seis parámetros en el constructor:
- *  1) Lista de Mensaje
- *  2) currentUserId: ID del usuario logueado (se usará en like/unlike y para mostrar el botón eliminar)
- *  3) OnUserNameClickListener: click sobre el nombre de usuario
- *  4) OnCommentClickListener: click sobre el icono de comentario
- *  5) OnPostClickListener: click sobre todo el bloque del post
- *  6) OnDeleteClickListener: click sobre el icono de eliminar (papelera)
+ * Incluye:
+ *  1) currentUserId: para determinar si el post es propio (mostrar botón eliminar).
+ *  2) Cinco listeners en el constructor:
+ *     - OnUserNameClickListener
+ *     - OnCommentClickListener
+ *     - OnPostClickListener
+ *     - OnDeleteClickListener
  */
 public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHolder> {
 
@@ -55,7 +55,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
     }
 
     public interface OnDeleteClickListener {
-        void onDeleteClicked(Mensaje mensaje);
+        void onDeleteClicked(Mensaje mensaje, int position);
     }
 
     private List<Mensaje> listaMensajes;
@@ -166,7 +166,7 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         // 6) CommentCount: mostrar el número de comentarios
         holder.tvCommentCount.setText(String.valueOf(m.getCommentCount()));
 
-        // 7) Mostrar/ocultar botón eliminar: sólo si currentUserId == autor del post
+        // 7) Mostrar u ocultar botón “Eliminar” según sea dueño del post
         if (m.getUsuarioId() == currentUserId) {
             holder.btnDeleteMessage.setVisibility(View.VISIBLE);
         } else {
@@ -275,10 +275,10 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
             }
         });
 
-        // 12) Click en icono de eliminar → avisar al listener de eliminación
+        // 12) Click en icono “Eliminar” → avisar al deleteListener
         holder.btnDeleteMessage.setOnClickListener(v -> {
             if (deleteListener != null) {
-                deleteListener.onDeleteClicked(m);
+                deleteListener.onDeleteClicked(m, position);
             }
         });
     }
