@@ -1,6 +1,7 @@
 package com.example.adoptatupet.adapters;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
@@ -34,7 +35,7 @@ import retrofit2.Response;
  * Adaptador que muestra cada Mensaje en un RecyclerView del foro.
  * Incluye:
  *  1) currentUserId: para determinar si el post es propio (mostrar botón eliminar).
- *  2) Cinco listeners en el constructor:
+ *  2) Seis listeners en el constructor:
  *     - OnUserNameClickListener
  *     - OnCommentClickListener
  *     - OnPostClickListener
@@ -166,8 +167,12 @@ public class ForoAdapter extends RecyclerView.Adapter<ForoAdapter.MensajeViewHol
         // 6) CommentCount: mostrar el número de comentarios
         holder.tvCommentCount.setText(String.valueOf(m.getCommentCount()));
 
-        // 7) Mostrar u ocultar botón “Eliminar” según sea dueño del post
-        if (m.getUsuarioId() == currentUserId) {
+        // 7) Mostrar u ocultar botón “Eliminar” si:
+        //    - es autor o
+        //    - el email en SharedPreferences es "admin@gmail.com"
+        SharedPreferences prefs = ctx.getSharedPreferences("user", Context.MODE_PRIVATE);
+        String userEmail = prefs.getString("email", "");
+        if (m.getUsuarioId() == currentUserId || "admin@gmail.com".equals(userEmail)) {
             holder.btnDeleteMessage.setVisibility(View.VISIBLE);
         } else {
             holder.btnDeleteMessage.setVisibility(View.GONE);

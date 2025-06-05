@@ -2,7 +2,6 @@ package com.example.adoptatupet.views.fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -274,6 +273,7 @@ public class MensajesTabFragment extends Fragment {
 
     /**
      * Envía un nuevo mensaje al servidor a través del endpoint POST.
+     * Muestra un indicador de "Cargando..." durante la operación.
      * Al completarse, refresca la lista de mensajes.
      *
      * @param texto  texto del mensaje
@@ -288,11 +288,20 @@ public class MensajesTabFragment extends Fragment {
         nuevo.setUsuarioId(userId);
         nuevo.setTexto(texto);
 
+        // Mostrar indicador de loading en MainActivity
+        if (getActivity() != null) {
+            ((MainActivity) getActivity()).showLoading();
+        }
+
         ApiService api = ApiClient.getClient().create(ApiService.class);
         Call<Mensaje> call = api.postMensaje(nuevo);
         call.enqueue(new Callback<Mensaje>() {
             @Override
             public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
+                // Ocultar loading
+                if (getActivity() != null) {
+                    ((MainActivity) getActivity()).hideLoading();
+                }
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null) {
                     etPostContent.setText("");
@@ -304,6 +313,10 @@ public class MensajesTabFragment extends Fragment {
             }
             @Override
             public void onFailure(Call<Mensaje> call, Throwable t) {
+                // Ocultar loading
+                if (getActivity() != null) {
+                    ((MainActivity) getActivity()).hideLoading();
+                }
                 if (!isAdded()) return;
                 Toast.makeText(getContext(), "Error de red al enviar", Toast.LENGTH_SHORT).show();
             }
@@ -362,7 +375,7 @@ public class MensajesTabFragment extends Fragment {
                 .inflate(R.layout.dialog_comentar, null);
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
-        TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
+        TextView tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
         TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
         EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
         Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);

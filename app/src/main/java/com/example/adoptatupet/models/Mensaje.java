@@ -69,6 +69,9 @@ public class Mensaje {
     @Expose
     private int commentCount;
 
+    // ----- NUEVO CAMPO: controla visibilidad del botón “eliminar” -----
+    private boolean mostrarBotonEliminar = false;
+
     // ----------------- Getters y Setters -----------------
 
     // Campos genéricos
@@ -184,5 +187,14 @@ public class Mensaje {
 
     public void setCommentCount(int commentCount) {
         this.commentCount = commentCount;
+    }
+
+    // Getter y Setter para controlar visibilidad del botón “eliminar”
+    public boolean isMostrarBotonEliminar() {
+        return mostrarBotonEliminar;
+    }
+
+    public void setMostrarBotonEliminar(boolean mostrarBotonEliminar) {
+        this.mostrarBotonEliminar = mostrarBotonEliminar;
     }
 }

@@ -63,14 +63,14 @@ public class ComentariosFragment extends Fragment {
             tvLikeCount,
             tvCommentCount;
     private ImageView   ivPostImage;
-    private ImageButton btnLike;          // Corazón
-    private ImageButton btnComment;       // Bocadillo
-    private ImageButton btnDeleteMessage; // Papelera para eliminar el post
+    private ImageButton btnLike;           // Corazón
+    private ImageButton btnComment;        // Bocadillo
+    private ImageButton btnDeleteMessage;  // Papelera para eliminar el post
 
     // ===== Vistas del listado de comentarios =====
-    private RecyclerView     rvComentarios;
-    private CommentsAdapter  commentsAdapter;
-    private List<Comment>    commentList = new ArrayList<>();
+    private RecyclerView    rvComentarios;
+    private CommentsAdapter commentsAdapter;
+    private List<Comment>   commentList = new ArrayList<>();
 
     // ===== Flecha de retroceso =====
     private ImageView btnAtras;
@@ -101,7 +101,7 @@ public class ComentariosFragment extends Fragment {
             String postJson = getArguments().getString(ARG_POST);
             postOriginal = gson.fromJson(postJson, Mensaje.class);
         }
-        // Obtener currentUserId de SharedPreferences
+        // Obtener currentUserId y email de SharedPreferences
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
         currentUserId = prefs.getInt("idUsuario", -1);
@@ -290,8 +290,13 @@ public class ComentariosFragment extends Fragment {
                 );
             });
 
-            // --------- Mostrar el botón de Eliminar POST si el usuario es el autor -----------
-            if (postOriginal.getUsuarioId() == currentUserId) {
+            // --------- Mostrar el botón de Eliminar POST si el usuario es autor o admin -----------
+            SharedPreferences prefs = requireActivity()
+                    .getSharedPreferences("user", Context.MODE_PRIVATE);
+            String email = prefs.getString("email", "");
+            boolean isAdmin = "admin@gmail.com".equals(email);
+
+            if (postOriginal.getUsuarioId() == currentUserId || isAdmin) {
                 btnDeleteMessage.setVisibility(View.VISIBLE);
                 btnDeleteMessage.setOnClickListener(v -> {
                     new AlertDialog.Builder(requireContext())
