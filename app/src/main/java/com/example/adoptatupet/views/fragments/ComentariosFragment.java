@@ -45,7 +45,7 @@ import retrofit2.Response;
 /**
  * ComentariosFragment muestra:
  *  1) El post original en la parte superior (usando layout item_mensaje).
- *     Ahora con funcionalidad de “like/unlike” y “commentCount”.
+ *     Ahora con funcionalidad de “like/unlike”, “commentCount”, “Eliminar post” y “pop-up de comentario”.
  *  2) Un RecyclerView con todos los comentarios asociados a ese post.
  *  3) Flecha de retroceso para volver al foro.
  */
@@ -56,15 +56,16 @@ public class ComentariosFragment extends Fragment {
     private Mensaje postOriginal;
 
     // ===== Vistas del post original (include @layout/item_mensaje) =====
-    private ImageView ivPostUserProfile;
-    private TextView  tvUserName,
+    private ImageView   ivPostUserProfile;
+    private TextView    tvUserName,
             tvFechaMensaje,
             tvTextoMensaje,
             tvLikeCount,
-            tvCommentCount;       // Contador de comentarios
-    private ImageView ivPostImage;
-    private ImageButton btnLike;          // Botón de “like” (corazón)
-    private ImageButton btnComment;       // Botón de “comentario” (bocadillo)
+            tvCommentCount;
+    private ImageView   ivPostImage;
+    private ImageButton btnLike;          // Corazón
+    private ImageButton btnComment;       // Bocadillo
+    private ImageButton btnDeleteMessage; // Papelera para eliminar el post
 
     // ===== Vistas del listado de comentarios =====
     private RecyclerView     rvComentarios;
@@ -74,10 +75,11 @@ public class ComentariosFragment extends Fragment {
     // ===== Flecha de retroceso =====
     private ImageView btnAtras;
 
+    private int currentUserId = -1;
     private static final Gson gson = new Gson();
 
     public ComentariosFragment() {
-        // Constructor vacío requerido
+        // Constructor vacío
     }
 
     /**
@@ -94,11 +96,15 @@ public class ComentariosFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Recuperar el post original de los argumentos
+        // Leer el postOriginal de los argumentos
         if (getArguments() != null && getArguments().containsKey(ARG_POST)) {
             String postJson = getArguments().getString(ARG_POST);
             postOriginal = gson.fromJson(postJson, Mensaje.class);
         }
+        // Obtener currentUserId de SharedPreferences
+        SharedPreferences prefs = requireActivity()
+                .getSharedPreferences("user", Context.MODE_PRIVATE);
+        currentUserId = prefs.getInt("idUsuario", -1);
     }
 
     @Nullable
@@ -113,7 +119,7 @@ public class ComentariosFragment extends Fragment {
         // ======================
         btnAtras = view.findViewById(R.id.atras);
         btnAtras.setOnClickListener(v -> {
-            // Reemplaza el contenedor principal con el fragmento ForoFragment
+            // Volver al foro
             getActivity()
                     .getSupportFragmentManager()
                     .beginTransaction()
@@ -125,7 +131,6 @@ public class ComentariosFragment extends Fragment {
         // ======================
         // 1) Setear datos del post original en include (item_mensaje)
         // ======================
-        // Los IDs corresponden al layout item_mensaje.xml
         ivPostUserProfile = view.findViewById(R.id.ivPostUserProfile);
         tvUserName        = view.findViewById(R.id.tvUserName);
         tvFechaMensaje    = view.findViewById(R.id.tvFechaMensaje);
@@ -134,15 +139,16 @@ public class ComentariosFragment extends Fragment {
         tvLikeCount       = view.findViewById(R.id.tvLikeCount);
         tvCommentCount    = view.findViewById(R.id.tvCommentCount);
 
-        btnLike    = view.findViewById(R.id.btnLike);
-        btnComment = view.findViewById(R.id.btnComment);
+        btnLike           = view.findViewById(R.id.btnLike);
+        btnComment        = view.findViewById(R.id.btnComment);
+        btnDeleteMessage  = view.findViewById(R.id.btnDeleteMessage);
 
         if (postOriginal != null) {
             // –– Nombre y fecha
             tvUserName.setText(postOriginal.getUsuarioNombre());
             tvFechaMensaje.setText(postOriginal.getFechaPublicacion());
 
-            // –– Texto
+            // –– Texto del post
             tvTextoMensaje.setText(postOriginal.getTexto());
 
             // –– Foto de perfil (Base64 → Bitmap)
@@ -210,12 +216,8 @@ public class ComentariosFragment extends Fragment {
                     tvLikeCount.setText(String.valueOf(postOriginal.getLikeCount()));
                 }
 
-                // b) Llamada al backend para persistir el cambio
+                // b) Llamar a backend para persistir
                 Map<String, Integer> body = new HashMap<>();
-                SharedPreferences prefs = requireActivity()
-                        .getSharedPreferences("user", Context.MODE_PRIVATE);
-                int currentUserId = prefs.getInt("idUsuario", -1);
-
                 body.put("usuarioId", currentUserId);
                 body.put("idPost", postOriginal.getIdMensaje());
 
@@ -287,6 +289,23 @@ public class ComentariosFragment extends Fragment {
                         postOriginal.getFotoPerfil()
                 );
             });
+
+            // --------- Mostrar el botón de Eliminar POST si el usuario es el autor -----------
+            if (postOriginal.getUsuarioId() == currentUserId) {
+                btnDeleteMessage.setVisibility(View.VISIBLE);
+                btnDeleteMessage.setOnClickListener(v -> {
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Eliminar post")
+                            .setMessage("¿Estás seguro de que deseas eliminar este post?")
+                            .setPositiveButton("Eliminar", (dialogInt, which) -> {
+                                deletePostFromServer(postOriginal.getIdMensaje());
+                            })
+                            .setNegativeButton("Cancelar", null)
+                            .show();
+                });
+            } else {
+                btnDeleteMessage.setVisibility(View.GONE);
+            }
         }
 
         // ======================
@@ -309,7 +328,7 @@ public class ComentariosFragment extends Fragment {
 
     /**
      * Carga los comentarios desde el servidor vía API:
-     * GET https://…/api/get_comentarios.php?idPost=…
+     * GET …/get_comentarios.php?idPost=…
      */
     private void cargarComentariosDesdeServidor(int postId) {
         ApiService api = ApiClient.getClient().create(ApiService.class);
@@ -337,25 +356,21 @@ public class ComentariosFragment extends Fragment {
 
     /**
      * Muestra un AlertDialog con un EditText para que el usuario escriba su comentario
-     * al post original. (Sin zona de envío en este layout, solo demo de popup).
+     * al post original.
      */
     private void mostrarDialogoComentario(int postId, String usuarioNombre, String fotoPerfilBase64) {
-        // Inflamos el layout dialog_comentar.xml
         View dialogView = LayoutInflater.from(getContext())
                 .inflate(R.layout.dialog_comentar, null);
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
         TextView  tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
         TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
-        EditText etComentario     = dialogView.findViewById(R.id.etComentario);
-        Button btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
+        EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
+        Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
 
-        // 1) Poner nombre del usuario al que se responde
         tvDestinoNombre.setText(usuarioNombre);
-        // 2) No mostramos email en esta versión
         tvDestinoEmail.setText("");
 
-        // 3) Cargar avatar del destinatario
         if (!TextUtils.isEmpty(fotoPerfilBase64)) {
             try {
                 byte[] decoded = Base64.decode(fotoPerfilBase64, Base64.NO_WRAP);
@@ -368,20 +383,17 @@ public class ComentariosFragment extends Fragment {
             ivAvatarDestino.setImageResource(R.drawable.default_avatar);
         }
 
-        // 4) Construir y mostrar el AlertDialog con dicho layout
         AlertDialog dialog = new AlertDialog.Builder(getContext())
                 .setView(dialogView)
                 .setCancelable(true)
                 .create();
 
-        // 5) Al pulsar “Responder” dentro del diálogo:
         btnResponder.setOnClickListener(v -> {
             String textoComent = etComentario.getText().toString().trim();
             if (TextUtils.isEmpty(textoComent)) {
                 Toast.makeText(getContext(), "Escribe algo antes de enviar", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // Construir body para enviar a la API
             SharedPreferences prefs = requireActivity()
                     .getSharedPreferences("user", Context.MODE_PRIVATE);
             int myUserId = prefs.getInt("idUsuario", -1);
@@ -400,10 +412,9 @@ public class ComentariosFragment extends Fragment {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         Toast.makeText(getContext(), "Comentario enviado", Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
-                        // Incrementar localmente el contador de comentarios y actualizar UI
+
                         postOriginal.setCommentCount(postOriginal.getCommentCount() + 1);
                         tvCommentCount.setText(String.valueOf(postOriginal.getCommentCount()));
-                        // Refrescar lista de comentarios
                         cargarComentariosDesdeServidor(postId);
                     } else {
                         Toast.makeText(getContext(), "Error al enviar comentario", Toast.LENGTH_SHORT).show();
@@ -418,5 +429,40 @@ public class ComentariosFragment extends Fragment {
         });
 
         dialog.show();
+    }
+
+    /**
+     * Llama a delete_post.php para eliminar el post actual. Al confirmarlo, vuelve al foro.
+     */
+    private void deletePostFromServer(int postId) {
+        Map<String, Integer> body = new HashMap<>();
+        body.put("usuarioId", currentUserId);
+        body.put("idPost", postId);
+
+        ApiService api = ApiClient.getClient().create(ApiService.class);
+        Call<Mensaje> callDelete = api.deletePost(body);
+        callDelete.enqueue(new Callback<Mensaje>() {
+            @Override
+            public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Post eliminado", Toast.LENGTH_SHORT).show();
+                    // Volver automáticamente al foro
+                    getActivity()
+                            .getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.nav_host_fragment,
+                                    new com.example.adoptatupet.views.fragments.ForoFragment())
+                            .commit();
+                } else {
+                    Toast.makeText(getContext(), "No se pudo eliminar el post", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<Mensaje> call, Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(getContext(), "Error de red al eliminar post", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
