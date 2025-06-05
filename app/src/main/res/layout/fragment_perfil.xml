@@ -67,6 +67,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Nombre: "
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
 
@@ -75,6 +76,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Editar"
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textAllCaps="false" />
             </LinearLayout>
 
@@ -83,6 +85,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nuevo nombre"
+                android:fontFamily="@font/fredoka_semibold"
                 android:visibility="gone"
                 android:inputType="textPersonName"
                 android:maxLines="1"
@@ -102,6 +105,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Email: "
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
 
@@ -109,6 +113,7 @@
                     android:id="@+id/btnEditarEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/fredoka_semibold"
                     android:text="Editar"
                     android:textAllCaps="false" />
             </LinearLayout>
@@ -119,6 +124,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Nuevo email"
                 android:visibility="gone"
+                android:fontFamily="@font/fredoka_semibold"
                 android:inputType="textEmailAddress"
                 android:maxLines="1"
                 android:imeOptions="actionDone" />
@@ -137,6 +143,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Contraseña: ********"
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
 
@@ -145,6 +152,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Editar"
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textAllCaps="false" />
             </LinearLayout>
 
@@ -153,6 +161,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nueva contraseña"
+                android:fontFamily="@font/fredoka_semibold"
                 android:visibility="gone"
                 android:inputType="textPassword"
                 android:maxLines="1"
@@ -172,6 +181,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Localidad: "
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
 
@@ -180,6 +190,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Editar"
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textAllCaps="false" />
             </LinearLayout>
 
@@ -188,6 +199,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Nueva localidad"
+                android:fontFamily="@font/fredoka_semibold"
                 android:visibility="gone"
                 android:inputType="text"
                 android:maxLines="1"

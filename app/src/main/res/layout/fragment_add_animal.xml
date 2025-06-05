@@ -49,6 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Nombre"
+            android:fontFamily="@font/fredoka_semibold"
             android:singleLine="true"
             android:maxLines="1"
             android:imeOptions="actionDone" />
@@ -58,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Especie:"
-            android:textStyle="bold"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="12dp"/>
         <RadioGroup
             android:id="@+id/rgEspecie"
@@ -69,11 +70,13 @@
                 android:id="@+id/rbPerro"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Perro"/>
             <RadioButton
                 android:id="@+id/rbGato"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Gato"
                 android:layout_marginStart="24dp"/>
         </RadioGroup>
@@ -83,13 +86,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Raza:"
-            android:textStyle="bold"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="12dp"/>
 
         <Spinner
             android:id="@+id/spinnerRaza"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/fredoka_regular"
             android:layout_marginTop="4dp"/>
 
         <!-- Edad -->
@@ -97,7 +101,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Edad:"
-            android:textStyle="bold"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="12dp"/>
         <RadioGroup
             android:id="@+id/rgEdad"
@@ -108,17 +112,20 @@
                 android:id="@+id/rbCachorro"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Cachorro"/>
             <RadioButton
                 android:id="@+id/rbJoven"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Joven"
                 android:layout_marginStart="24dp"/>
             <RadioButton
                 android:id="@+id/rbAdulto"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Adulto"
                 android:layout_marginStart="24dp"/>
         </RadioGroup>
@@ -128,13 +135,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Localidad:"
-            android:textStyle="bold"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="12dp"/>
 
         <Spinner
             android:id="@+id/spinnerLocalidadAnimal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="4dp"
             android:entries="@array/spain_localities"/>
 
@@ -143,22 +151,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Sexo:"
-            android:textStyle="bold"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="12dp"/>
         <RadioGroup
             android:id="@+id/rgSexo"
             android:layout_width="match_parent"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <RadioButton
                 android:id="@+id/rbMacho"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Macho"/>
             <RadioButton
                 android:id="@+id/rbHembra"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="Hembra"
                 android:layout_marginStart="24dp"/>
         </RadioGroup>
@@ -168,11 +179,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tamaño:"
-            android:textStyle="bold"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_marginTop="12dp"/>
         <RadioGroup
             android:id="@+id/rgTamano"
             android:layout_width="match_parent"
+            android:fontFamily="@font/fredoka_semibold"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <RadioButton
@@ -200,6 +212,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Descripción"
+            android:fontFamily="@font/fredoka_semibold"
             android:imeOptions="actionDone"
             android:layout_marginTop="12dp"/>
 

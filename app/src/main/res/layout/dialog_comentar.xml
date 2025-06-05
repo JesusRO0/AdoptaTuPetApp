@@ -38,6 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Nombre Usuario"
+                android:fontFamily="@font/fredoka_semibold"
                 android:textColor="#212121"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -61,6 +62,7 @@
         android:layout_height="120dp"
         android:layout_marginTop="8dp"
         android:gravity="top|start"
+        android:fontFamily="@font/fredoka_semibold"
         android:hint="Escribe tu respuesta..."
         android:inputType="textMultiLine"
         android:maxLines="6"
@@ -80,6 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:backgroundTint="@color/colorPrimary"
+            android:fontFamily="@font/fredoka_semibold"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
             android:text="Responder"

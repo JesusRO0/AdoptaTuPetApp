@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- fragment_foro.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/container_foro"
@@ -16,11 +17,15 @@
         app:tabTextColor="@android:color/white"
         app:tabIndicatorColor="@android:color/white" />
 
-    <!-- ViewPager2 que contendrá MensajesTabFragment y UserProfileTabFragment -->
+    <!--
+         ViewPager2 que contendrá MensajesTabFragment y UserProfileTabFragment.
+         Se le añade paddingBottom para dejar espacio debajo del contenido.
+    -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPagerForo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
-
+        android:layout_weight="1"
+        android:paddingBottom="56dp"
+        android:clipToPadding="false" />
 </LinearLayout>

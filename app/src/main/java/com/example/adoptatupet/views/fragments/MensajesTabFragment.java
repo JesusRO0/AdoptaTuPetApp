@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.view.LayoutInflater;
@@ -19,6 +20,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -35,6 +39,8 @@ import com.example.adoptatupet.views.MainActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,27 +54,32 @@ import retrofit2.Response;
 /**
  * MensajesTabFragment: muestra la lista de mensajes del foro
  * y permite postear nuevos.
- * Ahora incluye opción para eliminar cada post (con confirmación).
+ * Ahora incluye opción para eliminar cada post (con confirmación)
+ * y funcionalidad para adjuntar una imagen al post.
  */
 public class MensajesTabFragment extends Fragment {
 
     private static final String CACHE_PREFS = "foro_cache";
     private static final String KEY_CACHED_MENSAJES = "cachedMensajeList";
+    private static final int PICK_IMAGE_REQUEST = 100;
 
     private ImageView    ivUserProfile;
     private EditText     etPostContent;
     private ImageButton  btnAttachImage;
-    private Button       btnPostear;
+    private ImageButton  btnPostear;
     private RecyclerView rvMensajesTab;
     private ForoAdapter  foroAdapter;
 
-    // Para futura funcionalidad de adjuntar foto al post
-    private Uri attachedImageUri = null;
+    // Para almacenar imagen seleccionada en Base64
+    private String attachedImageBase64 = null;
 
     private final Gson gson = new Gson();
 
     /** Listener para clicks en nombre de usuario (inyectado desde ForoFragment) */
     private ForoAdapter.OnUserNameClickListener listenerUsuario;
+
+    // Lanzador de actividad para seleccionar imagen
+    private ActivityResultLauncher<String> pickImageLauncher;
 
     public MensajesTabFragment() {
         // Constructor vacío
@@ -100,10 +111,9 @@ public class MensajesTabFragment extends Fragment {
             }
         });
 
-        // 1c) Configurar “Adjuntar imagen” (de momento pendiente)
-        btnAttachImage.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Funcionalidad de adjuntar pendiente", Toast.LENGTH_SHORT).show()
-        );
+        // 1c) Configurar “Adjuntar imagen”
+        registerImagePicker();
+        btnAttachImage.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
 
         // 1d) Configurar botón “Postear”
         btnPostear.setOnClickListener(v -> {
@@ -112,7 +122,7 @@ public class MensajesTabFragment extends Fragment {
                 Toast.makeText(getContext(), "Escribe algo antes de postear", Toast.LENGTH_SHORT).show();
                 return;
             }
-            enviarMensaje(texto, attachedImageUri);
+            enviarMensaje(texto, attachedImageBase64);
         });
 
         // 2) Inicializar RecyclerView para mostrar mensajes
@@ -272,14 +282,46 @@ public class MensajesTabFragment extends Fragment {
     }
 
     /**
+     * Registra el lanzador de ActivityResult para seleccionar una imagen del dispositivo.
+     */
+    private void registerImagePicker() {
+        pickImageLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                new ActivityResultCallback<Uri>() {
+                    @Override
+                    public void onActivityResult(Uri uri) {
+                        if (uri != null) {
+                            try {
+                                InputStream inputStream = requireContext()
+                                        .getContentResolver()
+                                        .openInputStream(uri);
+                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                                // Convertir Bitmap a Base64
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+                                byte[] imageBytes = baos.toByteArray();
+                                attachedImageBase64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
+                                Toast.makeText(getContext(), "Imagen adjuntada", Toast.LENGTH_SHORT).show();
+                            } catch (Exception e) {
+                                Toast.makeText(getContext(), "Error al procesar imagen", Toast.LENGTH_SHORT).show();
+                                attachedImageBase64 = null;
+                            }
+                        }
+                    }
+                }
+        );
+    }
+
+    /**
      * Envía un nuevo mensaje al servidor a través del endpoint POST.
+     * Incluye campo "imagenMensaje" con Base64 si se adjuntó imagen.
      * Muestra un indicador de "Cargando..." durante la operación.
      * Al completarse, refresca la lista de mensajes.
      *
      * @param texto  texto del mensaje
-     * @param imagen URI de la imagen adjunta (puede ser null)
+     * @param imagenBase64 Base64 de la imagen adjunta (puede ser null)
      */
-    private void enviarMensaje(String texto, @Nullable Uri imagen) {
+    private void enviarMensaje(String texto, @Nullable String imagenBase64) {
         SharedPreferences prefs = requireActivity()
                 .getSharedPreferences("user", Context.MODE_PRIVATE);
         int userId = prefs.getInt("idUsuario", -1);
@@ -287,6 +329,10 @@ public class MensajesTabFragment extends Fragment {
         Mensaje nuevo = new Mensaje();
         nuevo.setUsuarioId(userId);
         nuevo.setTexto(texto);
+        // Asignar imagen adjunta si existe
+        if (imagenBase64 != null) {
+            nuevo.setImagenMensaje(imagenBase64);
+        }
 
         // Mostrar indicador de loading en MainActivity
         if (getActivity() != null) {
@@ -305,7 +351,7 @@ public class MensajesTabFragment extends Fragment {
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null) {
                     etPostContent.setText("");
-                    attachedImageUri = null;
+                    attachedImageBase64 = null;
                     refrescarMensajesDesdeServidor();
                 } else {
                     Toast.makeText(getContext(), "No se pudo enviar el mensaje", Toast.LENGTH_SHORT).show();
@@ -325,10 +371,11 @@ public class MensajesTabFragment extends Fragment {
 
     /**
      * Elimina un post en el servidor (requiere usuarioId + idPost).
-     * Si la operación es exitosa, quita el elemento de la lista local.
+     * Si la operación es exitosa, busca el índice real del post en la lista
+     * y lo quita. De esta forma evitamos el IndexOutOfBoundsException.
      *
      * @param postId   ID del post a eliminar
-     * @param position Posición en el RecyclerView
+     * @param position Posición propuesta en el RecyclerView (puede estar desfasada)
      */
     private void deletePostFromServer(int postId, int position) {
         SharedPreferences prefs = requireActivity()
@@ -346,10 +393,24 @@ public class MensajesTabFragment extends Fragment {
             public void onResponse(Call<Mensaje> call, Response<Mensaje> response) {
                 if (!isAdded()) return;
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    // Borrado exitoso en backend: quitar de la lista local
-                    foroAdapter.getListaMensajes().remove(position);
-                    foroAdapter.notifyItemRemoved(position);
-                    Toast.makeText(getContext(), "Post eliminado", Toast.LENGTH_SHORT).show();
+                    // Buscamos el índice real del post en 'listaMensajes', comparando idMensaje
+                    List<Mensaje> lista = foroAdapter.getListaMensajes();
+                    int indexToRemove = -1;
+                    for (int i = 0; i < lista.size(); i++) {
+                        if (lista.get(i).getIdMensaje() == postId) {
+                            indexToRemove = i;
+                            break;
+                        }
+                    }
+                    if (indexToRemove != -1) {
+                        lista.remove(indexToRemove);
+                        foroAdapter.notifyItemRemoved(indexToRemove);
+                        Toast.makeText(getContext(), "Post eliminado", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Si no se encontró (posiblemente ya se refrescó la lista), simplemente refrescamos
+                        Toast.makeText(getContext(), "Post eliminado (refrescando lista)", Toast.LENGTH_SHORT).show();
+                        refrescarMensajesDesdeServidor();
+                    }
                 } else {
                     Toast.makeText(getContext(), "No se pudo eliminar el post", Toast.LENGTH_SHORT).show();
                 }
@@ -376,7 +437,7 @@ public class MensajesTabFragment extends Fragment {
 
         ImageView ivAvatarDestino  = dialogView.findViewById(R.id.ivAvatarDestino);
         TextView tvDestinoNombre  = dialogView.findViewById(R.id.tvDestinoNombre);
-        TextView  tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
+        TextView tvDestinoEmail   = dialogView.findViewById(R.id.tvDestinoEmail);
         EditText  etComentario     = dialogView.findViewById(R.id.etComentario);
         Button    btnResponder     = dialogView.findViewById(R.id.btnResponderDialog);
 

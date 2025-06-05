@@ -35,8 +35,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Misifú"
+                    android:fontFamily="@font/fredoka_semibold"
                     android:textSize="20sp"
-                    android:textStyle="bold"
                     android:textColor="#222" />
 
                 <!-- Especie -->
@@ -49,7 +49,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Especie:"
-                        android:textStyle="bold"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#555"
                         android:layout_marginEnd="4dp"/>
                     <TextView
@@ -57,6 +57,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Gato"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#333"/>
                 </LinearLayout>
 
@@ -70,7 +71,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Raza:"
-                        android:textStyle="bold"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#555"
                         android:layout_marginEnd="4dp"/>
                     <TextView
@@ -78,6 +79,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Exótico"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#333"/>
                 </LinearLayout>
 
@@ -91,7 +93,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Edad:"
-                        android:textStyle="bold"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#555"
                         android:layout_marginEnd="4dp"/>
                     <TextView
@@ -99,6 +101,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Adulto"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#333"/>
                 </LinearLayout>
 
@@ -113,13 +116,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Localidad:"
-                        android:textStyle="bold"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:textColor="#555"
                         android:layout_marginEnd="4dp"/>
                     <TextView
                         android:id="@+id/tvAnimalLocalidad"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/fredoka_semibold"
                         android:text="Huelva"
                         android:textColor="#333"/>
                 </LinearLayout>

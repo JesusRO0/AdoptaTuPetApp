@@ -38,13 +38,14 @@
                 android:text="NombreUsuario"
                 android:textColor="#000000"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:fontFamily="@font/fredoka_semibold" />
 
             <TextView
                 android:id="@+id/tvCommentFecha"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:fontFamily="@font/fredoka_semibold"
                 android:text="01 Jun 2025 · 12:00"
                 android:textColor="#757575"
                 android:textSize="12sp" />
@@ -55,6 +56,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:fontFamily="@font/fredoka_semibold"
             android:text="Aquí va el texto del comentario."
             android:textColor="#212121"
             android:textSize="14sp" />

@@ -4,6 +4,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
         <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="android:fontFamily">@font/fredoka_bold</item>
         <!-- Color de tu toolbar / status bar -->
         <item name="android:statusBarColor">@color/colorPrimary</item>
         <!-- Para que los iconos de la status bar vayan en blanco (false) o negro (true) -->
@@ -17,7 +18,7 @@
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:fontFamily">@font/fredoka_regular</item>
+        <item name="android:fontFamily">@font/fredoka_bold</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 </resources>

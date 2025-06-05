@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- fragment_comentarios.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/fragment_comentarios_root"
     android:layout_width="match_parent"
@@ -40,18 +41,12 @@
     <include
         android:id="@+id/include_post_original"
         layout="@layout/item_mensaje" />
-
-    <!-- 2) RecyclerView que mostrará los comentarios -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvComentarios"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:paddingBottom="64dp"
         android:clipToPadding="false"
-        android:paddingBottom="8dp"
         android:scrollbars="vertical" />
-
-    <!-- 3) Zona inferior: nuevo comentario (no mostramos aquí para brevedad) -->
-    <!-- ... -->
-
 </LinearLayout>

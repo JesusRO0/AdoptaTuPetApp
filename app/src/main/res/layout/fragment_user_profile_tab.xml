@@ -41,6 +41,7 @@
                 android:layout_height="wrap_content"
                 android:text="Nombre Usuario"
                 android:textColor="#000000"
+                android:fontFamily="@font/fredoka_semibold"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -49,6 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="email@ejemplo.com"
+                android:fontFamily="@font/fredoka_semibold"
                 android:textColor="#757575"
                 android:textSize="14sp"
                 android:paddingTop="4dp" />
@@ -68,6 +70,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Historial de publicaciones"
+        android:fontFamily="@font/fredoka_semibold"
         android:textColor="#000000"
         android:textSize="16sp"
         android:textStyle="bold"
@@ -77,6 +80,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvUserPostsTab"
         android:layout_width="match_parent"
+        android:fontFamily="@font/fredoka_semibold"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false" />
