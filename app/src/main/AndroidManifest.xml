@@ -17,6 +17,10 @@
         android:theme="@style/Theme.AdoptaTuPet"
         tools:targetApi="31">
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBAakhgZIKUDWVh0Q5T3IJI1dsA9U9v1Ow" />
+
         <!-- LoginActivity ahora es la MAIN/LAUNCHER -->
         <activity
             android:name=".views.LoginActivity"

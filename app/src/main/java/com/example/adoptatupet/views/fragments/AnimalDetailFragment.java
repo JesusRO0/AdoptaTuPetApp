@@ -29,6 +29,7 @@ import java.util.List;
  * Fragment que muestra el detalle completo de un Animal.
  * Carga primero desde caché local, luego refresca desde el servidor.
  * Incluye botones BORRAR y EDITAR solo para admin.
+ * Ahora añade también popup de agradecimiento al pulsar “ADOPTAR”.
  */
 public class AnimalDetailFragment extends Fragment {
 
@@ -75,13 +76,13 @@ public class AnimalDetailFragment extends Fragment {
         TextView  tvTamano      = view.findViewById(R.id.tvDetailTamano);
         TextView  tvDescripcion = view.findViewById(R.id.tvDetailDescripcion);
 
-        // 1) Intent: mostrar instantáneamente desde caché local si existe
+        // 1) Mostrar instantáneamente desde caché local si existe
         List<Animal> cache = animalController.getInstance(requireContext())
                 .getCachedAnimals();
         for (Animal a : cache) {
             if (a.getIdAnimal() == animalId) {
                 animal = a;
-                // Rellenar UI con cache
+                // Rellenar UI con datos en caché
                 tvNombre.setText(a.getNombre());
                 tvEspecie.setText(a.getEspecie());
                 tvRaza.setText(a.getRaza());
@@ -202,5 +203,18 @@ public class AnimalDetailFragment extends Fragment {
             btnBorrar.setVisibility(View.GONE);
             btnEditar.setVisibility(View.GONE);
         }
+
+        // ─── NUEVO: Popup al pulsar “ADOPTAR” ───
+        MaterialButton btnAdoptar = view.findViewById(R.id.btnAdoptar);
+        btnAdoptar.setOnClickListener(v -> {
+            // Mostrar diálogo de agradecimiento
+            new android.app.AlertDialog.Builder(requireContext())
+                    .setTitle("¡Gracias por adoptar!")
+                    .setMessage("Contactaremos contigo lo antes posible.")
+                    .setCancelable(false)
+                    .setPositiveButton("Aceptar", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
+        // ───────────────────────────────────────
     }
 }

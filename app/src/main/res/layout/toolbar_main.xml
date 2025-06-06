@@ -5,28 +5,36 @@
     android:id="@+id/topAppBar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/colorPrimary"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/toolbar_gradient"
     android:fitsSystemWindows="true"
     app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
-    <!-- Título fijo -->
-    <TextView
-        android:id="@+id/toolbar_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:fontFamily="@font/fredoka_semibold"
-        android:textColor="@android:color/white"
-        android:textAppearance="?attr/textAppearanceHeadline6" />
+    <!--
+       1) Logo “flotante” en la esquina superior izquierda,
+          centrado verticalmente.
+    -->
+    <ImageView
+        android:id="@+id/ivToolbarLogo"
+        android:layout_width="200dp"
+        android:layout_height="70dp"
+        android:layout_gravity="start|center_vertical"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/adopta_tu_pet_logo"
+        android:contentDescription="@string/app_name"
+        android:adjustViewBounds="true" />
 
-    <!-- CircleImageView con borde blanco -->
+    <!--
+       2) Photo de perfil a la derecha, sin modificar más nada.
+    -->
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/toolbar_profile_image"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="50dp"
+        android:layout_height="44dp"
         android:layout_gravity="end|center_vertical"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="10dp"
         android:src="@drawable/default_avatar"
+        android:layout_marginBottom="18dp"
         android:contentDescription="@string/nav_header_desc"
         app:civ_border_width="2dp"
         app:civ_border_color="@android:color/white" />

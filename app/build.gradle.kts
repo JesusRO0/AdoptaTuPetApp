@@ -65,6 +65,7 @@ dependencies {
     implementation ("de.hdodenhof:circleimageview:3.1.0")
     implementation ("androidx.core:core-ktx:1.7.0")
     implementation ("androidx.core:core:1.7.0")
+    implementation ("com.google.android.gms:play-services-maps:18.1.0")
     implementation(libs.cronet.embedded)
     annotationProcessor ("com.github.bumptech.glide:compiler:4.14.2")
 

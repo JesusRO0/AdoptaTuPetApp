@@ -244,34 +244,34 @@
                 android:textAllCaps="true"
                 android:textStyle="bold"
                 app:cornerRadius="24dp"
-                android:backgroundTint="@color/accent"
+                android:backgroundTint="@color/colorPrimary"
                 android:textColor="@color/white"
-                android:padding="14dp" />
+                android:padding="6dp" />
 
+            <!-- Botón “BORRAR ANIMAL” con color rojo fijo -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBorrarAnimal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:text="BORRAR ANIMAL"
                 android:textAllCaps="true"
-                app:strokeColor="@color/error"
-                app:strokeWidth="1dp"
-                android:textColor="@color/error"
+                app:cornerRadius="24dp"
                 android:layout_marginTop="8dp"
+                android:backgroundTint="@color/error"
+                android:textColor="@android:color/white"
                 android:visibility="gone"/>
 
+            <!-- Botón “EDITAR ANIMAL” con color primary-variant fijo -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEditarAnimal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                style="@style/Widget.MaterialComponents.Button"
                 android:text="EDITAR ANIMAL"
                 android:textAllCaps="true"
                 app:cornerRadius="24dp"
-                android:backgroundTint="@color/colorPrimaryVariant"
-                android:textColor="@color/white"
                 android:layout_marginTop="8dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:textColor="@android:color/white"
                 android:visibility="gone"/>
 
         </LinearLayout>

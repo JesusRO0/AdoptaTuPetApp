@@ -46,7 +46,7 @@
             app:itemIconTint="@color/black"
             app:itemTextColor="@color/colorPrimaryVariant"
             app:itemIconSize="28dp"
-            android:background="@color/colorPrimary" />
+            android:background="@drawable/toolbar_gradient" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

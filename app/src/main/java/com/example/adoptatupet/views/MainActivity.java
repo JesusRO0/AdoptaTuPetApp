@@ -62,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Referencias del Toolbar
         topAppBar = findViewById(R.id.topAppBar);
-        toolbarTitle = topAppBar.findViewById(R.id.toolbar_title);
         toolbarProfileImage = topAppBar.findViewById(R.id.toolbar_profile_image);
         setSupportActionBar(topAppBar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
