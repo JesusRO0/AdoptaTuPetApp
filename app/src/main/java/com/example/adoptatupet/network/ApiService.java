@@ -148,4 +148,11 @@ public interface ApiService {
 
     @POST("api/delete_post.php")
     Call<Mensaje> deletePost(@Body Map<String, Integer> body);
+
+    /**
+     * Obtiene los últimos N animales (se pasará limit=5 desde Home).
+     * Ejemplo de llamada: GET /api/get_latest_animals.php?limit=5
+     */
+    @GET("api/get_latest_animals.php")
+    Call<List<Animal>> getLatestAnimals();
 }

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- fragment_home.xml -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/scrollHome"
     android:layout_width="match_parent"
@@ -33,6 +34,15 @@
             android:padding="12dp"
             android:textSize="16sp"
             android:textColor="#333" />
+
+        <!-- Slider de últimos 5 animales agregados -->
+        <!-- Este ViewPager2 mostrará uno a uno los animales -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPagerAnimals"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
 
         <!-- Botón CONÓCENOS -->
         <Button
