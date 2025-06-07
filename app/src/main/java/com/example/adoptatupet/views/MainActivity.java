@@ -1,14 +1,20 @@
 package com.example.adoptatupet.views;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,10 +34,12 @@ import com.example.adoptatupet.views.fragments.HomeFragment;
 import com.example.adoptatupet.views.fragments.PerfilFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar topAppBar;
-    private de.hdodenhof.circleimageview.CircleImageView toolbarProfileImage;
+    private CircleImageView toolbarProfileImage;
     private TextView toolbarTitle;
     private usuarioController usuarioController;
     private ProgressDialog loadingDialog;
@@ -78,16 +86,18 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Navegación inferior
+        // Navegación inferior
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             Fragment destino;
-            if (item.getItemId() == R.id.nav_home) {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
                 destino = new HomeFragment();
-            } else if (item.getItemId() == R.id.nav_adopta) {
+            } else if (id == R.id.nav_adopta) {
                 destino = new AdoptaFragment();
-            } else if (item.getItemId() == R.id.nav_foro) {
+            } else if (id == R.id.nav_foro) {
                 destino = new ForoFragment();
-            } else if (item.getItemId() == R.id.nav_contacto) {
+            } else if (id == R.id.nav_contacto) {
                 destino = new ContactoFragment();
             } else {
                 return false;
@@ -103,6 +113,36 @@ public class MainActivity extends AppCompatActivity {
 
         // Precarga de animales en caché
         animalController.getInstance(this).fetchAllAnimals(null);
+    }
+
+    /**
+     * Captura toques fuera de EditText y oculta el teclado si está abierto.
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int) ev.getRawX(), (int) ev.getRawY())) {
+                    v.clearFocus();
+                    hideKeyboard(v);
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    /**
+     * Oculta el teclado.
+     */
+    private void hideKeyboard(View view) {
+        InputMethodManager imm = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     /**

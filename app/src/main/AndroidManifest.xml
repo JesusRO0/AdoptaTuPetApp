@@ -26,6 +26,7 @@
             android:name=".views.LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.AdoptaTuPet"
+            android:parentActivityName=".views.fragments.BaseActivity"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,6 +39,7 @@
             android:name=".views.MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan"
+            android:parentActivityName=".views.fragments.BaseActivity"
             android:theme="@style/Theme.AdoptaTuPet" />
 
     </application>

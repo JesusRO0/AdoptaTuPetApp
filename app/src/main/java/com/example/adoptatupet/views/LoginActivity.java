@@ -3,6 +3,7 @@ package com.example.adoptatupet.views;
 import com.example.adoptatupet.R;
 import com.example.adoptatupet.controllers.usuarioController;
 import com.example.adoptatupet.models.Mensaje;
+import com.example.adoptatupet.views.fragments.BaseActivity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -19,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
     private static final String PREFS_NAME = "user";
 
     private EditText nameET, emailET, passET;
