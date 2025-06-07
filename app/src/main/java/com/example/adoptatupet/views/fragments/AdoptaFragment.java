@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,21 +22,16 @@ import com.example.adoptatupet.models.Animal;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * AdoptaFragment: muestra la lista de animales disponibles.
- *
- * Flujo:
- * 1) Configura el RecyclerView con LinearLayoutManager.
- * 2) Crea el adapter y le inyecta un listener para reaccionar al click en cada tarjeta.
- * 3) Intenta rellenar la lista desde la caché local (animalController.getCachedAnimals()).
- * 4) Si no hay caché, hace fetchAllAnimals() al servidor y actualiza la lista.
- * 5) Al hacer click en un animal, se abre AnimalDetailFragment pasando solo el ID del Animal.
- */
 public class AdoptaFragment extends Fragment {
 
     private RecyclerView rv;
     private animalAdapter adapter;
+    // lista filtrada que muestra el RecyclerView
     private final List<Animal> lista = new ArrayList<>();
+    // lista completa para aplicar filtros
+    private final List<Animal> fullList = new ArrayList<>();
+
+    private Spinner spinnerLocation, spinnerAge, spinnerSpecies;
 
     @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -42,6 +39,23 @@ public class AdoptaFragment extends Fragment {
                              @Nullable Bundle     savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_adopta, container, false);
 
+        // Inicializar spinners de filtro
+        spinnerLocation = v.findViewById(R.id.spinner_location);
+        spinnerAge      = v.findViewById(R.id.spinner_age);
+        spinnerSpecies  = v.findViewById(R.id.spinner_species);
+
+        // Listener único para todos los spinners
+        AdapterView.OnItemSelectedListener filterListener = new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                filterAnimals();
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        };
+        spinnerLocation.setOnItemSelectedListener(filterListener);
+        spinnerAge.setOnItemSelectedListener(filterListener);
+        spinnerSpecies.setOnItemSelectedListener(filterListener);
+
+        // Configurar RecyclerView y adapter
         rv = v.findViewById(R.id.adopta_recycler_view);
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new animalAdapter(lista);
@@ -58,21 +72,20 @@ public class AdoptaFragment extends Fragment {
         // Carga inicial desde caché o servidor
         List<Animal> cache = animalController.getInstance(requireContext()).getCachedAnimals();
         if (cache != null && !cache.isEmpty()) {
-            lista.clear();
-            lista.addAll(cache);
-            adapter.notifyDataSetChanged();
+            fullList.clear();
+            fullList.addAll(cache);
+            filterAnimals();
         } else {
             animalController.getInstance(requireContext())
                     .fetchAllAnimals(new animalController.FetchCallback() {
                         @Override
                         public void onSuccess(List<Animal> animales) {
-                            lista.clear();
-                            lista.addAll(animales);
-                            adapter.notifyDataSetChanged();
+                            fullList.clear();
+                            fullList.addAll(animales);
+                            filterAnimals();
                         }
                         @Override
                         public void onError(String msg) {
-                            // Sólo mostrar si el fragment sigue añadido
                             if (isAdded()) {
                                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
                             }
@@ -86,21 +99,37 @@ public class AdoptaFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refrescar siempre al volver al fragment
+        // Refrescar datos completos al volver al fragment
         animalController.getInstance(requireContext())
                 .fetchAllAnimals(new animalController.FetchCallback() {
-                    @Override
-                    public void onSuccess(List<Animal> animales) {
-                        lista.clear();
-                        lista.addAll(animales);
-                        adapter.notifyDataSetChanged();
+                    @Override public void onSuccess(List<Animal> animales) {
+                        fullList.clear();
+                        fullList.addAll(animales);
+                        filterAnimals();
                     }
-                    @Override
-                    public void onError(String msg) {
+                    @Override public void onError(String msg) {
                         if (isAdded()) {
                             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
+    }
+
+    /**
+     * Aplica los filtros seleccionados y actualiza la lista mostrada.
+     */
+    private void filterAnimals() {
+        lista.clear();
+        String loc     = spinnerLocation.getSelectedItem().toString();
+        String age     = spinnerAge.getSelectedItem().toString();
+        String species = spinnerSpecies.getSelectedItem().toString();
+
+        for (Animal a : fullList) {
+            if (!"Todos".equals(loc) && !a.getLocalidad().equals(loc)) continue;
+            if (!"Todos".equals(age) && !a.getEdad().equals(age)) continue;
+            if (!"Todos".equals(species) && !a.getEspecie().equals(species)) continue;
+            lista.add(a);
+        }
+        adapter.notifyDataSetChanged();
     }
 }

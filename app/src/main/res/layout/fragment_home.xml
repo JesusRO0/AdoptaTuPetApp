@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:padding="8dp">
+        android:padding="4dp">
 
         <!-- Slider de últimos 5 animales agregados, con indicador de página y sombra -->
         <androidx.cardview.widget.CardView
@@ -24,13 +24,13 @@
             app:cardCornerRadius="12dp"
             app:cardUseCompatPadding="true"
             app:cardElevation="4dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="5dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:padding="4dp">
 
                 <!-- Título dentro del bloque del slide -->
                 <TextView
@@ -42,15 +42,14 @@
                     android:textStyle="bold"
                     android:textSize="20sp"
                     android:textColor="#333"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_gravity="center_horizontal" />
 
                 <androidx.viewpager2.widget.ViewPager2
                     android:id="@+id/viewPagerAnimals"
                     android:layout_width="match_parent"
                     android:layout_height="300dp"
                     android:clipToPadding="false"
-                    android:padding="8dp" />
+                    android:padding="4dp" />
 
                 <!-- Dots indicator placeholder (implementar en el fragment) -->
                 <LinearLayout
@@ -73,13 +72,13 @@
             app:cardCornerRadius="12dp"
             app:cardUseCompatPadding="true"
             app:cardElevation="4dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="5dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="5dp">
 
                 <TextView
                     android:id="@+id/tvHomeTituloPerros"
@@ -91,7 +90,7 @@
                     android:textSize="20sp"
                     android:textColor="#03A9F4"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="5dp" />
 
                 <!-- Imagen envuelta en CardView para borde redondeado -->
                 <androidx.cardview.widget.CardView
@@ -100,7 +99,7 @@
                     app:cardCornerRadius="12dp"
                     app:cardUseCompatPadding="true"
                     app:cardElevation="0dp"
-                    android:layout_marginBottom="12dp">
+                    android:layout_marginBottom="5dp">
 
                     <ImageView
                         android:id="@+id/ivHomePerro"
@@ -120,7 +119,7 @@
                     android:padding="6dp"
                     android:textSize="16sp"
                     android:textColor="#333"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="5dp" />
 
                 <Button
                     android:id="@+id/ver_perros_button"
