@@ -37,7 +37,9 @@
         android:layout_marginBottom="12dp"
         android:background="@drawable/rounded_input"
         android:textColor="@android:color/black"
-        android:padding="12dp"/>
+        android:padding="12dp"
+        android:inputType="textPersonName"
+        android:imeOptions="actionDone" />
 
     <EditText
         android:id="@+id/emailEditText"
