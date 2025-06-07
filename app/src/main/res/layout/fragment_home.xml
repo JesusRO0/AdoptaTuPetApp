@@ -88,7 +88,7 @@
                     android:text="Adopta un perro"
                     android:textStyle="bold"
                     android:textSize="20sp"
-                    android:textColor="#03A9F4"
+                    android:textColor="?attr/colorPrimary"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginBottom="5dp" />
 
@@ -163,7 +163,7 @@
                     android:text="Adopta un gato"
                     android:textStyle="bold"
                     android:textSize="20sp"
-                    android:textColor="#FF4081"
+                    android:textColor="?attr/colorSecondary"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginBottom="5dp" />
 
