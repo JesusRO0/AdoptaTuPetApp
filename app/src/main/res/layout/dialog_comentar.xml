@@ -73,14 +73,14 @@
     <!-- == Botón “Responder” alineado a la derecha == -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="45dp"
         android:layout_marginTop="16dp"
         android:gravity="end">
 
         <Button
             android:id="@+id/btnResponderDialog"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="match_parent"
             android:backgroundTint="@color/colorPrimary"
             android:fontFamily="@font/fredoka_semibold"
             android:paddingLeft="12dp"
